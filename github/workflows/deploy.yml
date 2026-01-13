@@ -70,6 +70,9 @@ jobs:
             ${{ runner.os }}-nuxt-build-
       - name: Install dependencies
         run: ${{ steps.detect-package-manager.outputs.manager }} ${{ steps.detect-package-manager.outputs.command }}
+      - name: Rebuild sharp for Linux 
+        run: npm rebuild --arch=x64 --platform=linux --libc=musl sharp || true
+        if: steps.detect-package-manager.outputs.manager == 'npm'
       - name: Static HTML export with Nuxt
         run: ${{ steps.detect-package-manager.outputs.manager }} run generate
       - name: Upload artifact

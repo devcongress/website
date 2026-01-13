@@ -231,17 +231,25 @@ function handleKeydown(e) {
 
 /* Auto-close mobile menu when resizing to md+ */
 function handleResize() {
-  if (window.innerWidth >= 768) closeAll();
+  if (typeof window !== 'undefined' && window.innerWidth >= 768) closeAll();
 }
 
 onMounted(() => {
-  document.addEventListener("click", handleClickOutside);
-  document.addEventListener("keydown", handleKeydown);
-  window.addEventListener("resize", handleResize);
+  if (typeof document !== 'undefined') {
+    document.addEventListener("click", handleClickOutside);
+    document.addEventListener("keydown", handleKeydown);
+  }
+  if (typeof window !== 'undefined') {
+    window.addEventListener("resize", handleResize);
+  }
 });
 onBeforeUnmount(() => {
-  document.removeEventListener("click", handleClickOutside);
-  document.removeEventListener("keydown", handleKeydown);
-  window.removeEventListener("resize", handleResize);
+  if (typeof document !== 'undefined') {
+    document.removeEventListener("click", handleClickOutside);
+    document.removeEventListener("keydown", handleKeydown);
+  }
+  if (typeof window !== 'undefined') {
+    window.removeEventListener("resize", handleResize);
+  }
 });
 </script>

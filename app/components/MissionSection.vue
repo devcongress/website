@@ -38,7 +38,7 @@
             </div>
           </div>
           <div class="flex gap-4 group">
-            <div class="flex-shrink-0">
+            <div class="shrink-0">
               <LogoPattern
                 class="w-12 group aspect-square before:bg-surface-400 group-hover:before:bg-secondary-500 before:transition-colors before:duration-300"
               >
@@ -59,7 +59,7 @@
             </div>
           </div>
           <div class="flex gap-4 group">
-            <div class="flex-shrink-0">
+            <div class="shrink-0">
               <LogoPattern
                 class="w-12 group aspect-square before:bg-surface-400 group-hover:before:bg-secondary-500 before:transition-colors before:duration-300"
               >
@@ -80,7 +80,7 @@
             </div>
           </div>
           <div class="flex gap-4 group">
-            <div class="flex-shrink-0">
+            <div class="shrink-0">
               <LogoPattern
                 class="w-12 group aspect-square before:bg-surface-400 group-hover:before:bg-secondary-500 before:transition-colors before:duration-300"
               >
@@ -111,8 +111,8 @@
       </div>
 
       <LogoPattern
+        mask-url="pattern-rectangle.svg"
         class="w-full h-full scale-120 aspect-video sm:absolute left-0 sm:left-2/3 object-cover drop-shadow-xl group before:bg-[url('https://pbs.twimg.com/media/GnM9JWzWUAAJg7I?format=jpg&name=large')] before:bg-cover"
-        style="--mask-url: url('/images/pattern-rectangle.svg')"
       >
       </LogoPattern>
     </div>

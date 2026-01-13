@@ -4,7 +4,7 @@
       <div class="flex items-center justify-between h-16 md:h-20">
         <!-- Logo -->
         <a href="/" class="flex items-center gap-2">
-          <NuxtImg src="/images/logo.svg" alt="Devcongress Logo" class="h-8 w-auto" />
+          <img src="/images/logo.svg" alt="Devcongress Logo" class="h-8 w-auto" />
         </a>
 
         <!-- Desktop Nav -->

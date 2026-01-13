@@ -105,7 +105,7 @@
           </ul>
         </div>
       </div>
-      <NuxtImg src="/images/logo.svg" class="w-full" alt="devcongress-logo" srcset="" />
+      <img src="/images/logo.svg" class="w-full" alt="devcongress-logo" srcset="" />
 
       <div class="pt-8 text-center">
         <p class="text-gray-100">

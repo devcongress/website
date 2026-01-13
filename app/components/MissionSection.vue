@@ -8,7 +8,7 @@
       >
         <h2 class="text-5xl lg:text-7xl font-bold mb-8 tracking-tighter">
           That's why we created
-          <NuxtImg
+          <img
             src="/images/logo.svg"
             alt="Devcongress Logo"
             class="h-16 w-auto inline-flex"

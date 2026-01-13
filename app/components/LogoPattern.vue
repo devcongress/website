@@ -13,8 +13,8 @@
 <style scoped>
 /* Apply the mask to the host element so regular backgrounds get clipped too */
 .scribble-badge {
-  -webkit-mask-image: var(--mask-url, url("/images/pattern-square.svg"));
-  mask-image: var(--mask-url, url("/images/pattern-square.svg"));
+  -webkit-mask-image: var(--mask-url, url("/website/images/pattern-square.svg"));
+  mask-image: var(--mask-url, url("/website/images/pattern-square.svg"));
   -webkit-mask-repeat: no-repeat;
   mask-repeat: no-repeat;
   -webkit-mask-position: var(--mask-position, center);
@@ -32,8 +32,8 @@
   pointer-events: none;
 
   /* Mask shape (user can override URL via a CSS var) */
-  -webkit-mask-image: var(--mask-url, url("/images/pattern-square.svg"));
-  mask-image: var(--mask-url, url("/images/pattern-square.svg"));
+  -webkit-mask-image: var(--mask-url, url("/website/images/pattern-square.svg"));
+  mask-image: var(--mask-url, url("/website/images/pattern-square.svg"));
   -webkit-mask-repeat: no-repeat;
   mask-repeat: no-repeat;
   -webkit-mask-position: var(--mask-position, center);

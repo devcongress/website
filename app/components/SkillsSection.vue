@@ -102,43 +102,12 @@
 </template>
 
 <script setup>
+import { roles as defaultRoles } from '../data/roles';
+
 const props = defineProps({
   roles: {
     type: Array,
-    default: () => [
-      "Developers",
-      "Designers",
-      "Product Managers",
-      "Data Scientists",
-      "DevOps",
-      "QA Engineers",
-      "AI/ML Engineers",
-      "Cloud Architects",
-      "Technical Writers",
-      "Security Engineers",
-      "Founders",
-      "Community Managers",
-      "Growth Marketers",
-      "UI Engineers",
-      "Backend Engineers",
-      "Mobile Engineers",
-      "Analysts",
-      "Scrum Masters",
-      "Solutions Architects",
-      "Researchers",
-      "No-Code Builders",
-      "Student Builders",
-      "Mentors",
-      "Open-Source Contributors",
-      "Startup Operators",
-      "Tech Artists",
-      "Hardware Hackers",
-      "SREs",
-      "BI Engineers",
-      "Support Engineers",
-      "Content Engineers",
-      "Entrepreneurs",
-    ],
+    default: () => defaultRoles,
   },
   /** Tailwind-ish duration: e.g. '30s', '45s'. */
   duration: {

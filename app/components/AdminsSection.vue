@@ -30,9 +30,6 @@
           <!-- Info -->
           <div>
             <h3 class="text-lg font-bold text-white">{{ admin.name }}</h3>
-            <p class="text-sm text-gray-400 font-medium group-hover:text-secondary-400">
-              {{ admin.role }}
-            </p>
 
             <!-- Social Links -->
             <div class="flex items-center justify-center gap-4 mt-3">

@@ -4,7 +4,6 @@
   <SkillsSection />
   <MissionSection />
   <GetStartedSection />
-  <TestimonialSection />
   <WhatWeveBeenUpTo />
   <PartnersSection />
   <AdminsSection />

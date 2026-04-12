@@ -16,7 +16,7 @@
             </li>
             <li>
               <a
-                href="#"
+                href="https://paystack.shop/pay/devcongress-meetup"
                 class="text-gray-100 hover:text-primary-500 hover:underline text-lg transition-colors"
                 >Support Mission</a
               >

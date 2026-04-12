@@ -196,7 +196,7 @@ const navItems = [
 ];
 
 const ctas = [
-  { label: "Support Mission", href: "#support", variant: "secondary" },
+  { label: "Support Mission", href: "https://paystack.shop/pay/devcongress-meetup", variant: "secondary" },
   { label: "Join Community", href: "https://devcongress-community.slack.com/join/shared_invite/zt-3elxv0f0y-U6JoK8Al4ExQp8ERaS8uwg#/shared-invite/email", variant: "primary" },
 ];
 

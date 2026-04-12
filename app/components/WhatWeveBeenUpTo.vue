@@ -72,7 +72,7 @@
                 fill="none"
                 stroke="currentColor"
                 stroke-width="2"
-                class="ms-4 size-7 text-white/60 shrink-0 transition-all duration-300 group-hover:text-[color:var(--card-color)] group-hover:translate-x-1"
+                class="ms-4 size-7 text-white/60 shrink-0 transition-all duration-300 group-hover:text-(--card-color) group-hover:translate-x-1"
                 aria-hidden="true"
               >
                 <path stroke-linecap="round" stroke-linejoin="round" d="M18 13v5a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h5"/>

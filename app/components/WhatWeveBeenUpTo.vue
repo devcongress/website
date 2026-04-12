@@ -47,7 +47,8 @@
             v-else
             :href="card.link"
             class="group block h-full rounded-3xl transition duration-300 bg-(--card-color)/5 hover:bg-(--card-color)/20"
-            :style="{ '--card-color': card.color }"
+            :class="card.title === 'Hackathon 2025' ? 'ring-1 ring-primary-500/30 shadow-[0_0_60px_rgb(252_244_4/0.08)]' : ''"
+            :style="cardBackgroundStyle(card, i)"
           >
             <div class="flex h-full gap-4 items-start justify-between p-5 md:p-7">
               <!-- Copy -->
@@ -87,4 +88,33 @@
 
 <script setup>
 import { activities as cards } from '../data/activities';
+
+function cardBackgroundStyle(card, index) {
+  const gradients = [
+    "linear-gradient(155deg, var(--surface-600), var(--surface-800))",
+    "linear-gradient(155deg, var(--surface-500), var(--surface-700))",
+    "linear-gradient(155deg, var(--surface-700), var(--surface-900))",
+    "linear-gradient(155deg, var(--surface-600), var(--surface-900))",
+  ];
+
+  const baseGradient = gradients[index % gradients.length];
+  const isHackathon = card.title === 'Hackathon 2025';
+
+  return {
+    '--card-color': card.color,
+    backgroundImage: `
+      linear-gradient(160deg, rgb(8 10 18 / 88%), rgb(8 10 18 / 72%)),
+      radial-gradient(circle at top right, var(--card-color), transparent 52%),
+      ${
+        isHackathon
+          ? "linear-gradient(155deg, rgb(8 10 18 / 20%), rgb(8 10 18 / 54%)), url('/images/hackathon-bg.jpg'), repeating-linear-gradient(135deg, rgb(252 244 4 / 0.12) 0 2px, transparent 2px 14px), radial-gradient(circle at 12% 16%, rgb(252 244 4 / 0.2), transparent 38%), radial-gradient(circle at 86% 84%, rgb(251 113 133 / 0.18), transparent 34%),"
+          : ""
+      }
+      ${baseGradient}
+    `,
+    backgroundSize: 'cover',
+    backgroundPosition: 'center',
+    backgroundRepeat: 'no-repeat',
+  };
+}
 </script>

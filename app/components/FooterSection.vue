@@ -45,14 +45,14 @@
               <a
                 href="#"
                 class="text-gray-100 hover:text-primary-500 hover:underline text-lg transition-colors"
-                >How to build</a
+                >How To Build</a
               >
             </li>
             <li>
               <a
                 href="#"
                 class="text-gray-100 hover:text-primary-500 hover:underline text-lg transition-colors"
-                >Echo</a
+                >Echo Podcast</a
               >
             </li>
             <li>
@@ -66,7 +66,7 @@
               <a
                 href="#"
                 class="text-gray-100 hover:text-primary-500 hover:underline text-lg transition-colors"
-                >What are you building</a
+                >What Are You Building</a
               >
             </li>
             <li>
@@ -92,15 +92,16 @@
             </li>
             <li>
               <a
-                href="#"
-                
+                href="https://www.linkedin.com/company/devcongress"
+                target="_blank" rel="noopener noreferrer"
                 class="text-gray-100 hover:text-primary-500 hover:underline text-lg transition-colors"
                 >LinkedIn</a
               >
             </li>
             <li>
               <a
-                href="#"
+                href="https://www.facebook.com/DevCongress/"
+                target="_blank" rel="noopener noreferrer"
                 class="text-gray-100 hover:text-primary-500 hover:underline text-lg transition-colors"
                 >Facebook</a
               >
@@ -112,7 +113,7 @@
 
       <div class="pt-8 text-center">
         <p class="text-gray-100">
-        Designed & developed with love from Ghana 🇬🇭 by <a href="https://www.linkedin.com/in/yoofi-graham/" target="_blank" rel="noopener noreferrer" class="underline text-primary-500">Yoofi Graham</a>
+        Designed & developed with love from Ghana 🇬🇭 by <a href="https://www.linkedin.com/company/devcongress" target="_blank" rel="noopener noreferrer" class="underline text-primary-500">Yoofi Graham</a>
         </p>
       </div>
     </div>

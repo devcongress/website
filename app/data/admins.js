@@ -12,7 +12,7 @@ export const admins = [
     name: "Bubunyo Nyavor",
     image: "https://pbs.twimg.com/media/FHvsk2MXMAQBovS?format=jpg&name=large",
     socials: [
-      { platform: "linkedin", url: "https://linkedin.com/in/leo" },
+      { platform: "linkedin", url: "https://www.linkedin.com/company/devcongress" },
       { platform: "github", url: "https://github.com/leo" },
     ],
   },
@@ -22,7 +22,7 @@ export const admins = [
       "https://pbs.twimg.com/profile_images/3248556771/feb8ad6b5f403e70ea321d17b80df232_400x400.png",
     socials: [
       { platform: "twitter", url: "https://twitter.com/anthonyacquah" },
-      { platform: "linkedin", url: "https://linkedin.com/in/anthonyacquah" },
+      { platform: "linkedin", url: "https://www.linkedin.com/company/devcongress" },
     ],
   },
   {
@@ -32,14 +32,14 @@ export const admins = [
       { platform: "twitter", url: "https://twitter.com/claudeayitey" },
       { platform: "website", url: "https://claudeayitey.com" },
       { platform: "youtube", url: "https://claudeayitey.com" },
-      { platform: "linkedin", url: "https://claudeayitey.com" },
+      { platform: "linkedin", url: "https://www.linkedin.com/company/devcongress" },
     ],
   },
   {
     name: "Edem",
     image: "https://www.devcongress.org/images/edem.jpg",
     socials: [
-      { platform: "linkedin", url: "https://linkedin.com/in/edem" },
+      { platform: "linkedin", url: "https://www.linkedin.com/company/devcongress" },
       { platform: "github", url: "https://github.com/edem" },
     ],
   },
@@ -55,7 +55,7 @@ export const admins = [
     image: "https://www.devcongress.org/images/elorm.jpg",
     socials: [
       { platform: "twitter", url: "https://twitter.com/elormadjaho" },
-      { platform: "linkedin", url: "https://linkedin.com/in/elormadjaho" },
+      { platform: "linkedin", url: "https://www.linkedin.com/company/devcongress" },
     ],
   },
   {
@@ -70,7 +70,7 @@ export const admins = [
     name: "Saviour Kirk Agbenyegah",
     image: "https://www.devcongress.org/images/savekirk.jpg",
     socials: [
-      { platform: "linkedin", url: "https://linkedin.com/in/saviourkirk" },
+      { platform: "linkedin", url: "https://www.linkedin.com/company/devcongress" },
       { platform: "twitter", url: "https://twitter.com/savekirk" },
     ],
   },
@@ -79,7 +79,7 @@ export const admins = [
     image:
       "https://pbs.twimg.com/profile_images/1680929162616291329/_jCSwpti_400x400.jpg",
     socials: [
-      { platform: "linkedin", url: "https://linkedin.com/in/yawboakye" },
+      { platform: "linkedin", url: "https://www.linkedin.com/company/devcongress" },
       { platform: "twitter", url: "https://twitter.com/yawboakye" },
     ],
   },
@@ -95,7 +95,7 @@ export const admins = [
     name: "Blossom Dugbatey",
     image: "https://ca.slack-edge.com/T0A0T7A5Q-U02LQJ83N9H-42650d9d2b97-512",
     socials: [
-      { platform: "linkedin", url: "https://linkedin.com/in/blossomdugbatey" },
+      { platform: "linkedin", url: "https://www.linkedin.com/company/devcongress" },
       { platform: "twitter", url: "https://twitter.com/blossomdugbatey" },
     ],
   },

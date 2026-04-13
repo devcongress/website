@@ -29,7 +29,7 @@
           Want to collaborate or support our community of vibrant tech talent?
         </p>
         <a
-          href="#support"
+          href="https://paystack.shop/pay/devcongress-meetup"
           class="inline-flex items-center justify-center rounded-2xl px-6 py-4 bg-white/10 text-primary-500 border border-transparent hover:border-primary-500 font-semibold hover:bg-white/10 transition duration-150 ease-out delay-75"
         >
           Support Mission

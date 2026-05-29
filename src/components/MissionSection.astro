@@ -1,6 +1,13 @@
 ---
 interface MissionItem { heading: string; description: string; stat: string; }
-interface Props { mission: MissionItem[]; slackUrl: string; }
+interface MissionSection {
+  eyebrow: string;
+  headline: string;
+  body: string;
+  cta: string;
+  items: MissionItem[];
+}
+interface Props { mission: MissionSection; slackUrl: string; }
 const { mission, slackUrl } = Astro.props;
 const nums = ['01', '02', '03', '04'];
 ---
@@ -12,21 +19,21 @@ const nums = ['01', '02', '03', '04'];
 
       <!-- Left: sticky statement -->
       <div class="mission-left">
-        <span class="eyebrow">Mission</span>
+        <span class="eyebrow">{mission.eyebrow}</span>
         <h2 class="heading-serif mission-headline">
-          We exist because Africa's builders deserve a community that takes them seriously.
+          {mission.headline}
         </h2>
         <p class="mission-body">
-          DevCongress is a movement. No paywalls, no gatekeeping — just builders helping builders grow across Africa and beyond.
+          {mission.body}
         </p>
         <a href={slackUrl} target="_blank" rel="noopener noreferrer" class="btn btn-primary">
-          Join the community
+          {mission.cta}
         </a>
       </div>
 
       <!-- Right: numbered list -->
       <ol class="mission-list">
-        {mission.map((item, i) => (
+        {mission.items.map((item, i) => (
           <li class="mission-item">
             <div class="mission-num">{nums[i]}</div>
             <div class="mission-content">

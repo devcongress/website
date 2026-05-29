@@ -68,7 +68,13 @@ const site = defineCollection({
     })),
     socials: z.array(socialSchema),
     roles: z.array(z.string()),
-    mission: z.array(missionItemSchema),
+    mission_section: z.object({
+      eyebrow:  z.string(),
+      headline: z.string(),
+      body:     z.string(),
+      cta:      z.string(),
+      items:    z.array(missionItemSchema),
+    }),
     hero: z.object({
       eyebrow: z.string(),
       headline: z.string(),

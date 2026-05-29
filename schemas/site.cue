@@ -7,7 +7,13 @@ package schema
 	stats!: [...#StatItem]
 	socials!: [...#Social]
 	roles!:   [...string]
-	mission!: [...#MissionItem]
+	mission_section!: {
+		eyebrow!:  string
+		headline!: string
+		body!:     string
+		cta!:      string
+		items!:    [...#MissionItem]
+	}
 	hero!: {
 		eyebrow!:    string
 		headline!:   string

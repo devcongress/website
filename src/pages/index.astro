@@ -34,7 +34,7 @@ const meetups     = await getCollection('meetups');
       youtubeEmbedUrl={site.youtube_embed_url}
     />
     <StatsBar stats={site.stats} />
-    <MissionSection mission={site.mission} slackUrl={site.community_slack_url} />
+    <MissionSection mission={site.mission_section} slackUrl={site.community_slack_url} />
     <RolesMarquee roles={site.roles} />
     <ProgramsSection activities={activities} />
     <MeetupsSection meetups={meetups} />

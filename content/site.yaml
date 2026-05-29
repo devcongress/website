@@ -52,16 +52,21 @@
     video_label: "dev:congress{}; — community highlight"
     video_live: "● Live Community"
 
-  mission:
-    - heading: Build confidence among tech talents.
-      description: Over 500+ professionals upskilled through mentorship, events, and hands-on feedback.
-      stat: "500+"
-    - heading: Expose tech talents to a rich array of resources.
-      description: 30+ community sessions, 100+ shared resources, and growing.
-      stat: "100+"
-    - heading: Contribute to innovative and community-driven projects that create real impact.
-      description: Contributed to 10+ community-led tools powering innovation across Africa.
-      stat: "10+"
-    - heading: Harness the collective strength of Africa's tech community to solve real problems.
-      description: From solo learners to startup founders, we connect and grow together.
-      stat: "1000+"
+  mission_section:
+    eyebrow: "Mission"
+    headline: "We exist because Africa's builders deserve a community that takes them seriously."
+    body: "DevCongress is a movement. No paywalls, no gatekeeping — just builders helping builders grow across Africa and beyond."
+    cta: "Join the community"
+    items:
+      - heading: Build confidence among tech talents.
+        description: Over 500+ professionals upskilled through mentorship, events, and hands-on feedback.
+        stat: "500+"
+      - heading: Expose tech talents to a rich array of resources.
+        description: 30+ community sessions, 100+ shared resources, and growing.
+        stat: "100+"
+      - heading: Contribute to innovative and community-driven projects that create real impact.
+        description: Contributed to 10+ community-led tools powering innovation across Africa.
+        stat: "10+"
+      - heading: Harness the collective strength of Africa's tech community to solve real problems.
+        description: From solo learners to startup founders, we connect and grow together.
+        stat: "1000+"

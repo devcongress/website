@@ -68,3 +68,15 @@
         description: From solo learners to startup founders, we connect and grow together.
       - heading: Build the *changemakers* who shape a nation's technology policy & future.
         description: From community organising to national policy discussions, DevCongress members are agents of change — shaping the future of technology and society across Africa.
+
+  donate_section:
+    eyebrow: "Support"
+    heading: "Keep DevCongress running."
+    body: "DevCongress is community-funded. No corporate backing, no paywalls. Your contribution keeps the lights on and the community growing."
+    cta_text: "Donate via Paystack"
+    uses_header: "Your support funds"
+    uses_items:
+      - "Monthly meetups across Africa"
+      - "The Chale Code mentorship program"
+      - "Community tools and shared resources"
+      - "The Echo Podcast and community content"

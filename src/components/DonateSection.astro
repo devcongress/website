@@ -1,6 +1,19 @@
 ---
-interface Props { paystackUrl: string; }
-const { paystackUrl } = Astro.props;
+interface DonateSectionContent {
+  eyebrow: string;
+  heading: string;
+  body: string;
+  cta_text: string;
+  uses_header: string;
+  uses_items: string[];
+}
+
+interface Props {
+  paystackUrl: string;
+  donate: DonateSectionContent;
+}
+
+const { paystackUrl, donate } = Astro.props;
 ---
 
 <section class="donate-section" id="donate">
@@ -8,25 +21,24 @@ const { paystackUrl } = Astro.props;
     <div class="donate-inner">
 
       <div class="donate-copy">
-        <span class="eyebrow">Support</span>
+        <span class="eyebrow">{donate.eyebrow}</span>
         <h2 class="heading-serif donate-heading">
-          Keep DevCongress running.
+          {donate.heading}
         </h2>
         <p class="donate-body">
-          DevCongress is community-funded. No corporate backing, no paywalls. Your contribution keeps the lights on and the community growing.
+          {donate.body}
         </p>
         <a href={paystackUrl} target="_blank" rel="noopener noreferrer" class="btn btn-primary">
-          Donate via Paystack
+          {donate.cta_text}
         </a>
       </div>
 
       <div class="donate-uses card">
-        <div class="donate-uses-header">Your support funds</div>
+        <div class="donate-uses-header">{donate.uses_header}</div>
         <ul class="donate-list">
-          <li><span class="donate-num">01</span>Monthly meetups across Africa</li>
-          <li><span class="donate-num">02</span>The Chale Code mentorship program</li>
-          <li><span class="donate-num">03</span>Community tools and shared resources</li>
-          <li><span class="donate-num">04</span>The Echo Podcast and community content</li>
+          {donate.uses_items.map((item, i) => (
+            <li><span class="donate-num">{String(i + 1).padStart(2, '0')}</span>{item}</li>
+          ))}
         </ul>
       </div>
 

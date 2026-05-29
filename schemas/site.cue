@@ -14,6 +14,14 @@ package schema
 		cta!:      string
 		items!:    [...#MissionItem]
 	}
+	donate_section!: {
+		eyebrow!:    string
+		heading!:    string
+		body!:       string
+		cta_text!:   string
+		uses_header!: string
+		uses_items!: [...string]
+	}
 	hero!: {
 		eyebrow!:    string
 		headline!:   string

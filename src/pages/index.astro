@@ -40,7 +40,7 @@ const meetups     = await getCollection('meetups');
     <MeetupsSection meetups={meetups} />
     <AdminsSection admins={admins} />
     <PartnersSection partners={partners} />
-    <DonateSection paystackUrl={site.paystack_url} />
+    <DonateSection paystackUrl={site.paystack_url} donate={site.donate_section} />
   </main>
   <FooterSection socials={site.socials} />
 </Base>

@@ -113,6 +113,14 @@ const site = defineCollection({
       cta:      z.string(),
       items:    z.array(missionItemSchema),
     }),
+    donate_section: z.object({
+      eyebrow: z.string(),
+      heading: z.string(),
+      body: z.string(),
+      cta_text: z.string(),
+      uses_header: z.string(),
+      uses_items: z.array(z.string()),
+    }),
     hero: z.object({
       eyebrow: z.string(),
       headline: z.string(),

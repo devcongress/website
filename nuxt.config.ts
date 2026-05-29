@@ -37,7 +37,7 @@ export default defineNuxtConfig({
 	devtools: { enabled: true },
 	ssr: false,
 
-	modules: ["@nuxt/image", "@nuxt/ui", "nuxt-lucide-icons"],
+	modules: ["nitro-cloudflare-dev"],
 	css: ["~/assets/css/main.css"],
 
 	runtimeConfig: {
@@ -102,8 +102,13 @@ export default defineNuxtConfig({
 		},
 	},
 	nitro: {
-		preset: "static",
-	},
+        preset: "cloudflare_module",
+
+        cloudflare: {
+            deployConfig: true,
+            nodeCompat: true
+        }
+    },
 
 	vite: {
 		plugins: [tailwindcss()],

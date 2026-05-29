@@ -6,8 +6,10 @@
     "build": "nuxt build",
     "dev": "nuxt dev",
     "generate": "nuxt generate",
-    "preview": "nuxt preview",
-    "postinstall": "nuxt prepare && npm rebuild --arch=x64 --platform=linux sharp || true"
+    "preview": "pnpm run build && wrangler dev",
+    "postinstall": "nuxt prepare && npm rebuild --arch=x64 --platform=linux sharp || true",
+    "deploy": "pnpm run build && wrangler deploy",
+    "cf-typegen": "wrangler types"
   },
   "dependencies": {
     "@nuxt/ui": "^4.0.1",
@@ -21,6 +23,8 @@
     "vue-router": "^4.5.1"
   },
   "devDependencies": {
-    "@nuxt/image": "^2.0.0"
+    "@nuxt/image": "^2.0.0",
+    "nitro-cloudflare-dev": "^0.2.2",
+    "wrangler": "^4.95.0"
   }
 }

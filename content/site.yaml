@@ -45,7 +45,7 @@
       text: "Join us on Slack"
       color: "pink"
     cta_secondary:
-      text: "Support the mission"
+      text: "Support the Mission"
       color: "outline"
     video_label: "dev:congress{}; — community highlight"
     video_live: "● Live community"

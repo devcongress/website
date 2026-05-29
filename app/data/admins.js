@@ -96,7 +96,7 @@ export const admins = [
     name: "Blossom Dugbatey",
     image: "https://ca.slack-edge.com/T0A0T7A5Q-U02LQJ83N9H-42650d9d2b97-512",
     socials: [
-      { platform: "linkedin", url: "https://www.linkedin.com/company/devcongress" },
+      { platform: "linkedin", url: "https://gh.linkedin.com/in/blossom-" },
       { platform: "twitter", url: "https://twitter.com/blossomdugbatey" },
     ],
   },

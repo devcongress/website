@@ -1,0 +1,119 @@
+---
+interface Social { platform: string; url: string; }
+interface Admin {
+  id: string;
+  data: { name: string; image: string; socials: Social[]; };
+}
+interface Props { admins: Admin[]; }
+const { admins } = Astro.props;
+const sorted = [...admins].sort((a, b) => a.data.name.localeCompare(b.data.name));
+---
+
+<section class="section" id="team">
+  <div class="container">
+    <p class="section-label">Team</p>
+    <h2 class="section-heading team-heading">The people behind it</h2>
+    <p class="team-intro">DevCongress is run by a volunteer team of builders who believe in the power of community.</p>
+
+    <ul class="team-grid">
+      {sorted.map((admin) => (
+        <li class="team-member">
+          <img
+            src={admin.data.image}
+            alt={admin.data.name}
+            loading="lazy"
+            decoding="async"
+            class="team-avatar"
+          />
+          <h3 class="team-name">{admin.data.name}</h3>
+          <ul class="team-socials">
+            {admin.data.socials.map((social) => (
+              <li>
+                <a
+                  href={social.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="team-social-link"
+                >
+                  {social.platform}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </li>
+      ))}
+    </ul>
+  </div>
+</section>
+
+<style>
+  .team-heading { margin-bottom: var(--space-3); }
+
+  .team-intro {
+    font-size: var(--text-base);
+    color: var(--color-text-muted);
+    margin-bottom: var(--space-8);
+    max-width: 560px;
+  }
+
+  .team-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-6) var(--space-5);
+  }
+
+  @media (min-width: 640px) {
+    .team-grid { grid-template-columns: repeat(3, 1fr); }
+  }
+
+  @media (min-width: 900px) {
+    .team-grid { grid-template-columns: repeat(4, 1fr); }
+  }
+
+  @media (min-width: 1100px) {
+    .team-grid { grid-template-columns: repeat(6, 1fr); }
+  }
+
+  .team-member {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-3);
+    text-align: center;
+  }
+
+  .team-avatar {
+    width: 72px;
+    height: 72px;
+    border-radius: var(--radius-full);
+    object-fit: cover;
+    border: 2px solid var(--color-border);
+    background: var(--color-bg-subtle);
+    transition: border-color 200ms ease;
+  }
+
+  .team-member:hover .team-avatar { border-color: var(--color-accent); }
+
+  .team-name {
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--color-text);
+    line-height: var(--leading-snug);
+  }
+
+  .team-socials {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--space-2);
+  }
+
+  .team-social-link {
+    font-size: var(--text-xs);
+    color: var(--color-text-faint);
+    transition: color 150ms ease;
+    text-transform: capitalize;
+  }
+
+  .team-social-link:hover { color: var(--color-accent); }
+</style>

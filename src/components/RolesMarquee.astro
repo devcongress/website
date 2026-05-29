@@ -1,0 +1,45 @@
+---
+interface Props { roles: string[]; }
+const { roles } = Astro.props;
+---
+
+<div class="marquee-section" aria-label="Community roles">
+  <div class="marquee-outer">
+    <div class="marquee-track" aria-hidden="true">
+      {[...roles, ...roles].map((role) => (
+        <span class="role-pill">{role}</span>
+      ))}
+    </div>
+  </div>
+</div>
+
+<style>
+  .marquee-section {
+    padding-block: var(--space-7);
+    overflow: hidden;
+    border-top: 1px solid var(--color-border);
+    border-bottom: 1px solid var(--color-border);
+    background: var(--color-bg-raised);
+  }
+
+  .marquee-outer { overflow: hidden; }
+
+  .role-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: var(--space-2) var(--space-5);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-full);
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+    white-space: nowrap;
+    background: var(--color-bg-subtle);
+    flex-shrink: 0;
+    transition: color 200ms ease, border-color 200ms ease;
+  }
+
+  .marquee-track:hover .role-pill {
+    color: var(--color-text);
+    border-color: var(--color-text-faint);
+  }
+</style>

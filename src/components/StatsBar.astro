@@ -1,0 +1,86 @@
+---
+interface Stats {
+  members: string;
+  hired: string;
+  events: string;
+  mentored: string;
+}
+interface Props { stats: Stats; }
+const { stats } = Astro.props;
+
+const items = [
+  { value: stats.members,  label: 'Community members' },
+  { value: stats.hired,    label: 'Members hired'      },
+  { value: stats.events,   label: 'Events run'         },
+  { value: stats.mentored, label: 'Mentored'           },
+];
+---
+
+<div class="stats-bar">
+  <div class="container stats-inner">
+    {items.map((item, i) => (
+      <>
+        <div class="stat-item">
+          <span class="stat-value">{item.value}</span>
+          <span class="stat-label">{item.label}</span>
+        </div>
+        {i < items.length - 1 && <div class="stat-divider" aria-hidden="true"></div>}
+      </>
+    ))}
+  </div>
+</div>
+
+<style>
+  .stats-bar {
+    background: var(--color-bg-raised);
+    border-top: 1px solid var(--color-border);
+    border-bottom: 1px solid var(--color-border);
+    padding-block: var(--space-6);
+  }
+
+  .stats-inner {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr) repeat(3, 1px);
+    align-items: center;
+    gap: 0;
+  }
+
+  @media (max-width: 640px) {
+    .stats-inner {
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-5);
+    }
+    .stat-divider { display: none; }
+  }
+
+  .stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-1);
+    padding-inline: var(--space-5);
+    text-align: center;
+  }
+
+  .stat-value {
+    font-family: var(--font-display);
+    font-size: clamp(var(--text-2xl), 4vw, var(--text-3xl));
+    font-weight: 700;
+    color: var(--color-accent);
+    line-height: 1;
+  }
+
+  .stat-label {
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .stat-divider {
+    width: 1px;
+    height: 40px;
+    background: var(--color-border);
+    align-self: center;
+  }
+</style>

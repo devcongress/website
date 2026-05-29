@@ -1,0 +1,179 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+
+export async function getStaticPaths() {
+  const meetups = await getCollection('meetups');
+  return meetups.map((meetup) => {
+    const slug = meetup.id.replace(/\/meta$/, '');
+    return { params: { slug }, props: { meetup } };
+  });
+}
+
+const { meetup } = Astro.props;
+const { name, date, location, description, cover, photos } = meetup.data;
+
+function formatDate(iso: string): string {
+  const [year, month, day] = iso.split('-').map(Number);
+  return new Date(year, month - 1, day).toLocaleDateString('en-GB', {
+    day: 'numeric', month: 'long', year: 'numeric',
+  });
+}
+---
+
+<Base title={`${name} — DevCongress`} description={description}>
+  <header class="meetup-nav">
+    <div class="container meetup-nav-inner">
+      <a href="/" class="meetup-logo">DevCongress</a>
+      <a href="/#meetups" class="back-link">&larr; All meetups</a>
+    </div>
+  </header>
+
+  <main>
+    <div class="meetup-hero" style={`background-image: url('${cover}')`} role="img" aria-label={`${name} cover photo`}></div>
+
+    <div class="container meetup-body">
+      <div class="meetup-header">
+        <div class="meetup-meta">
+          <time datetime={date}>{formatDate(date)}</time>
+          <span aria-hidden="true">&middot;</span>
+          <span>{location}</span>
+        </div>
+        <h1 class="meetup-title">{name}</h1>
+        <p class="meetup-description">{description}</p>
+      </div>
+
+      {photos.length > 0 && (
+        <section class="gallery-section">
+          <h2 class="gallery-heading">Photos</h2>
+          <ul class="gallery-grid">
+            {photos.map((photo, i) => (
+              <li class="gallery-item">
+                <img
+                  src={photo}
+                  alt={`${name} — photo ${i + 1}`}
+                  loading="lazy"
+                  decoding="async"
+                />
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+    </div>
+  </main>
+</Base>
+
+<style>
+  .meetup-nav {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(13,13,13,0.88);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--color-border);
+    padding-block: var(--space-4);
+  }
+
+  .meetup-nav-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .meetup-logo {
+    font-family: var(--font-display);
+    font-size: var(--text-lg);
+    font-weight: 700;
+    color: var(--color-accent);
+  }
+
+  .back-link {
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+    transition: color 150ms ease;
+  }
+  .back-link:hover { color: var(--color-text); }
+
+  .meetup-hero {
+    width: 100%;
+    aspect-ratio: 21 / 9;
+    background-size: cover;
+    background-position: center;
+    background-color: var(--color-bg-subtle);
+  }
+
+  @media (max-width: 640px) {
+    .meetup-hero { aspect-ratio: 16 / 9; }
+  }
+
+  .meetup-body { padding-block: var(--space-9); }
+
+  .meetup-header {
+    max-width: 720px;
+    margin-bottom: var(--space-9);
+  }
+
+  .meetup-meta {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+    margin-bottom: var(--space-4);
+  }
+
+  .meetup-title {
+    font-family: var(--font-display);
+    font-size: clamp(var(--text-2xl), 4vw, var(--text-3xl));
+    font-weight: 700;
+    line-height: var(--leading-tight);
+    color: var(--color-text);
+    margin-bottom: var(--space-4);
+  }
+
+  .meetup-description {
+    font-size: var(--text-lg);
+    color: var(--color-text-muted);
+    line-height: var(--leading-body);
+  }
+
+  .gallery-heading {
+    font-family: var(--font-display);
+    font-size: var(--text-xl);
+    font-weight: 700;
+    color: var(--color-text);
+    margin-bottom: var(--space-6);
+  }
+
+  .gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-3);
+  }
+
+  @media (min-width: 720px) {
+    .gallery-grid { grid-template-columns: repeat(3, 1fr); }
+  }
+
+  @media (min-width: 1024px) {
+    .gallery-grid { grid-template-columns: repeat(4, 1fr); }
+  }
+
+  .gallery-item {
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    background: var(--color-bg-subtle);
+    aspect-ratio: 4 / 3;
+  }
+
+  .gallery-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 300ms ease;
+  }
+
+  .gallery-item:hover img { transform: scale(1.04); }
+</style>

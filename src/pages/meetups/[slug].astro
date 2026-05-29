@@ -40,6 +40,10 @@ const scheduleTypeLabel: Record<string, string> = {
   open_discussion:'Open Discussion',
   break:          'Break',
 };
+
+const photos = d.photos ?? [];
+const imagePhotos = photos.filter((photo) => !photo.type || photo.type === 'image');
+const folderPhotos = photos.filter((photo) => photo.type === 'folder');
 ---
 
 <Base title={`${d.name} — DevCongress`} description={d.description}>
@@ -216,28 +220,57 @@ const scheduleTypeLabel: Record<string, string> = {
     )}
 
     <!-- ── Photos (past only) ─────────────────────────────── -->
-    {status === 'past' && d.photos && d.photos.length > 0 && (
+    {status === 'past' && imagePhotos.length > 0 && (
       <div class="photos-section">
         <div class="container">
           <div class="photos-header">
             <span class="eyebrow">Gallery</span>
-            <span class="photos-count">{d.photos.length} photos</span>
+            <span class="photos-count">{imagePhotos.length} photos</span>
           </div>
-          <ul class="photos-grid">
-            {d.photos.map((photo, i) => (
+          <ul class="photos-grid" data-photo-grid>
+            {imagePhotos.map((photo, i) => (
               <li class="photo-item">
-                {photo.type === 'folder' ? (
-                  <a href={photo.url} target="_blank" rel="noopener noreferrer" class="photo-folder-link">
-                    <span class="photo-folder-icon">📁</span>
-                    <span>Open photo folder →</span>
-                  </a>
-                ) : (
+                <button
+                  type="button"
+                  class="photo-trigger"
+                  data-photo-src={photo.url}
+                  data-photo-alt={`${d.name} — photo ${i + 1}`}
+                  aria-label={`Expand photo ${i + 1}`}
+                >
                   <img src={photo.url} alt={`${d.name} — photo ${i + 1}`} loading="lazy" decoding="async" />
-                )}
+                </button>
               </li>
             ))}
           </ul>
         </div>
+      </div>
+    )}
+
+    {status === 'past' && folderPhotos.length > 0 && (
+      <div class="folders-section">
+        <div class="container">
+          <div class="photos-header">
+            <span class="eyebrow">Photo folders</span>
+            <span class="photos-count">{folderPhotos.length} folders</span>
+          </div>
+          <ul class="folders-grid">
+            {folderPhotos.map((photo, i) => (
+              <li class="folder-item card">
+                <a href={photo.url} target="_blank" rel="noopener noreferrer" class="folder-link">
+                  <span class="folder-icon" aria-hidden="true">📁</span>
+                  <span class="folder-copy">Open folder {i + 1} →</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    )}
+
+    {status === 'past' && imagePhotos.length > 0 && (
+      <div class="lightbox-overlay" data-lightbox hidden>
+        <button type="button" class="lightbox-close" data-lightbox-close aria-label="Close image viewer">✕</button>
+        <img class="lightbox-image" data-lightbox-image src="" alt="" />
       </div>
     )}
 
@@ -436,16 +469,40 @@ const scheduleTypeLabel: Record<string, string> = {
   @media (min-width: 1024px) { .photos-grid { grid-template-columns: repeat(4, 1fr); } }
 
   .photo-item { aspect-ratio: 4/3; overflow: hidden; background: var(--border-light); position: relative; }
+  .photo-trigger { width: 100%; height: 100%; border: none; background: none; padding: 0; cursor: zoom-in; }
   .photo-item img { width: 100%; height: 100%; object-fit: cover; transition: transform 400ms ease; }
   .photo-item:hover img { transform: scale(1.06); }
 
-  .photo-folder-link {
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    width: 100%; height: 100%; gap: var(--s2); color: var(--text-mid); font-size: var(--text-sm);
-    font-weight: 600; text-decoration: none; transition: background 200ms, color 200ms;
+  .folders-section { padding-block: var(--s8); border-bottom: 2px solid var(--black); }
+  .folders-grid { display: grid; grid-template-columns: 1fr; gap: var(--s4); }
+  @media (min-width: 720px) { .folders-grid { grid-template-columns: repeat(2, 1fr); } }
+  .folder-item { padding: var(--s5); }
+  .folder-link {
+    display: flex; align-items: center; gap: var(--s3); text-decoration: none;
+    color: var(--text-mid); font-weight: 600;
   }
-  .photo-folder-link:hover { background: var(--border-light); color: var(--text); }
-  .photo-folder-icon { font-size: 2rem; }
+  .folder-link:hover { color: var(--text); }
+  .folder-icon { font-size: 1.5rem; }
+  .folder-copy { font-size: var(--text-sm); }
+
+  .lightbox-overlay {
+    position: fixed; inset: 0; z-index: 1000;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(0, 0, 0, 0.88);
+  }
+  .lightbox-overlay[hidden] { display: none !important; }
+  .lightbox-image {
+    max-width: 92vw; max-height: 90vh; object-fit: contain;
+    border-radius: var(--r-sm); box-shadow: 0 8px 48px rgba(0, 0, 0, 0.55);
+  }
+  .lightbox-close {
+    position: fixed; top: var(--s5); right: var(--s5);
+    width: 44px; height: 44px; border-radius: 50%; border: none;
+    font-size: 1.5rem; color: #fff; background: rgba(0, 0, 0, 0.55);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+  }
+  .lightbox-close:hover { background: rgba(0, 0, 0, 0.8); }
 
   /* ── Videos ──────────────────────────────────────────── */
   .videos-section { padding-block: var(--s9); }
@@ -460,3 +517,47 @@ const scheduleTypeLabel: Record<string, string> = {
   .video-wrap iframe { width: 100%; aspect-ratio: 16/9; border: none; display: block; }
   .video-title { padding: var(--s4) var(--s5); font-size: var(--text-sm); font-weight: 600; color: var(--text); }
 </style>
+
+<script is:inline>
+  (() => {
+    const lightbox = document.querySelector('[data-lightbox]');
+    const lightboxImage = document.querySelector('[data-lightbox-image]');
+    const closeButton = document.querySelector('[data-lightbox-close]');
+
+    if (!lightbox || !lightboxImage) return;
+
+    function closeLightbox() {
+      lightbox.hidden = true;
+      lightboxImage.src = '';
+      lightboxImage.alt = '';
+      document.body.style.overflow = '';
+    }
+
+    document.addEventListener('click', (event) => {
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+
+      const trigger = target.closest('.photo-trigger');
+      if (trigger instanceof HTMLElement) {
+        const src = trigger.dataset.photoSrc;
+        if (!src) return;
+
+        lightboxImage.src = src;
+        lightboxImage.alt = trigger.dataset.photoAlt ?? 'Meetup photo';
+        lightbox.hidden = false;
+        document.body.style.overflow = 'hidden';
+        return;
+      }
+
+      if (target === lightbox || target === closeButton) {
+        closeLightbox();
+      }
+    });
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && !lightbox.hidden) {
+        closeLightbox();
+      }
+    });
+  })();
+</script>

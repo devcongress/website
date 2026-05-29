@@ -18,15 +18,16 @@ interface Props { meetups: Meetup[]; }
 const { meetups } = Astro.props;
 
 function getMeetupStatus(start: string, end: string) {
-  const now  = new Date();
-  const s    = new Date(start);
-  const e    = new Date(end);
+  const now = new Date();
+  const s   = new Date(start);
+  const e   = new Date(end);
   return now < s ? 'upcoming' : now <= e ? 'live' : 'past';
 }
 
 function formatDate(iso: string): string {
-  const d = new Date(iso);
-  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+  return new Date(iso).toLocaleDateString('en-GB', {
+    day: 'numeric', month: 'long', year: 'numeric',
+  });
 }
 
 const sorted = [...meetups]
@@ -36,6 +37,9 @@ const sorted = [...meetups]
     slug:   m.id,
     status: getMeetupStatus(m.data.start, m.data.end),
   }));
+
+const recent  = sorted.slice(0, 3);
+const earlier = sorted.slice(3);
 
 const statusConfig = {
   upcoming: { label: 'Upcoming', cta: 'Register →' },
@@ -52,58 +56,187 @@ const statusConfig = {
       <h2 class="heading-serif meetups-heading">Where we show up</h2>
     </div>
 
-    <ul class="meetups-grid">
-      {sorted.map((meetup) => {
-        const cfg = statusConfig[meetup.status];
-        const photoCount = meetup.data.photos?.length ?? 0;
-        return (
-          <li class="meetup-card card">
-            <a href={`/website/meetups/${meetup.slug}/`} class="meetup-cover-link" aria-hidden="true" tabindex="-1">
-              <div class="meetup-cover" style={`background-image: url('${meetup.data.cover}')`}>
-                <span class={`meetup-status-badge status-${meetup.status}`}>{cfg.label}</span>
-                {photoCount > 0 && (
-                  <span class="meetup-photo-badge">{photoCount} photos</span>
-                )}
-              </div>
-            </a>
-            <div class="meetup-body">
-              <div class="meetup-meta">
-                <time datetime={meetup.data.start}>{formatDate(meetup.data.start)}</time>
-                <span class="meetup-location">{meetup.data.location.name}</span>
-              </div>
-              <h3 class="heading-serif meetup-name">
-                <a href={`/website/meetups/${meetup.slug}/`}>{meetup.data.name}</a>
-              </h3>
-              <p class="meetup-desc">{meetup.data.description}</p>
-              <a href={`/website/meetups/${meetup.slug}/`} class="btn btn-outline meetup-cta">
-                {cfg.cta}
+    <!-- Recent: horizontal scroll row, always visible -->
+    <div class="scroll-outer">
+      <ul class="meetups-scroll">
+        {recent.map((meetup) => {
+          const cfg        = statusConfig[meetup.status];
+          const photoCount = meetup.data.photos?.length ?? 0;
+          return (
+            <li class="meetup-card card">
+              <a href={`/website/meetups/${meetup.slug}/`} class="meetup-cover-link" aria-hidden="true" tabindex="-1">
+                <div class="meetup-cover" style={`background-image: url('${meetup.data.cover}')`}>
+                  <span class={`meetup-status-badge status-${meetup.status}`}>{cfg.label}</span>
+                  {photoCount > 0 && (
+                    <span class="meetup-photo-badge">{photoCount} photos</span>
+                  )}
+                </div>
               </a>
-            </div>
-          </li>
-        );
-      })}
-    </ul>
+              <div class="meetup-body">
+                <div class="meetup-meta">
+                  <time datetime={meetup.data.start}>{formatDate(meetup.data.start)}</time>
+                  <span class="meetup-location">{meetup.data.location.name}</span>
+                </div>
+                <h3 class="heading-serif meetup-name">
+                  <a href={`/website/meetups/${meetup.slug}/`}>{meetup.data.name}</a>
+                </h3>
+                <p class="meetup-desc">{meetup.data.description}</p>
+                <a href={`/website/meetups/${meetup.slug}/`} class="btn btn-outline meetup-cta">
+                  {cfg.cta}
+                </a>
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+
+    <!-- Earlier meetups — hidden until toggled -->
+    {earlier.length > 0 && (
+      <>
+        <div class="earlier-wrap" id="earlier-meetups" aria-hidden="true">
+          <ul class="earlier-grid">
+            {earlier.map((meetup) => {
+              const cfg        = statusConfig[meetup.status];
+              const photoCount = meetup.data.photos?.length ?? 0;
+              return (
+                <li class="meetup-card card">
+                  <a href={`/website/meetups/${meetup.slug}/`} class="meetup-cover-link" aria-hidden="true" tabindex="-1">
+                    <div class="meetup-cover" style={`background-image: url('${meetup.data.cover}')`}>
+                      <span class={`meetup-status-badge status-${meetup.status}`}>{cfg.label}</span>
+                      {photoCount > 0 && (
+                        <span class="meetup-photo-badge">{photoCount} photos</span>
+                      )}
+                    </div>
+                  </a>
+                  <div class="meetup-body">
+                    <div class="meetup-meta">
+                      <time datetime={meetup.data.start}>{formatDate(meetup.data.start)}</time>
+                      <span class="meetup-location">{meetup.data.location.name}</span>
+                    </div>
+                    <h3 class="heading-serif meetup-name">
+                      <a href={`/website/meetups/${meetup.slug}/`}>{meetup.data.name}</a>
+                    </h3>
+                    <p class="meetup-desc">{meetup.data.description}</p>
+                    <a href={`/website/meetups/${meetup.slug}/`} class="btn btn-outline meetup-cta">
+                      {cfg.cta}
+                    </a>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+
+        <div class="earlier-toggle-wrap">
+          <button
+            id="earlier-toggle"
+            class="btn btn-outline earlier-toggle"
+            aria-expanded="false"
+            aria-controls="earlier-meetups"
+          >
+            Earlier meetups ({earlier.length}) ↓
+          </button>
+        </div>
+      </>
+    )}
 
   </div>
 </section>
 
+<script>
+  const btn  = document.getElementById('earlier-toggle');
+  const wrap = document.getElementById('earlier-meetups');
+  if (btn && wrap) {
+    btn.addEventListener('click', () => {
+      const isOpen = wrap.getAttribute('aria-hidden') === 'false';
+      wrap.setAttribute('aria-hidden', String(isOpen));
+      wrap.classList.toggle('is-open', !isOpen);
+      btn.setAttribute('aria-expanded', String(!isOpen));
+      const count = btn.textContent?.match(/\d+/)?.[0] ?? '';
+      btn.textContent = isOpen
+        ? `Earlier meetups (${count}) ↓`
+        : `Hide earlier ↑`;
+    });
+  }
+</script>
+
 <style>
   .meetups-header {
-    margin-bottom: var(--s8);
+    margin-bottom: var(--s7);
     display: flex;
     flex-direction: column;
     gap: var(--s2);
   }
-
   .meetups-heading { font-size: clamp(var(--text-3xl), 5vw, var(--text-4xl)); }
 
-  .meetups-grid {
+  /* ── Horizontal scroll row ─────────────────────────────── */
+  .scroll-outer {
+    overflow-x: auto;
+    overflow-y: visible;
+    /* hide scrollbar visually but keep it functional */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    margin-inline: calc(-1 * var(--pad));
+    padding-inline: var(--pad);
+    /* bottom padding so box-shadow isn't clipped */
+    padding-bottom: var(--s3);
+  }
+  .scroll-outer::-webkit-scrollbar { display: none; }
+
+  .meetups-scroll {
+    display: flex;
+    gap: var(--s5);
+    /* exactly 3 cards on desktop */
+    width: max-content;
+  }
+
+  .meetups-scroll .meetup-card {
+    /* desktop: exactly 1/3 of container minus gaps */
+    width: calc((min(var(--max-w), 100vw) - 2 * var(--pad) - 2 * var(--s5)) / 3);
+    flex-shrink: 0;
+  }
+
+  /* tablet: ~2 cards visible */
+  @media (max-width: 900px) {
+    .meetups-scroll .meetup-card {
+      width: calc((100vw - 2 * var(--pad) - var(--s5)) / 2);
+    }
+  }
+
+  /* mobile: 1.5 cards visible — scroll hint */
+  @media (max-width: 600px) {
+    .meetups-scroll .meetup-card {
+      width: 85vw;
+    }
+  }
+
+  /* ── Earlier section ───────────────────────────────────── */
+  .earlier-wrap {
+    display: none;
+    margin-top: var(--s7);
+  }
+  .earlier-wrap.is-open { display: block; }
+
+  .earlier-grid {
     display: grid;
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr 1fr;
     gap: var(--s5);
   }
-  @media (min-width: 720px) { .meetups-grid { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 640px) { .earlier-grid { grid-template-columns: 1fr; } }
 
+  .earlier-toggle-wrap {
+    display: flex;
+    justify-content: center;
+    margin-top: var(--s7);
+  }
+
+  .earlier-toggle {
+    font-size: var(--text-sm);
+    padding: var(--s3) var(--s6);
+  }
+
+  /* ── Shared card styles ────────────────────────────────── */
   .meetup-card { overflow: hidden; display: flex; flex-direction: column; }
 
   .meetup-cover-link { display: block; }
@@ -130,9 +263,9 @@ const statusConfig = {
     border-radius: var(--r-sm);
     padding: 2px var(--s2);
   }
-  .status-upcoming { background: var(--yellow);    color: var(--black); }
-  .status-live     { background: var(--pink);      color: #fff;         }
-  .status-past     { background: var(--bg-white);  color: var(--text-muted); }
+  .status-upcoming { background: var(--yellow);   color: var(--black); }
+  .status-live     { background: var(--pink);     color: #fff; }
+  .status-past     { background: var(--bg-white); color: var(--text-muted); }
 
   .meetup-photo-badge {
     font-size: var(--text-xs);
@@ -164,7 +297,6 @@ const statusConfig = {
     flex-wrap: wrap;
     gap: var(--s2);
   }
-
   .meetup-location { color: var(--pink); }
 
   .meetup-name { font-size: var(--text-xl); line-height: var(--leading-snug); }

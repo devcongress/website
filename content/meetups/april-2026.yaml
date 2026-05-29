@@ -1,0 +1,75 @@
+name: Accra Developer Meetup — April 2025
+start: "2025-04-12T18:00:00+00:00"
+end:   "2025-04-12T21:00:00+00:00"
+description: >
+  A casual evening of talks, demos, and networking. Developers from across Accra
+  came together to share what they are building and learn from each other.
+cover: https://lh3.googleusercontent.com/placeholder-cover
+
+location:
+  name: iSpace Foundation, Accra
+  map_url: https://maps.google.com/?q=iSpace+Foundation+Accra
+
+stream_url: null
+registration_url: null
+
+speakers:
+  - name: Alice Smith
+    title: Senior Engineer at Paystack
+    bio: Alice builds payment infrastructure at scale across Africa, focusing on reliability and developer experience.
+    image: https://pbs.twimg.com/profile_images/placeholder/photo.jpg
+    talk_title: Building Reliable APIs in Ghana's Fintech Ecosystem
+    talk_description: A deep dive into how Paystack handles reliability at scale across multiple African markets.
+    slides_url: null
+    recording_url: null
+    socials:
+      - platform: x
+        url: https://x.com/alicesmith
+      - platform: linkedin
+        url: https://linkedin.com/in/alicesmith
+
+schedule:
+  - time: "6:00 PM"
+    title: Doors open & networking
+    type: networking
+    lead: null
+    resources: []
+
+  - time: "6:30 PM"
+    title: Opening remarks
+    type: talk
+    lead: null
+    resources: []
+
+  - time: "6:45 PM"
+    title: Building Reliable APIs in Ghana's Fintech Ecosystem
+    type: talk
+    lead: Alice Smith
+    resources:
+      - title: Slides
+        url: https://slides.com/placeholder
+
+  - time: "7:30 PM"
+    title: "System Design: Building at Scale in Africa"
+    type: open_discussion
+    lead: null
+    resources:
+      - title: Discussion notes
+        url: https://docs.google.com/placeholder
+
+  - time: "8:00 PM"
+    title: Networking & close
+    type: networking
+    lead: null
+    resources: []
+
+photos:
+  - https://lh3.googleusercontent.com/placeholder-1
+  - https://lh3.googleusercontent.com/placeholder-2
+  - https://lh3.googleusercontent.com/placeholder-3
+
+videos:
+  - title: Opening Remarks — Accra April 2025
+    embed_url: https://www.youtube-nocookie.com/embed/placeholder
+  - title: Building Reliable APIs — Alice Smith
+    embed_url: https://www.youtube-nocookie.com/embed/placeholder2

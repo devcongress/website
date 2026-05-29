@@ -523,13 +523,31 @@ const folderPhotos = photos.filter((photo) => photo.type === 'folder');
     const lightbox = document.querySelector('[data-lightbox]');
     const lightboxImage = document.querySelector('[data-lightbox-image]');
     const closeButton = document.querySelector('[data-lightbox-close]');
+    const photoTriggers = Array.from(document.querySelectorAll('.photo-trigger'));
+    let currentIndex = -1;
 
     if (!lightbox || !lightboxImage) return;
+
+    function openImageAt(index) {
+      if (!photoTriggers.length) return;
+
+      const normalized = (index + photoTriggers.length) % photoTriggers.length;
+      const trigger = photoTriggers[normalized];
+      const src = trigger.dataset.photoSrc;
+      if (!src) return;
+
+      currentIndex = normalized;
+      lightboxImage.src = src;
+      lightboxImage.alt = trigger.dataset.photoAlt ?? 'Meetup photo';
+      lightbox.hidden = false;
+      document.body.style.overflow = 'hidden';
+    }
 
     function closeLightbox() {
       lightbox.hidden = true;
       lightboxImage.src = '';
       lightboxImage.alt = '';
+      currentIndex = -1;
       document.body.style.overflow = '';
     }
 
@@ -539,13 +557,9 @@ const folderPhotos = photos.filter((photo) => photo.type === 'folder');
 
       const trigger = target.closest('.photo-trigger');
       if (trigger instanceof HTMLElement) {
-        const src = trigger.dataset.photoSrc;
-        if (!src) return;
-
-        lightboxImage.src = src;
-        lightboxImage.alt = trigger.dataset.photoAlt ?? 'Meetup photo';
-        lightbox.hidden = false;
-        document.body.style.overflow = 'hidden';
+        const clickedIndex = photoTriggers.indexOf(trigger);
+        if (clickedIndex === -1) return;
+        openImageAt(clickedIndex);
         return;
       }
 
@@ -555,8 +569,22 @@ const folderPhotos = photos.filter((photo) => photo.type === 'folder');
     });
 
     document.addEventListener('keydown', (event) => {
-      if (event.key === 'Escape' && !lightbox.hidden) {
+      if (lightbox.hidden) return;
+
+      if (event.key === 'Escape') {
         closeLightbox();
+        return;
+      }
+
+      if (event.key === 'ArrowRight') {
+        event.preventDefault();
+        openImageAt(currentIndex + 1);
+        return;
+      }
+
+      if (event.key === 'ArrowLeft') {
+        event.preventDefault();
+        openImageAt(currentIndex - 1);
       }
     });
   })();

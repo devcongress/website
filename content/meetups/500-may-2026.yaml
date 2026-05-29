@@ -1,75 +1,59 @@
-name: Accra Developer Meetup — April 2025
-start: "2025-04-12T18:00:00+00:00"
-end:   "2025-04-12T21:00:00+00:00"
+name: DevCongress May Meetup
+start: "2026-05-30T10:00:00+00:00"
+end:   "2026-05-30T15:00:00+00:00"
 description: >
-  A casual evening of talks, demos, and networking. Developers from across Accra
-  came together to share what they are building and learn from each other.
-cover: https://lh3.googleusercontent.com/placeholder-cover
+  DevCongress Meetups are builder-focused gatherings for developers, engineers,
+  and tech enthusiasts who want to learn from real-world experiences and connect
+  with others building in the ecosystem. Whether you're an experienced engineer,
+  an early-career developer, or someone exploring new technologies, you'll find
+  practical insights and meaningful conversations.
+cover: https://pbs.twimg.com/media/HG_xUr-WIAABl-e?format=jpg&name=medium
 
 location:
-  name: iSpace Foundation, Accra
-  map_url: https://maps.google.com/?q=iSpace+Foundation+Accra
+  name: buro.gh, Accra
+  map_url: https://maps.app.goo.gl/n8u6C6TgdtW35db67
 
 stream_url: null
-registration_url: null
+registration_url: https://lu.ma/3b0il40a
 
-speakers:
-  - name: Alice Smith
-    title: Senior Engineer at Paystack
-    bio: Alice builds payment infrastructure at scale across Africa, focusing on reliability and developer experience.
-    image: https://pbs.twimg.com/profile_images/placeholder/photo.jpg
-    talk_title: Building Reliable APIs in Ghana's Fintech Ecosystem
-    talk_description: A deep dive into how Paystack handles reliability at scale across multiple African markets.
-    slides_url: null
-    recording_url: null
-    socials:
-      - platform: x
-        url: https://x.com/alicesmith
-      - platform: linkedin
-        url: https://linkedin.com/in/alicesmith
+speakers: []
 
 schedule:
-  - time: "6:00 PM"
+  - time: "10:00 AM"
     title: Doors open & networking
     type: networking
     lead: null
     resources: []
-
-  - time: "6:30 PM"
-    title: Opening remarks
+  - time: "10:30 AM"
+    title: Practical session with microcontrollers
+    type: workshop
+    lead: null
+    resources: []
+  - time: "11:30 AM"
+    title: Tech talks
     type: talk
     lead: null
     resources: []
-
-  - time: "6:45 PM"
-    title: Building Reliable APIs in Ghana's Fintech Ecosystem
-    type: talk
-    lead: Alice Smith
-    resources:
-      - title: Slides
-        url: https://slides.com/placeholder
-
-  - time: "7:30 PM"
-    title: "System Design: Building at Scale in Africa"
+  - time: "12:30 PM"
+    title: System Design
     type: open_discussion
     lead: null
-    resources:
-      - title: Discussion notes
-        url: https://docs.google.com/placeholder
-
-  - time: "8:00 PM"
-    title: Networking & close
+    resources: []
+  - time: "1:30 PM"
+    title: Product & tool demos
+    type: talk
+    lead: null
+    resources: []
+  - time: "2:00 PM"
+    title: Jampoll session
+    type: open_discussion
+    lead: null
+    resources: []
+  - time: "2:30 PM"
+    title: Pizza & networking
     type: networking
     lead: null
     resources: []
 
-photos:
-  - https://lh3.googleusercontent.com/placeholder-1
-  - https://lh3.googleusercontent.com/placeholder-2
-  - https://lh3.googleusercontent.com/placeholder-3
-
-videos:
-  - title: Opening Remarks — Accra April 2025
-    embed_url: https://www.youtube-nocookie.com/embed/placeholder
-  - title: Building Reliable APIs — Alice Smith
-    embed_url: https://www.youtube-nocookie.com/embed/placeholder2
+photos: []
+videos: []

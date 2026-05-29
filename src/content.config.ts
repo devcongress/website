@@ -20,12 +20,12 @@ const activities = defineCollection({
   schema: z.object({
     title: z.string().min(2),
     description: z.string().min(10),
-    link: z.string().refine(v => v.startsWith('/') || v.startsWith('http'), {
+    link: z.string().optional().refine(v => !v || v.startsWith('/') || v.startsWith('http'), {
       message: 'link must be a relative path or full URL',
     }),
     color: z.string().regex(/^#[0-9a-fA-F]{6}$/),
     order: z.number().int().min(1),
-    status: z.enum(['active', 'ongoing', 'upcoming']),
+    status: z.enum(['active', 'ongoing', 'upcoming', 'completed']),
   }),
 });
 

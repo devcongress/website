@@ -70,6 +70,20 @@ const site = defineCollection({
     socials: z.array(socialSchema),
     roles: z.array(z.string()),
     mission: z.array(missionItemSchema),
+    hero: z.object({
+      eyebrow: z.string(),
+      headline: z.string(),
+      cta_primary: z.object({
+        text: z.string(),
+        color: z.enum(['pink', 'outline', 'white', 'yellow']),
+      }),
+      cta_secondary: z.object({
+        text: z.string(),
+        color: z.enum(['pink', 'outline', 'white', 'yellow']),
+      }),
+      video_label: z.string(),
+      video_live: z.string(),
+    }),
   }),
 });
 

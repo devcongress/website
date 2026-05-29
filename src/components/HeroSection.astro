@@ -1,39 +1,61 @@
 ---
+interface Cta { text: string; color: 'pink' | 'outline' | 'white' | 'yellow'; }
+interface Hero {
+  eyebrow: string;
+  headline: string;
+  cta_primary: Cta;
+  cta_secondary: Cta;
+  video_label: string;
+  video_live: string;
+}
 interface Props {
+  hero: Hero;
   slackUrl: string;
   paystackUrl: string;
   youtubeEmbedUrl: string;
 }
-const { slackUrl, paystackUrl, youtubeEmbedUrl } = Astro.props;
+const { hero, slackUrl, paystackUrl, youtubeEmbedUrl } = Astro.props;
+
+const colorClass: Record<string, string> = {
+  pink:    'btn-primary',
+  outline: 'btn-outline',
+  white:   'btn-white',
+  yellow:  'btn-yellow',
+};
 ---
 
 <section class="hero" id="hero">
   <div class="container">
 
     <div class="hero-top">
-      <span class="eyebrow">Africa's tech community</span>
-      <h1 class="heading-serif hero-headline">
-        Where Africa's builders<br />
-        connect, collaborate<br />
-        and grow.
-      </h1>
+      <span class="eyebrow">{hero.eyebrow}</span>
+      <h1 class="heading-serif hero-headline">{hero.headline}</h1>
       <div class="hero-ctas">
-        <a href={slackUrl} target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-hero">
-          Join on Slack
+        <a
+          href={slackUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          class={`btn ${colorClass[hero.cta_primary.color]} btn-hero`}
+        >
+          {hero.cta_primary.text}
         </a>
-        <a href={paystackUrl} target="_blank" rel="noopener noreferrer" class="btn btn-outline btn-hero">
-          Support the mission
+        <a
+          href={paystackUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          class={`btn ${colorClass[hero.cta_secondary.color]} btn-hero`}
+        >
+          {hero.cta_secondary.text}
         </a>
       </div>
     </div>
 
   </div>
 
-  <!-- Full-width video — breaks out of container -->
   <div class="hero-video-wrap">
     <div class="hero-video-bar">
-      <span class="hero-video-label">dev:congress&#123;&#125;; — community highlight</span>
-      <span class="hero-video-live">● Live community</span>
+      <span class="hero-video-label">{hero.video_label}</span>
+      <span class="hero-video-live">{hero.video_live}</span>
     </div>
     <div class="hero-video">
       <iframe
@@ -82,7 +104,6 @@ const { slackUrl, paystackUrl, youtubeEmbedUrl } = Astro.props;
     font-size: var(--text-base);
   }
 
-  /* Video — full width, breaks container */
   .hero-video-wrap {
     border-top: 2px solid var(--black);
   }
@@ -100,7 +121,6 @@ const { slackUrl, paystackUrl, youtubeEmbedUrl } = Astro.props;
     font-size: var(--text-sm);
     font-weight: 600;
     color: var(--black);
-    font-family: var(--font-body);
   }
 
   .hero-video-live {

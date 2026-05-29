@@ -28,6 +28,7 @@ const meetups     = await getCollection('meetups');
   />
   <main>
     <HeroSection
+      hero={site.hero}
       slackUrl={site.community_slack_url}
       paystackUrl={site.paystack_url}
       youtubeEmbedUrl={site.youtube_embed_url}

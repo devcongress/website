@@ -38,6 +38,18 @@
     - Sales Professional
     - System Architect
 
+  hero:
+    eyebrow: "Africa's tech community"
+    headline: "Where Africa's builders connect, collaborate and grow."
+    cta_primary:
+      text: "Join on Slack"
+      color: "pink"
+    cta_secondary:
+      text: "Support the mission"
+      color: "outline"
+    video_label: "dev:congress{}; — community highlight"
+    video_live: "● Live community"
+
   mission:
     - heading: Build confidence among tech talents.
       description: Over 500+ professionals upskilled through mentorship, events, and hands-on feedback.

@@ -4,8 +4,8 @@ export const admins = [
     image:
       "https://pbs.twimg.com/profile_images/1686721836795432960/Ghu7dKZC_400x400.jpg",
     socials: [
-      { platform: "twitter", url: "https://twitter.com/andrewsmith" },
-      { platform: "github", url: "https://github.com/andrewsmith" },
+      { platform: "twitter", url: "https://twitter.com/silentworks" },
+      { platform: "github", url: "https://github.com/silentworks" },
     ],
   },
   {
@@ -29,10 +29,11 @@ export const admins = [
     name: "Claude Ayitey",
     image: "https://www.devcongress.org/images/claude.jpg",
     socials: [
-      { platform: "twitter", url: "https://twitter.com/claudeayitey" },
-      { platform: "website", url: "https://claudeayitey.com" },
-      { platform: "youtube", url: "https://claudeayitey.com" },
-      { platform: "linkedin", url: "https://www.linkedin.com/company/devcongress" },
+      { platform: "twitter", url: "https://twitter.com/mrayitey" },
+      { platform: "website", url: "https://ayitey.me" },
+      { platform: "youtube", url: "https://youtube.com/@ayitey" },
+      { platform: "github", url: "https://github.com/claudey" },
+      { platform: "linkedin", url: "https://linkedin.com/in/ayitey" },
     ],
   },
   {
@@ -40,7 +41,7 @@ export const admins = [
     image: "https://www.devcongress.org/images/edem.jpg",
     socials: [
       { platform: "linkedin", url: "https://www.linkedin.com/company/devcongress" },
-      { platform: "github", url: "https://github.com/edem" },
+      { platform: "github", url: "https://github.com/edemkumodzi" },
     ],
   },
   {
@@ -80,7 +81,7 @@ export const admins = [
       "https://pbs.twimg.com/profile_images/1680929162616291329/_jCSwpti_400x400.jpg",
     socials: [
       { platform: "linkedin", url: "https://www.linkedin.com/company/devcongress" },
-      { platform: "twitter", url: "https://twitter.com/yawboakye" },
+      { platform: "twitter", url: "https://twitter.com/ejnbo" },
     ],
   },
   {

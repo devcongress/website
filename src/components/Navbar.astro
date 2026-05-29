@@ -1,31 +1,44 @@
 ---
-interface Social { platform: string; url: string; }
-interface Props { slackUrl: string; }
-const { slackUrl } = Astro.props;
+interface Props { slackUrl: string; paystackUrl: string; }
+const { slackUrl, paystackUrl } = Astro.props;
 ---
 
 <header class="navbar">
   <div class="container navbar-inner">
-    <a href="/" class="navbar-logo">DevCongress</a>
+    <a href="/" class="navbar-logo" aria-label="DevCongress home">
+      <img src="/website/images/logo.png" alt="dev:congress{};" height="40" />
+    </a>
+
     <nav class="navbar-links" aria-label="Primary">
       <a href="#community">Community</a>
       <a href="#programs">Programs</a>
       <a href="#meetups">Meetups</a>
     </nav>
-    <a href={slackUrl} target="_blank" rel="noopener noreferrer" class="btn btn-primary navbar-cta">
-      Join on Slack
-    </a>
-    <button class="navbar-burger" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-menu">
+
+    <div class="navbar-actions">
+      <a href={paystackUrl} target="_blank" rel="noopener noreferrer" class="btn btn-outline">
+        Support Us
+      </a>
+      <a href={slackUrl} target="_blank" rel="noopener noreferrer" class="btn btn-primary">
+        Join Slack
+      </a>
+    </div>
+
+    <button class="burger" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-menu">
       <span></span><span></span><span></span>
     </button>
   </div>
+
   <div class="mobile-menu" id="mobile-menu" aria-hidden="true">
     <nav>
       <a href="#community">Community</a>
       <a href="#programs">Programs</a>
       <a href="#meetups">Meetups</a>
-      <a href={slackUrl} target="_blank" rel="noopener noreferrer" class="btn btn-primary">Join on Slack</a>
     </nav>
+    <div class="mobile-actions">
+      <a href={paystackUrl} target="_blank" rel="noopener noreferrer" class="btn btn-outline">Support Us</a>
+      <a href={slackUrl} target="_blank" rel="noopener noreferrer" class="btn btn-primary">Join Slack</a>
+    </div>
   </div>
 </header>
 
@@ -34,87 +47,105 @@ const { slackUrl } = Astro.props;
     position: sticky;
     top: 0;
     z-index: 100;
-    background: rgba(13, 13, 13, 0.88);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border-bottom: 1px solid var(--color-border);
+    background: var(--bg);
+    border-bottom: 2px solid var(--black);
   }
 
   .navbar-inner {
     display: flex;
     align-items: center;
-    gap: var(--space-6);
-    height: 64px;
+    gap: var(--s5);
+    height: 68px;
   }
 
-  .navbar-logo {
-    font-family: var(--font-display);
-    font-size: var(--text-lg);
-    font-weight: 700;
-    color: var(--color-accent);
-    flex-shrink: 0;
-    letter-spacing: -0.01em;
-  }
+  .navbar-logo img { height: 40px; width: auto; }
 
   .navbar-links {
     display: flex;
     align-items: center;
-    gap: var(--space-6);
+    gap: var(--s6);
+    margin-left: var(--s4);
     margin-right: auto;
   }
 
   .navbar-links a {
     font-size: var(--text-sm);
-    color: var(--color-text-muted);
+    font-weight: 500;
+    color: var(--text-mid);
     transition: color 150ms ease;
+    position: relative;
   }
-  .navbar-links a:hover { color: var(--color-text); }
+  .navbar-links a::after {
+    content: '';
+    position: absolute;
+    bottom: -3px;
+    left: 0; right: 0;
+    height: 2px;
+    background: var(--pink);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 200ms ease;
+  }
+  .navbar-links a:hover { color: var(--text); }
+  .navbar-links a:hover::after { transform: scaleX(1); }
 
-  .navbar-cta { margin-left: auto; }
+  .navbar-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--s3);
+  }
 
-  .navbar-burger {
+  .burger {
     display: none;
     flex-direction: column;
     gap: 5px;
-    padding: var(--space-2);
+    padding: var(--s2);
     margin-left: auto;
   }
-  .navbar-burger span {
+  .burger span {
     display: block;
     width: 22px;
     height: 2px;
-    background: var(--color-text);
+    background: var(--black);
     border-radius: 2px;
-    transition: transform 200ms ease, opacity 200ms ease;
   }
 
   .mobile-menu {
     display: none;
-    padding: var(--space-5) var(--container-pad);
-    border-top: 1px solid var(--color-border);
+    background: var(--bg-white);
+    border-top: 2px solid var(--black);
+    padding: var(--s5) var(--pad);
   }
   .mobile-menu nav {
     display: flex;
     flex-direction: column;
-    gap: var(--space-4);
+    gap: var(--s4);
+    margin-bottom: var(--s5);
+    border-bottom: 1px solid var(--border-light);
+    padding-bottom: var(--s5);
   }
-  .mobile-menu a {
+  .mobile-menu nav a {
     font-size: var(--text-base);
-    color: var(--color-text-muted);
+    font-weight: 500;
+    color: var(--text-mid);
   }
-  .mobile-menu .btn { align-self: flex-start; margin-top: var(--space-2); }
-
+  .mobile-actions {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s3);
+    align-items: flex-start;
+    padding-top: var(--s4);
+  }
   .mobile-menu.is-open { display: block; }
 
-  @media (max-width: 640px) {
-    .navbar-links,
-    .navbar-cta { display: none; }
-    .navbar-burger { display: flex; }
+  @media (max-width: 700px) {
+    .navbar-links, .navbar-actions { display: none; }
+    .burger { display: flex; }
   }
 </style>
 
 <script>
-  const burger = document.querySelector('.navbar-burger') as HTMLButtonElement;
+  const burger = document.querySelector('.burger') as HTMLButtonElement;
   const menu   = document.getElementById('mobile-menu');
   burger?.addEventListener('click', () => {
     const open = menu?.classList.toggle('is-open');

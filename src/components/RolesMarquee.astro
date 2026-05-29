@@ -15,11 +15,11 @@ const { roles } = Astro.props;
 
 <style>
   .marquee-section {
-    padding-block: var(--space-7);
+    border-top: 2px solid var(--black);
+    border-bottom: 2px solid var(--black);
+    background: var(--yellow);
     overflow: hidden;
-    border-top: 1px solid var(--color-border);
-    border-bottom: 1px solid var(--color-border);
-    background: var(--color-bg-raised);
+    padding-block: var(--s5);
   }
 
   .marquee-outer { overflow: hidden; }
@@ -27,19 +27,21 @@ const { roles } = Astro.props;
   .role-pill {
     display: inline-flex;
     align-items: center;
-    padding: var(--space-2) var(--space-5);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-full);
+    padding: var(--s2) var(--s5);
+    border: 2px solid var(--black);
+    border-radius: var(--r-full);
     font-size: var(--text-sm);
-    color: var(--color-text-muted);
+    font-weight: 600;
+    color: var(--black);
     white-space: nowrap;
-    background: var(--color-bg-subtle);
+    background: var(--bg-white);
     flex-shrink: 0;
-    transition: color 200ms ease, border-color 200ms ease;
+    transition: background 150ms ease, color 150ms ease;
   }
 
   .marquee-track:hover .role-pill {
-    color: var(--color-text);
-    border-color: var(--color-text-faint);
+    background: var(--pink);
+    color: #fff;
+    border-color: var(--pink);
   }
 </style>

@@ -8,46 +8,38 @@ import MissionSection from '../components/MissionSection.astro';
 import RolesMarquee from '../components/RolesMarquee.astro';
 import ProgramsSection from '../components/ProgramsSection.astro';
 import MeetupsSection from '../components/MeetupsSection.astro';
-import TeamSection from '../components/TeamSection.astro';
+import AdminsSection from '../components/AdminsSection.astro';
 import PartnersSection from '../components/PartnersSection.astro';
 import DonateSection from '../components/DonateSection.astro';
 import FooterSection from '../components/FooterSection.astro';
 
 const siteEntries = await getCollection('site');
-const site = siteEntries[0]!.data;
-
-const admins     = await getCollection('admins');
-const activities = await getCollection('activities');
-const partners   = await getCollection('partners');
-const meetups    = await getCollection('meetups');
+const site        = siteEntries[0]!.data;
+const admins      = await getCollection('admins');
+const activities  = await getCollection('activities');
+const partners    = await getCollection('partners');
+const meetups     = await getCollection('meetups');
 ---
 
 <Base>
-  <Navbar slackUrl={site.community_slack_url} />
-
+  <Navbar
+    slackUrl={site.community_slack_url}
+    paystackUrl={site.paystack_url}
+  />
   <main>
     <HeroSection
       slackUrl={site.community_slack_url}
       paystackUrl={site.paystack_url}
       youtubeEmbedUrl={site.youtube_embed_url}
     />
-
     <StatsBar stats={site.stats} />
-
     <MissionSection mission={site.mission} slackUrl={site.community_slack_url} />
-
     <RolesMarquee roles={site.roles} />
-
     <ProgramsSection activities={activities} />
-
     <MeetupsSection meetups={meetups} />
-
-    <TeamSection admins={admins} />
-
+    <AdminsSection admins={admins} />
     <PartnersSection partners={partners} />
-
     <DonateSection paystackUrl={site.paystack_url} />
   </main>
-
   <FooterSection socials={site.socials} />
 </Base>

@@ -6,15 +6,17 @@ interface Partner {
 interface Props { partners: Partner[]; }
 const { partners } = Astro.props;
 
-const sponsors   = partners.filter(p => p.data.tier === 'gold' || p.data.tier === 'silver')
-  .sort((a, b) => (a.data.tier === 'gold' ? -1 : 1));
-const community  = partners.filter(p => !p.data.tier || p.data.tier === 'community');
+const tierOrder: Record<string, number> = { gold: 1, silver: 2, community: 3 };
+const sponsors  = partners
+  .filter(p => p.data.tier === 'gold' || p.data.tier === 'silver')
+  .sort((a, b) => (tierOrder[a.data.tier!] ?? 3) - (tierOrder[b.data.tier!] ?? 3));
+const community = partners.filter(p => !p.data.tier || p.data.tier === 'community');
 ---
 
 <section class="section" id="partners">
   <div class="container">
-    <p class="section-label">Partners</p>
-    <h2 class="section-heading partners-heading">Built with support from</h2>
+    <span class="eyebrow">Partners</span>
+    <h2 class="heading-serif partners-heading">Built with support</h2>
 
     {sponsors.length > 0 && (
       <div class="partner-group">
@@ -55,23 +57,27 @@ const community  = partners.filter(p => !p.data.tier || p.data.tier === 'communi
 </section>
 
 <style>
-  .partners-heading { margin-bottom: var(--space-8); }
+  .partners-heading {
+    font-size: clamp(var(--text-3xl), 5vw, var(--text-4xl));
+    margin-bottom: var(--s8);
+  }
 
-  .partner-group { margin-bottom: var(--space-8); }
+  .partner-group { margin-bottom: var(--s7); }
 
   .partner-group-label {
     font-size: var(--text-xs);
-    color: var(--color-text-faint);
-    text-transform: uppercase;
+    font-weight: 700;
     letter-spacing: 0.1em;
-    margin-bottom: var(--space-5);
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: var(--s5);
   }
 
   .partner-row {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: var(--space-7);
+    gap: var(--s7);
   }
 
   .partner-item img {
@@ -82,9 +88,7 @@ const community  = partners.filter(p => !p.data.tier || p.data.tier === 'communi
     opacity: 0.5;
     transition: filter 250ms ease, opacity 250ms ease;
   }
-
-  .partner-item:hover img,
-  .partner-item a:focus img {
+  .partner-item:hover img {
     filter: grayscale(0);
     opacity: 1;
   }

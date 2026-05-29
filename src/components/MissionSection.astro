@@ -1,37 +1,44 @@
 ---
-interface MissionItem {
-  heading: string;
-  description: string;
-  stat: string;
-}
+interface MissionItem { heading: string; description: string; stat: string; }
 interface Props { mission: MissionItem[]; slackUrl: string; }
 const { mission, slackUrl } = Astro.props;
 const nums = ['01', '02', '03', '04'];
 ---
 
 <section class="section" id="community">
-  <div class="container mission-grid">
-    <div class="mission-statement">
-      <p class="section-label">Mission</p>
-      <h2 class="mission-headline">
-        We exist because Africa's builders deserve a community that takes them seriously.
-      </h2>
-      <a href={slackUrl} target="_blank" rel="noopener noreferrer" class="btn btn-primary">
-        Join on Slack
-      </a>
-    </div>
+  <div class="container">
 
-    <ol class="mission-list">
-      {mission.map((item, i) => (
-        <li class="mission-item">
-          <span class="mission-num">{nums[i]}</span>
-          <div class="mission-body">
-            <h3 class="mission-item-heading">{item.heading}</h3>
-            <p class="mission-item-desc">{item.description}</p>
-          </div>
-        </li>
-      ))}
-    </ol>
+    <div class="mission-grid">
+
+      <!-- Left: sticky statement -->
+      <div class="mission-left">
+        <span class="eyebrow">Mission</span>
+        <h2 class="heading-serif mission-headline">
+          We exist because Africa's builders deserve a community that takes them seriously.
+        </h2>
+        <p class="mission-body">
+          DevCongress is a movement. No paywalls, no gatekeeping — just builders helping builders grow across Africa and beyond.
+        </p>
+        <a href={slackUrl} target="_blank" rel="noopener noreferrer" class="btn btn-primary">
+          Join the community
+        </a>
+      </div>
+
+      <!-- Right: numbered list -->
+      <ol class="mission-list">
+        {mission.map((item, i) => (
+          <li class="mission-item">
+            <div class="mission-num">{nums[i]}</div>
+            <div class="mission-content">
+              <h3 class="mission-item-heading">{item.heading}</h3>
+              <p class="mission-item-desc">{item.description}</p>
+              <span class="mission-stat">{item.stat}</span>
+            </div>
+          </li>
+        ))}
+      </ol>
+
+    </div>
   </div>
 </section>
 
@@ -39,70 +46,79 @@ const nums = ['01', '02', '03', '04'];
   .mission-grid {
     display: grid;
     grid-template-columns: 1fr;
-    gap: var(--space-9);
+    gap: var(--s9);
   }
 
   @media (min-width: 900px) {
     .mission-grid {
       grid-template-columns: 5fr 7fr;
-      gap: var(--space-8);
+      gap: var(--s10);
       align-items: start;
     }
   }
 
-  .mission-statement {
+  .mission-left {
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
-    gap: var(--space-6);
+    gap: var(--s5);
     position: sticky;
     top: 88px;
   }
 
   .mission-headline {
-    font-family: var(--font-display);
-    font-size: clamp(var(--text-xl), 3vw, var(--text-2xl));
-    font-weight: 700;
+    font-size: clamp(var(--text-2xl), 3vw, var(--text-3xl));
     line-height: var(--leading-snug);
-    color: var(--color-text);
+  }
+
+  .mission-body {
+    font-size: var(--text-base);
+    color: var(--text-mid);
+    line-height: var(--leading-body);
   }
 
   .mission-list {
     display: flex;
     flex-direction: column;
-    gap: 0;
+    border-top: 2px solid var(--black);
   }
 
   .mission-item {
-    display: flex;
-    gap: var(--space-5);
-    padding-block: var(--space-6);
-    border-bottom: 1px solid var(--color-border);
+    display: grid;
+    grid-template-columns: 40px 1fr;
+    gap: var(--s5);
+    padding-block: var(--s6);
+    border-bottom: 2px solid var(--black);
+    transition: background 150ms ease;
   }
-  .mission-item:first-child { border-top: 1px solid var(--color-border); }
+  .mission-item:hover { background: var(--yellow-bg); }
 
   .mission-num {
-    font-family: var(--font-display);
-    font-size: var(--text-sm);
-    font-weight: 700;
-    color: var(--color-accent);
-    flex-shrink: 0;
-    width: 2ch;
+    font-family: var(--font-serif);
+    font-size: var(--text-xl);
+    color: var(--pink);
+    line-height: 1.2;
     padding-top: 2px;
   }
 
-  .mission-body { display: flex; flex-direction: column; gap: var(--space-2); }
+  .mission-content { display: flex; flex-direction: column; gap: var(--s2); }
 
   .mission-item-heading {
-    font-size: var(--text-base);
-    font-weight: 600;
-    color: var(--color-text);
+    font-family: var(--font-serif);
+    font-size: var(--text-xl);
     line-height: var(--leading-snug);
+    color: var(--text);
   }
 
   .mission-item-desc {
     font-size: var(--text-sm);
-    color: var(--color-text-muted);
+    color: var(--text-mid);
     line-height: var(--leading-body);
+  }
+
+  .mission-stat {
+    font-size: var(--text-sm);
+    font-weight: 700;
+    color: var(--pink);
+    margin-top: var(--s1);
   }
 </style>

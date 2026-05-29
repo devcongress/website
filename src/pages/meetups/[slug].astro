@@ -14,38 +14,47 @@ const { meetup } = Astro.props;
 const { name, date, location, description, cover, photos } = meetup.data;
 
 function formatDate(iso: string): string {
-  const [year, month, day] = iso.split('-').map(Number);
-  return new Date(year, month - 1, day).toLocaleDateString('en-GB', {
+  const [y, mo, d] = iso.split('-').map(Number);
+  return new Date(y, mo - 1, d).toLocaleDateString('en-GB', {
     day: 'numeric', month: 'long', year: 'numeric',
   });
 }
 ---
 
 <Base title={`${name} — DevCongress`} description={description}>
-  <header class="meetup-nav">
-    <div class="container meetup-nav-inner">
-      <a href="/" class="meetup-logo">DevCongress</a>
-      <a href="/#meetups" class="back-link">&larr; All meetups</a>
+  <header class="mnav">
+    <div class="container mnav-inner">
+      <a href="/" class="mnav-logo">
+        <img src="/website/images/logo.png" alt="DevCongress" height="36" />
+      </a>
+      <a href="/#meetups" class="mnav-back">← All meetups</a>
     </div>
   </header>
 
   <main>
+    <!-- Hero image -->
     <div class="meetup-hero" style={`background-image: url('${cover}')`} role="img" aria-label={`${name} cover photo`}></div>
 
-    <div class="container meetup-body">
-      <div class="meetup-header">
+    <!-- Header info below image -->
+    <div class="meetup-intro">
+      <div class="container">
         <div class="meetup-meta">
-          <time datetime={date}>{formatDate(date)}</time>
-          <span aria-hidden="true">&middot;</span>
-          <span>{location}</span>
+          <time datetime={date} class="meetup-date">{formatDate(date)}</time>
+          <span class="meetup-location">{location}</span>
         </div>
-        <h1 class="meetup-title">{name}</h1>
-        <p class="meetup-description">{description}</p>
+        <h1 class="heading-serif meetup-title">{name}</h1>
+        <p class="meetup-desc">{description}</p>
       </div>
+    </div>
 
-      {photos.length > 0 && (
-        <section class="gallery-section">
-          <h2 class="gallery-heading">Photos</h2>
+    <!-- Gallery -->
+    {photos.length > 0 && (
+      <div class="gallery-section">
+        <div class="container">
+          <div class="gallery-header">
+            <span class="eyebrow">Gallery</span>
+            <span class="gallery-count">{photos.length} photos</span>
+          </div>
           <ul class="gallery-grid">
             {photos.map((photo, i) => (
               <li class="gallery-item">
@@ -58,122 +67,128 @@ function formatDate(iso: string): string {
               </li>
             ))}
           </ul>
-        </section>
-      )}
-    </div>
+        </div>
+      </div>
+    )}
   </main>
 </Base>
 
 <style>
-  .meetup-nav {
+  .mnav {
     position: sticky;
     top: 0;
     z-index: 100;
-    background: rgba(13,13,13,0.88);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border-bottom: 1px solid var(--color-border);
-    padding-block: var(--space-4);
+    background: var(--bg);
+    border-bottom: 2px solid var(--black);
+    padding-block: var(--s4);
   }
-
-  .meetup-nav-inner {
+  .mnav-inner {
     display: flex;
     align-items: center;
     justify-content: space-between;
   }
-
-  .meetup-logo {
-    font-family: var(--font-display);
-    font-size: var(--text-lg);
-    font-weight: 700;
-    color: var(--color-accent);
-  }
-
-  .back-link {
+  .mnav-back {
     font-size: var(--text-sm);
-    color: var(--color-text-muted);
+    font-weight: 500;
+    color: var(--text-mid);
     transition: color 150ms ease;
   }
-  .back-link:hover { color: var(--color-text); }
+  .mnav-back:hover { color: var(--pink); }
 
   .meetup-hero {
     width: 100%;
     aspect-ratio: 21 / 9;
     background-size: cover;
     background-position: center;
-    background-color: var(--color-bg-subtle);
+    background-color: var(--border-light);
+    border-bottom: 2px solid var(--black);
   }
+  @media (max-width: 640px) { .meetup-hero { aspect-ratio: 16 / 9; } }
 
-  @media (max-width: 640px) {
-    .meetup-hero { aspect-ratio: 16 / 9; }
-  }
-
-  .meetup-body { padding-block: var(--space-9); }
-
-  .meetup-header {
-    max-width: 720px;
-    margin-bottom: var(--space-9);
+  .meetup-intro {
+    padding-block: var(--s8);
+    border-bottom: 2px solid var(--black);
+    background: var(--bg-white);
   }
 
   .meetup-meta {
     display: flex;
     align-items: center;
-    gap: var(--space-2);
+    gap: var(--s4);
+    margin-bottom: var(--s4);
+  }
+
+  .meetup-date {
     font-size: var(--text-sm);
-    color: var(--color-text-muted);
-    margin-bottom: var(--space-4);
+    font-weight: 600;
+    color: var(--text-muted);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .meetup-location {
+    font-size: var(--text-sm);
+    font-weight: 700;
+    color: var(--pink);
+    background: var(--pink-light);
+    border: 1.5px solid var(--pink);
+    border-radius: var(--r-full);
+    padding: 2px var(--s3);
   }
 
   .meetup-title {
-    font-family: var(--font-display);
-    font-size: clamp(var(--text-2xl), 4vw, var(--text-3xl));
-    font-weight: 700;
-    line-height: var(--leading-tight);
-    color: var(--color-text);
-    margin-bottom: var(--space-4);
+    font-size: clamp(var(--text-3xl), 6vw, var(--text-4xl));
+    margin-bottom: var(--s4);
   }
 
-  .meetup-description {
+  .meetup-desc {
     font-size: var(--text-lg);
-    color: var(--color-text-muted);
+    color: var(--text-mid);
     line-height: var(--leading-body);
+    max-width: 680px;
   }
 
-  .gallery-heading {
-    font-family: var(--font-display);
-    font-size: var(--text-xl);
-    font-weight: 700;
-    color: var(--color-text);
-    margin-bottom: var(--space-6);
+  .gallery-section { padding-block: var(--s9); }
+
+  .gallery-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: var(--s6);
+  }
+
+  .gallery-count {
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--text-muted);
   }
 
   .gallery-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: var(--space-3);
+    gap: var(--s3);
+    border: 2px solid var(--black);
+    border-radius: var(--r-md);
+    overflow: hidden;
   }
-
-  @media (min-width: 720px) {
-    .gallery-grid { grid-template-columns: repeat(3, 1fr); }
-  }
-
-  @media (min-width: 1024px) {
-    .gallery-grid { grid-template-columns: repeat(4, 1fr); }
-  }
+  @media (min-width: 640px)  { .gallery-grid { grid-template-columns: repeat(3, 1fr); } }
+  @media (min-width: 1024px) { .gallery-grid { grid-template-columns: repeat(4, 1fr); } }
 
   .gallery-item {
-    border-radius: var(--radius-md);
-    overflow: hidden;
-    background: var(--color-bg-subtle);
     aspect-ratio: 4 / 3;
+    overflow: hidden;
+    background: var(--border-light);
   }
 
   .gallery-item img {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    transition: transform 300ms ease;
+    transition: transform 400ms ease, filter 300ms ease;
+    filter: grayscale(0.1);
   }
-
-  .gallery-item:hover img { transform: scale(1.04); }
+  .gallery-item:hover img {
+    transform: scale(1.06);
+    filter: grayscale(0);
+  }
 </style>

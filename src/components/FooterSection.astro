@@ -6,21 +6,25 @@ const year = new Date().getFullYear();
 ---
 
 <footer class="footer">
-  <div class="container footer-inner">
+  <div class="container footer-body">
 
     <div class="footer-brand">
-      <a href="/" class="footer-logo">DevCongress</a>
+      <a href="/" aria-label="DevCongress home">
+        <img src="/website/images/logo.png" alt="dev:congress{};" height="36" />
+      </a>
       <p class="footer-tagline">Africa's home for builders.</p>
-      <a href="mailto:hello@devcongress.org" class="footer-email">hello@devcongress.org</a>
+      <a href="mailto:hello@devcongress.org" class="footer-email">
+        hello@devcongress.org
+      </a>
     </div>
 
-    <nav class="footer-nav" aria-label="Footer">
+    <nav class="footer-nav" aria-label="Footer links">
       <p class="footer-nav-label">Links</p>
       <ul>
         <li><a href="#community">Community</a></li>
         <li><a href="#programs">Programs</a></li>
         <li><a href="#meetups">Meetups</a></li>
-        <li><a href="#team">Team</a></li>
+        <li><a href="#admins">Admins</a></li>
         <li><a href="#partners">Partners</a></li>
         <li><a href="#donate">Support Us</a></li>
         <li><a href="/website/coc/">Code of Conduct</a></li>
@@ -44,80 +48,85 @@ const year = new Date().getFullYear();
 
   <div class="footer-bottom">
     <div class="container footer-bottom-inner">
-      <p>&copy; {year} DevCongress. All rights reserved.</p>
-      <a href="/website/coc/" class="footer-coc-link">Code of Conduct</a>
+      <span>&copy; {year} DevCongress. Built by the community, for the community.</span>
+      <a href="/website/coc/">Code of Conduct</a>
     </div>
   </div>
 </footer>
 
 <style>
   .footer {
-    border-top: 1px solid var(--color-border);
-    background: var(--color-bg);
+    border-top: 2px solid var(--black);
+    background: var(--black);
+    color: #f0f0f0;
   }
 
-  .footer-inner {
+  .footer-body {
     display: grid;
     grid-template-columns: 1fr;
-    gap: var(--space-8);
-    padding-block: var(--space-9);
+    gap: var(--s8);
+    padding-block: var(--s9);
   }
-
   @media (min-width: 720px) {
-    .footer-inner { grid-template-columns: 2fr 1fr 1fr; }
+    .footer-body { grid-template-columns: 2fr 1fr 1fr; }
   }
 
-  .footer-logo {
-    font-family: var(--font-display);
-    font-size: var(--text-lg);
-    font-weight: 700;
-    color: var(--color-accent);
-    display: block;
-    margin-bottom: var(--space-3);
+  .footer-brand {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s4);
   }
+
+  /* Logo has its own yellow background — renders well on dark */
+  .footer-brand img { border-radius: 4px; }
 
   .footer-tagline {
     font-size: var(--text-sm);
-    color: var(--color-text-muted);
-    margin-bottom: var(--space-3);
+    color: #888;
   }
 
   .footer-email {
     font-size: var(--text-sm);
-    color: var(--color-text-muted);
+    color: #888;
     transition: color 150ms ease;
   }
-  .footer-email:hover { color: var(--color-accent); }
+  .footer-email:hover { color: var(--yellow); }
 
   .footer-nav-label {
     font-size: var(--text-xs);
-    color: var(--color-text-faint);
-    text-transform: uppercase;
+    font-weight: 700;
     letter-spacing: 0.1em;
-    margin-bottom: var(--space-4);
+    text-transform: uppercase;
+    color: var(--yellow);
+    margin-bottom: var(--s4);
   }
 
   .footer-nav ul,
   .footer-social ul {
     display: flex;
     flex-direction: column;
-    gap: var(--space-3);
+    gap: var(--s3);
   }
 
-  .footer-nav a,
-  .footer-social-link {
+  .footer-nav a {
     font-size: var(--text-sm);
-    color: var(--color-text-muted);
+    color: #888;
     transition: color 150ms ease;
     text-transform: capitalize;
   }
+  .footer-nav a:hover { color: #f0f0f0; }
 
-  .footer-nav a:hover,
-  .footer-social-link:hover { color: var(--color-text); }
+  .footer-social-link {
+    font-size: var(--text-sm);
+    color: #888;
+    text-transform: capitalize;
+    transition: color 150ms ease;
+  }
+  .footer-social-link:hover { color: var(--yellow); }
 
   .footer-bottom {
-    border-top: 1px solid var(--color-border);
-    padding-block: var(--space-5);
+    border-top: 1px solid #222;
+    padding-block: var(--s4);
   }
 
   .footer-bottom-inner {
@@ -125,14 +134,14 @@ const year = new Date().getFullYear();
     align-items: center;
     justify-content: space-between;
     flex-wrap: wrap;
-    gap: var(--space-3);
-  }
-
-  .footer-bottom p,
-  .footer-coc-link {
+    gap: var(--s3);
     font-size: var(--text-xs);
-    color: var(--color-text-faint);
+    color: #555;
   }
 
-  .footer-coc-link:hover { color: var(--color-text-muted); }
+  .footer-bottom-inner a {
+    color: #555;
+    transition: color 150ms ease;
+  }
+  .footer-bottom-inner a:hover { color: var(--yellow); }
 </style>

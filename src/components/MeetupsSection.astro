@@ -1,14 +1,7 @@
 ---
 interface Meetup {
   id: string;
-  data: {
-    name: string;
-    date: string;
-    location: string;
-    description: string;
-    cover: string;
-    photos: string[];
-  };
+  data: { name: string; date: string; location: string; description: string; cover: string; photos: string[]; };
 }
 interface Props { meetups: Meetup[]; }
 const { meetups } = Astro.props;
@@ -17,8 +10,8 @@ const sorted = [...meetups]
   .map((m) => ({ ...m, slug: m.id.replace(/\/meta$/, '') }));
 
 function formatDate(iso: string): string {
-  const [year, month, day] = iso.split('-').map(Number);
-  return new Date(year, month - 1, day).toLocaleDateString('en-GB', {
+  const [y, mo, d] = iso.split('-').map(Number);
+  return new Date(y, mo - 1, d).toLocaleDateString('en-GB', {
     day: 'numeric', month: 'long', year: 'numeric',
   });
 }
@@ -26,59 +19,64 @@ function formatDate(iso: string): string {
 
 <section class="section" id="meetups">
   <div class="container">
-    <p class="section-label">Meetups</p>
-    <h2 class="section-heading meetups-heading">Where we show up</h2>
+
+    <div class="meetups-header">
+      <span class="eyebrow">Meetups</span>
+      <h2 class="heading-serif meetups-heading">Where we show up</h2>
+    </div>
 
     <ul class="meetups-grid">
       {sorted.map((meetup) => (
-        <li class="meetup-card">
+        <li class="meetup-card card">
           <a href={`/website/meetups/${meetup.slug}/`} class="meetup-cover-link" aria-hidden="true" tabindex="-1">
-            <div class="meetup-cover" style={`background-image: url('${meetup.data.cover}')`}></div>
+            <div class="meetup-cover" style={`background-image: url('${meetup.data.cover}')`}>
+              <span class="meetup-photo-badge">{meetup.data.photos.length} photos</span>
+            </div>
           </a>
           <div class="meetup-body">
             <div class="meetup-meta">
               <time datetime={meetup.data.date}>{formatDate(meetup.data.date)}</time>
-              <span class="meetup-sep" aria-hidden="true">&middot;</span>
-              <span>{meetup.data.location}</span>
-              <span class="meetup-count">{meetup.data.photos.length} photos</span>
+              <span class="meetup-location">{meetup.data.location}</span>
             </div>
-            <h3 class="meetup-name">
+            <h3 class="heading-serif meetup-name">
               <a href={`/website/meetups/${meetup.slug}/`}>{meetup.data.name}</a>
             </h3>
             <p class="meetup-desc">{meetup.data.description}</p>
-            <a href={`/website/meetups/${meetup.slug}/`} class="meetup-link">
-              View photos &rarr;
+            <a href={`/website/meetups/${meetup.slug}/`} class="btn btn-outline meetup-cta">
+              View gallery →
             </a>
           </div>
         </li>
       ))}
     </ul>
+
   </div>
 </section>
 
 <style>
-  .meetups-heading { margin-bottom: var(--space-7); }
+  .meetups-header {
+    margin-bottom: var(--s8);
+    display: flex;
+    flex-direction: column;
+    gap: var(--s2);
+  }
+
+  .meetups-heading {
+    font-size: clamp(var(--text-3xl), 5vw, var(--text-4xl));
+  }
 
   .meetups-grid {
     display: grid;
     grid-template-columns: 1fr;
-    gap: var(--space-5);
+    gap: var(--s5);
   }
-
-  @media (min-width: 720px) {
-    .meetups-grid { grid-template-columns: 1fr 1fr; }
-  }
+  @media (min-width: 720px) { .meetups-grid { grid-template-columns: 1fr 1fr; } }
 
   .meetup-card {
-    background: var(--color-bg-raised);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-lg);
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    transition: border-color 200ms ease;
   }
-  .meetup-card:hover { border-color: var(--color-text-faint); }
 
   .meetup-cover-link { display: block; }
 
@@ -87,59 +85,63 @@ function formatDate(iso: string): string {
     aspect-ratio: 16 / 9;
     background-size: cover;
     background-position: center;
-    background-color: var(--color-bg-subtle);
+    background-color: var(--border-light);
+    position: relative;
+    display: flex;
+    align-items: flex-end;
+    padding: var(--s3);
+    transition: opacity 200ms ease;
+  }
+  .meetup-card:hover .meetup-cover { opacity: 0.9; }
+
+  .meetup-photo-badge {
+    font-size: var(--text-xs);
+    font-weight: 700;
+    background: var(--yellow);
+    color: var(--black);
+    border: 2px solid var(--black);
+    border-radius: var(--r-sm);
+    padding: 2px var(--s2);
   }
 
   .meetup-body {
-    padding: var(--space-5);
+    padding: var(--s5);
     display: flex;
     flex-direction: column;
-    gap: var(--space-3);
+    gap: var(--s3);
+    flex: 1;
+    border-top: 2px solid var(--black);
   }
 
   .meetup-meta {
     display: flex;
     align-items: center;
-    gap: var(--space-2);
+    justify-content: space-between;
     font-size: var(--text-xs);
-    color: var(--color-text-muted);
-    flex-wrap: wrap;
+    font-weight: 600;
+    color: var(--text-muted);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
   }
 
-  .meetup-sep { color: var(--color-text-faint); }
-
-  .meetup-count {
-    margin-left: auto;
-    background: var(--color-bg-subtle);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-full);
-    padding: 2px var(--space-3);
-  }
+  .meetup-location { color: var(--pink); }
 
   .meetup-name {
-    font-size: var(--text-base);
-    font-weight: 700;
-    color: var(--color-text);
+    font-size: var(--text-xl);
     line-height: var(--leading-snug);
   }
-  .meetup-name a:hover { color: var(--color-accent); }
+  .meetup-name a:hover { color: var(--pink); }
 
   .meetup-desc {
     font-size: var(--text-sm);
-    color: var(--color-text-muted);
+    color: var(--text-mid);
     line-height: var(--leading-body);
     display: -webkit-box;
     -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
     overflow: hidden;
+    flex: 1;
   }
 
-  .meetup-link {
-    font-size: var(--text-sm);
-    font-weight: 600;
-    color: var(--color-accent);
-    margin-top: auto;
-    transition: opacity 150ms ease;
-  }
-  .meetup-link:hover { opacity: 0.8; }
+  .meetup-cta { align-self: flex-start; margin-top: var(--s2); }
 </style>

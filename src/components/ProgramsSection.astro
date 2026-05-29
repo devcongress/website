@@ -13,101 +13,111 @@ interface Activity {
 interface Props { activities: Activity[]; }
 const { activities } = Astro.props;
 const sorted = [...activities].sort((a, b) => a.data.order - b.data.order);
-
-const statusLabel: Record<string, string> = {
-  active:   'Active',
-  ongoing:  'Ongoing',
-  upcoming: 'Upcoming',
-};
+const statusLabel: Record<string, string> = { active: 'Active', ongoing: 'Ongoing', upcoming: 'Upcoming' };
 ---
 
 <section class="section" id="programs">
   <div class="container">
-    <p class="section-label">Programs</p>
-    <h2 class="section-heading programs-heading">What we do</h2>
+
+    <div class="programs-header">
+      <span class="eyebrow">Programs</span>
+      <h2 class="heading-serif programs-heading">What we do</h2>
+      <p class="programs-sub">Community-built programs, open to everyone. No barriers.</p>
+    </div>
 
     <ul class="programs-grid">
       {sorted.map((activity) => (
-        <li class="program-card">
-          <div class="program-card-top">
+        <li class="program-card card">
+          <div class="program-top">
             <span
-              class={`badge badge-${activity.data.status}`}
-            >{statusLabel[activity.data.status]}</span>
-            <div
               class="program-dot"
-              style={`background: ${activity.data.color};`}
+              style={`background: ${activity.data.color}`}
               aria-hidden="true"
-            ></div>
+            ></span>
+            <span class={`badge badge-${activity.data.status}`}>
+              {statusLabel[activity.data.status]}
+            </span>
           </div>
-          <h3 class="program-title">
+          <h3 class="heading-serif program-title">
             <a href={activity.data.link}>{activity.data.title}</a>
           </h3>
           <p class="program-desc">{activity.data.description}</p>
+          <a href={activity.data.link} class="program-link">
+            Learn more →
+          </a>
         </li>
       ))}
     </ul>
+
   </div>
 </section>
 
 <style>
-  .programs-heading { margin-bottom: var(--space-7); }
+  .programs-header {
+    margin-bottom: var(--s8);
+    display: flex;
+    flex-direction: column;
+    gap: var(--s2);
+  }
+
+  .programs-heading {
+    font-size: clamp(var(--text-3xl), 5vw, var(--text-4xl));
+  }
+
+  .programs-sub {
+    font-size: var(--text-base);
+    color: var(--text-mid);
+  }
 
   .programs-grid {
     display: grid;
     grid-template-columns: 1fr;
-    gap: var(--space-4);
+    gap: var(--s5);
   }
-
-  @media (min-width: 640px) {
-    .programs-grid { grid-template-columns: 1fr 1fr; }
-  }
-
-  @media (min-width: 1024px) {
-    .programs-grid { grid-template-columns: repeat(3, 1fr); }
-  }
+  @media (min-width: 640px)  { .programs-grid { grid-template-columns: 1fr 1fr; } }
+  @media (min-width: 1024px) { .programs-grid { grid-template-columns: repeat(3, 1fr); } }
 
   .program-card {
-    background: var(--color-bg-raised);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-lg);
-    padding: var(--space-6);
+    padding: var(--s6);
     display: flex;
     flex-direction: column;
-    gap: var(--space-3);
-    transition: border-color 200ms ease, background 200ms ease;
+    gap: var(--s4);
   }
 
-  .program-card:hover {
-    border-color: var(--color-text-faint);
-    background: var(--color-bg-subtle);
-  }
-
-  .program-card-top {
+  .program-top {
     display: flex;
     align-items: center;
     justify-content: space-between;
   }
 
   .program-dot {
-    width: 8px;
-    height: 8px;
+    width: 12px;
+    height: 12px;
     border-radius: 50%;
+    border: 2px solid var(--black);
     flex-shrink: 0;
   }
 
   .program-title {
-    font-size: var(--text-base);
-    font-weight: 700;
-    color: var(--color-text);
+    font-size: var(--text-2xl);
     line-height: var(--leading-snug);
+    transition: color 150ms ease;
   }
-
-  .program-title a:hover { color: var(--color-accent); }
+  .program-title a:hover { color: var(--pink); }
 
   .program-desc {
     font-size: var(--text-sm);
-    color: var(--color-text-muted);
+    color: var(--text-mid);
     line-height: var(--leading-body);
     flex: 1;
   }
+
+  .program-link {
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--pink);
+    margin-top: auto;
+    transition: opacity 150ms ease;
+  }
+  .program-link:hover { opacity: 0.7; }
 </style>

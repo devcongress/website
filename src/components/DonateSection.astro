@@ -3,91 +3,115 @@ interface Props { paystackUrl: string; }
 const { paystackUrl } = Astro.props;
 ---
 
-<section class="section donate-section" id="donate">
+<section class="donate-section" id="donate">
   <div class="container">
-    <div class="donate-card">
-      <p class="section-label">Support</p>
-      <h2 class="donate-heading">Keep DevCongress running</h2>
-      <p class="donate-sub">
-        DevCongress is community-funded. Every contribution directly supports the people and programs that make this community work.
-      </p>
-      <ul class="donate-uses">
-        <li>
-          <span class="donate-dot" aria-hidden="true"></span>
-          Monthly meetups across Africa
-        </li>
-        <li>
-          <span class="donate-dot" aria-hidden="true"></span>
-          The Chale Code mentorship program
-        </li>
-        <li>
-          <span class="donate-dot" aria-hidden="true"></span>
-          Community tools and shared resources
-        </li>
-      </ul>
-      <a href={paystackUrl} target="_blank" rel="noopener noreferrer" class="btn btn-primary donate-btn">
-        Donate via Paystack
-      </a>
+    <div class="donate-inner">
+
+      <div class="donate-copy">
+        <span class="eyebrow">Support</span>
+        <h2 class="heading-serif donate-heading">
+          Keep DevCongress running.
+        </h2>
+        <p class="donate-body">
+          DevCongress is community-funded. No corporate backing, no paywalls. Your contribution keeps the lights on and the community growing.
+        </p>
+        <a href={paystackUrl} target="_blank" rel="noopener noreferrer" class="btn btn-primary">
+          Donate via Paystack
+        </a>
+      </div>
+
+      <div class="donate-uses card">
+        <div class="donate-uses-header">Your support funds</div>
+        <ul class="donate-list">
+          <li><span class="donate-num">01</span>Monthly meetups across Africa</li>
+          <li><span class="donate-num">02</span>The Chale Code mentorship program</li>
+          <li><span class="donate-num">03</span>Community tools and shared resources</li>
+          <li><span class="donate-num">04</span>The Echo Podcast and community content</li>
+        </ul>
+      </div>
+
     </div>
   </div>
 </section>
 
 <style>
-  .donate-section { background: var(--color-bg-raised); }
+  .donate-section {
+    padding-block: var(--section);
+    background: var(--yellow);
+    border-top: 2px solid var(--black);
+    border-bottom: 2px solid var(--black);
+  }
 
-  .donate-card {
-    max-width: 600px;
-    margin-inline: auto;
-    text-align: center;
+  .donate-inner {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--s8);
+  }
+  @media (min-width: 860px) {
+    .donate-inner {
+      grid-template-columns: 1fr 1fr;
+      align-items: start;
+      gap: var(--s10);
+    }
+  }
+
+  .donate-copy {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    gap: var(--space-5);
+    gap: var(--s5);
   }
 
   .donate-heading {
-    font-family: var(--font-display);
-    font-size: clamp(var(--text-xl), 3vw, var(--text-2xl));
-    font-weight: 700;
+    font-size: clamp(var(--text-3xl), 5vw, var(--text-4xl));
     line-height: var(--leading-tight);
-    color: var(--color-text);
   }
 
-  .donate-sub {
+  .donate-body {
     font-size: var(--text-base);
-    color: var(--color-text-muted);
+    color: var(--text-mid);
     line-height: var(--leading-body);
-    max-width: 480px;
+    max-width: 420px;
   }
 
   .donate-uses {
+    overflow: hidden;
+  }
+
+  .donate-uses-header {
+    padding: var(--s4) var(--s5);
+    background: var(--black);
+    color: var(--yellow);
+    font-size: var(--text-xs);
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .donate-list {
     display: flex;
     flex-direction: column;
-    gap: var(--space-3);
-    text-align: left;
-    width: 100%;
-    max-width: 400px;
-    background: var(--color-bg-subtle);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-md);
-    padding: var(--space-5);
   }
 
-  .donate-uses li {
+  .donate-list li {
     display: flex;
     align-items: center;
-    gap: var(--space-3);
+    gap: var(--s4);
+    padding: var(--s4) var(--s5);
+    border-bottom: 2px solid var(--black);
     font-size: var(--text-sm);
-    color: var(--color-text-muted);
+    font-weight: 500;
+    color: var(--text);
+    background: var(--bg-white);
+    transition: background 150ms ease;
   }
+  .donate-list li:last-child { border-bottom: none; }
+  .donate-list li:hover { background: var(--pink-light); }
 
-  .donate-dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: var(--color-accent);
+  .donate-num {
+    font-family: var(--font-serif);
+    font-size: var(--text-lg);
+    color: var(--pink);
     flex-shrink: 0;
+    line-height: 1;
   }
-
-  .donate-btn { margin-top: var(--space-2); }
 </style>

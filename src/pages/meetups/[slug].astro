@@ -80,6 +80,21 @@ const folderPhotos = photos.filter((photo) => photo.type === 'folder');
         </div>
       </div>
     </div>
+    
+    <!-- ── About ──────────────────────────────────────────── -->
+    <div class="about-section">
+      <div class="container about-inner">
+        <div>
+          <span class="eyebrow">About</span>
+          <p class="about-desc">{d.description}</p>
+        </div>
+        {status === 'past' && d.stream_url && !d.embed_stream && (
+          <a href={d.stream_url} target="_blank" rel="noopener noreferrer" class="btn btn-outline">
+            Watch recording →
+          </a>
+        )}
+      </div>
+    </div>
 
     <!-- ── Live: stream embed ─────────────────────────────── -->
     {status === 'live' && d.stream_url && d.embed_stream && (
@@ -125,21 +140,6 @@ const folderPhotos = photos.filter((photo) => photo.type === 'folder');
         </div>
       </div>
     )}
-
-    <!-- ── About ──────────────────────────────────────────── -->
-    <div class="about-section">
-      <div class="container about-inner">
-        <div>
-          <span class="eyebrow">About</span>
-          <p class="about-desc">{d.description}</p>
-        </div>
-        {status === 'past' && d.stream_url && !d.embed_stream && (
-          <a href={d.stream_url} target="_blank" rel="noopener noreferrer" class="btn btn-outline">
-            Watch recording →
-          </a>
-        )}
-      </div>
-    </div>
 
     {status === 'past' && d.stream_url && d.embed_stream && (
       <div class="stream-section">

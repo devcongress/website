@@ -82,7 +82,7 @@ const folderPhotos = photos.filter((photo) => photo.type === 'folder');
     </div>
 
     <!-- ── Live: stream embed ─────────────────────────────── -->
-    {status === 'live' && d.stream_url && (
+    {status === 'live' && d.stream_url && d.embed_stream && (
       <div class="stream-section">
         <div class="container">
           <span class="eyebrow live-eyebrow">● Streaming now</span>
@@ -94,6 +94,16 @@ const folderPhotos = photos.filter((photo) => photo.type === 'folder');
               allowfullscreen
             ></iframe>
           </div>
+        </div>
+      </div>
+    )}
+    {status === 'live' && d.stream_url && !d.embed_stream && (
+      <div class="stream-section">
+        <div class="container">
+          <span class="eyebrow live-eyebrow">● Streaming now</span>
+          <a href={d.stream_url} target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-stream-link">
+            Watch live →
+          </a>
         </div>
       </div>
     )}
@@ -123,13 +133,30 @@ const folderPhotos = photos.filter((photo) => photo.type === 'folder');
           <span class="eyebrow">About</span>
           <p class="about-desc">{d.description}</p>
         </div>
-        {status === 'past' && d.stream_url && (
+        {status === 'past' && d.stream_url && !d.embed_stream && (
           <a href={d.stream_url} target="_blank" rel="noopener noreferrer" class="btn btn-outline">
             Watch recording →
           </a>
         )}
       </div>
     </div>
+
+    {status === 'past' && d.stream_url && d.embed_stream && (
+      <div class="stream-section">
+        <div class="container">
+          <span class="eyebrow">Recording</span>
+          <div class="stream-wrap card">
+            <iframe
+              src={d.stream_url}
+              title={`${d.name} — Recording`}
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowfullscreen
+              loading="lazy"
+            ></iframe>
+          </div>
+        </div>
+      </div>
+    )}
 
     <!-- ── Speakers ───────────────────────────────────────── -->
     {d.speakers && d.speakers.length > 0 && (
@@ -357,6 +384,7 @@ const folderPhotos = photos.filter((photo) => photo.type === 'folder');
   .live-eyebrow { color: var(--pink); }
   .stream-wrap { overflow: hidden; margin-top: var(--s5); box-shadow: 8px 8px 0 var(--pink); }
   .stream-wrap iframe { width: 100%; aspect-ratio: 16/9; border: none; display: block; }
+  .btn-stream-link { margin-top: var(--s5); }
 
   /* ── Registration ────────────────────────────────────── */
   .reg-section { padding-block: var(--s8); border-bottom: 2px solid var(--black); background: var(--yellow); }

@@ -75,6 +75,7 @@ const meetups = defineCollection({
       map_url: z.string().url().nullable().optional(),
     }),
     stream_url: z.string().url().nullable().optional(),
+    embed_stream: z.boolean().optional().default(false),
     registration_url: z.string().url().nullable().optional(),
     speakers: z.array(meetupSpeakerSchema).optional(),
     schedule: z.array(scheduleItemSchema).optional(),

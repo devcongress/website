@@ -1,7 +1,9 @@
-name: Saviour Kirk Agbenyegah
-image: https://www.devcongress.org/images/savekirk.jpg
+﻿name: Saviour Kirk Agbenyegah
+avatar_seed: saviour-kirk
+image: null
 socials:
   - platform: x
     url: https://twitter.com/savekirk
   - platform: linkedin
     url: https://www.linkedin.com/in/savekirk
+

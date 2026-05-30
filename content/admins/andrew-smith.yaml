@@ -1,5 +1,5 @@
-name: Andrew Smith
-image: https://pbs.twimg.com/profile_images/1686721836795432960/Ghu7dKZC_400x400.jpg
+﻿name: Andrew Smith
+image: /website/images/admins/andrew-smith.jpg
 socials:
   - platform: x
     url: https://twitter.com/silentworks
@@ -7,3 +7,4 @@ socials:
     url: https://donielsmith.com
   - platform: github
     url: https://github.com/silentworks
+

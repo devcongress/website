@@ -1,7 +1,9 @@
-name: Claude Ayitey
-image: https://www.devcongress.org/images/claude.jpg
+﻿name: Claude Ayitey
+avatar_seed: claude-ayitey
+image: null
 socials:
   - platform: x
     url: https://twitter.com/mrayitey
   - platform: website
     url: https://ayitey.com
+

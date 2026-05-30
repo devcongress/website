@@ -1,5 +1,5 @@
-name: Francis Addai
-image: https://pbs.twimg.com/profile_images/1278660776232996864/YouNWmIr_400x400.jpg
+﻿name: Francis Addai
+image: /website/images/admins/francis-addai.jpg
 socials:
   - platform: x
     url: https://twitter.com/faddai
@@ -7,3 +7,4 @@ socials:
     url: https://francisaddai.com
   - platform: github
     url: https://github.com/francisaddai
+

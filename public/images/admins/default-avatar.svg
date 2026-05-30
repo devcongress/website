@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" role="img" aria-label="Default profile avatar">
+  <rect width="800" height="800" fill="#f1efe8"/>
+  <circle cx="400" cy="300" r="150" fill="#e6e1d3"/>
+  <path d="M140 690c26-141 138-230 260-230s234 89 260 230" fill="#e6e1d3"/>
+  <circle cx="340" cy="290" r="14" fill="#9b9281"/>
+  <circle cx="460" cy="290" r="14" fill="#9b9281"/>
+  <path d="M335 364c26 24 54 34 65 34s39-10 65-34" fill="none" stroke="#9b9281" stroke-width="14" stroke-linecap="round"/>
+  <rect x="28" y="28" width="744" height="744" fill="none" stroke="#111111" stroke-width="16"/>
+</svg>

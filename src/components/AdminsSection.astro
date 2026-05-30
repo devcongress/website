@@ -2,7 +2,7 @@
 interface Social { platform: string; url: string; }
 interface Admin {
   id: string;
-  data: { name: string; image: string; socials: Social[]; };
+  data: { name: string; image?: string | null; avatar_seed?: string; socials: Social[]; };
 }
 interface Props { admins: Admin[]; }
 const { admins } = Astro.props;
@@ -16,37 +16,47 @@ const sorted = [...admins].sort((a, b) => a.data.name.localeCompare(b.data.name)
     <p class="admins-intro">A volunteer-run community. No hierarchy, no corporate structure — just builders.</p>
 
     <ul class="admins-grid">
-      {sorted.map((admin) => (
-        <li class="admin-card card">
-          <div class="admin-img-wrap">
-            <img
-              src={admin.data.image}
-              alt={admin.data.name}
-              loading="lazy"
-              decoding="async"
-              class="admin-img"
-            />
-          </div>
-          <div class="admin-body">
-            <h3 class="admin-name">{admin.data.name}</h3>
-            <ul class="admin-socials">
-              {admin.data.socials.map((s) => (
-                <li>
-                  <a
-                    href={s.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="admin-social"
-                    aria-label={`${admin.data.name} on ${s.platform}`}
-                  >
-                    {s.platform}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </li>
-      ))}
+      {sorted.map((admin) => {
+        const naviiSeed = encodeURIComponent(admin.data.avatar_seed ?? admin.id);
+        const naviiSrc = `https://api.navii.dev/avatar/${naviiSeed}.png?size=512`;
+        const defaultSrc = '/website/images/admins/default-avatar.svg';
+        const src = admin.data.image ?? naviiSrc;
+
+        return (
+          <li class="admin-card card">
+            <div class="admin-img-wrap">
+              <img
+                src={src}
+                alt={admin.data.name}
+                loading="lazy"
+                decoding="async"
+                data-navii-src={naviiSrc}
+                data-default-src={defaultSrc}
+                onerror="if(this.dataset.fallback!=='1'){this.dataset.fallback='1';this.src=this.dataset.naviiSrc||this.dataset.defaultSrc||'';}else{this.src=this.dataset.defaultSrc||'';}"
+                class="admin-img"
+              />
+            </div>
+            <div class="admin-body">
+              <h3 class="admin-name">{admin.data.name}</h3>
+              <ul class="admin-socials">
+                {admin.data.socials.map((s) => (
+                  <li>
+                    <a
+                      href={s.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="admin-social"
+                      aria-label={`${admin.data.name} on ${s.platform}`}
+                    >
+                      {s.platform}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </li>
+        );
+      })}
     </ul>
   </div>
 </section>

@@ -1,6 +1,15 @@
 import { defineCollection, z } from 'astro:content';
 import { glob, file } from 'astro/loaders';
 
+const isUrl = (value: string) => {
+  try {
+    new URL(value);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
 const socialSchema = z.object({
   platform: z.enum(['x', 'linkedin', 'github', 'website', 'youtube', 'instagram', 'facebook', 'discord', 'slack']),
   url: z.string().url(),
@@ -10,7 +19,10 @@ const admins = defineCollection({
   loader: glob({ pattern: '**/*.yaml', base: './content/admins' }),
   schema: z.object({
     name: z.string().min(2).max(100),
-    image: z.string().url(),
+    avatar_seed: z.string().min(2).max(200).optional(),
+    image: z.string().min(1).refine((value) => value.startsWith('/') || isUrl(value), {
+      message: 'image must be an absolute path or full URL',
+    }).nullable().optional(),
     socials: z.array(socialSchema),
   }),
 });

@@ -1,5 +1,5 @@
-name: Bubunyo Nyavor
-image: https://pbs.twimg.com/media/FHvsk2MXMAQBovS?format=jpg&name=large
+﻿name: Bubunyo Nyavor
+image: /website/images/admins/bubunyo-nyavor.jpg
 socials:
   - platform: x
     url: https://twitter.com/KiddBubu
@@ -7,3 +7,4 @@ socials:
     url: https://5error.com
   - platform: github
     url: https://github.com/bubunyo
+

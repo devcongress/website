@@ -1,5 +1,5 @@
-name: Edem Kumodzi
-image: https://avatars.githubusercontent.com/u/676790?v=4
+﻿name: Edem Kumodzi
+image: /website/images/admins/edem-kumodzi.jpg
 socials:
   - platform: x
     url: https://twitter.com/edemkumodzi
@@ -9,3 +9,4 @@ socials:
     url: https://www.linkedin.com/in/edemkumodzi
   - platform: github
     url: https://github.com/edem
+

@@ -53,9 +53,20 @@ const sortedPartners = [...partners].sort((a, b) => a.data.name.localeCompare(b.
     display: block;
   }
 
+  .partner-item a,
+  .partner-item > img {
+    width: 150px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
   .partner-item img {
-    height: 56px;
+    max-width: 150px;
+    max-height: 60px;
     width: auto;
+    height: auto;
     object-fit: contain;
   }
 </style>

@@ -2,6 +2,7 @@
 dist/
 # generated types
 .astro/
+.nuxt/
 
 # dependencies
 node_modules/
@@ -22,3 +23,7 @@ pnpm-debug.log*
 
 # jetbrains setting folder
 .idea/
+
+# local tooling
+.wrangler/
+codealike.json

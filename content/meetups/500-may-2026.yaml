@@ -48,7 +48,9 @@ schedule:
     title: Old Mutual
     type: talk
     lead: null
-    resources: []
+    resources: 
+      - title: Startup Resources
+        url: https://ecosystem.oldmutual.com.gh
   - time: "1:25 PM"
     title: FIDCON partnership announcement & promo code
     type: talk

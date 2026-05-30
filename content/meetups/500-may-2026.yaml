@@ -1,19 +1,17 @@
 name: DevCongress May Meetup
 start: "2026-05-30T10:00:00+00:00"
-end:   "2026-05-30T15:00:00+00:00"
+end:   "2026-05-30T16:00:00+00:00"
 description: >
-  DevCongress Meetups are builder-focused gatherings for developers, engineers,
-  and tech enthusiasts who want to learn from real-world experiences and connect
-  with others building in the ecosystem. Whether you're an experienced engineer,
-  an early-career developer, or someone exploring new technologies, you'll find
-  practical insights and meaningful conversations.
+  Featuring product demos from Sankofa, OpenMirror, and JestryAI, a
+  microcontroller workshop with Manny, a session from Old Mutual, system
+  design discussion, FIDCON partnership announcement, and a panel discussion.
 cover: https://pbs.twimg.com/media/HG_xUr-WIAABl-e?format=jpg&name=medium
 
 location:
   name: buro.gh, Accra
   map_url: https://maps.app.goo.gl/n8u6C6TgdtW35db67
 
-stream_url: null
+stream_url: https://x.com/i/broadcasts/1aKbddMWOjaJX
 registration_url: https://lu.ma/3b0il40a
 
 speakers: []
@@ -24,34 +22,58 @@ schedule:
     type: networking
     lead: null
     resources: []
-  - time: "10:30 AM"
-    title: Practical session with microcontrollers
-    type: workshop
-    lead: null
-    resources: []
-  - time: "11:30 AM"
-    title: Tech talks
+  - time: "11:00 AM"
+    title: Welcome address
     type: talk
     lead: null
+    resources: []
+  - time: "11:10 AM"
+    title: "Product Demo: Sankofa"
+    type: talk
+    lead: null
+    resources: 
+      - title: Website 
+        url: https://sankofa.dev
+  - time: "11:30 AM"
+    title: "Manny — Demo with Microcontrollers"
+    type: workshop
+    lead: "@willofdaedalus"
     resources: []
   - time: "12:30 PM"
-    title: System Design
-    type: open_discussion
-    lead: null
-    resources: []
-  - time: "1:30 PM"
-    title: Product & tool demos
+    title: "Product Demo: OpenMirror"
     type: talk
     lead: null
     resources: []
-  - time: "2:00 PM"
-    title: Jampoll session
-    type: open_discussion
+  - time: "12:50 PM"
+    title: Old Mutual
+    type: talk
     lead: null
     resources: []
-  - time: "2:30 PM"
-    title: Pizza & networking
-    type: networking
+  - time: "1:25 PM"
+    title: FIDCON partnership announcement & promo code
+    type: talk
+    lead: null
+    resources: []
+  - time: "1:35 PM"
+    title: "Product Demo: JestryAI"
+    type: talk
+    lead: null
+    resources: []
+  - time: "1:50 PM"
+    title: System Design Session (Blacko's Detty December Concert)
+    type: open_discussion
+    lead: Tonny-Bright
+    resources: 
+      - title: Problem Discription
+        url: https://docs.google.com/document/d/1qGhdc7L_PoCPuEGaheQ5RT5C-ML9-BzzfVQjmKTfSTQ/edit?usp=sharing
+  - time: "2:50 PM"
+    title: DevCongress Support Announcement
+    type: talk
+    lead: null
+    resources: []
+  - time: "3:10 PM"
+    title: Panel Discussion
+    type: panel
     lead: null
     resources: []
 

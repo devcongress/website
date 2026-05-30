@@ -51,7 +51,7 @@ location:
 # ── STREAM / RECORDING ───────────────────────────────────────────────────────
 # OPTIONAL. One URL serves all three states:
 #   - upcoming: hidden
-#   - live:     shown as "Watch live →"
+#   - live:     shown as "Follow live →"
 #   - past:     shown as "Watch recording →"
 # Set to null or remove if not streaming.
 stream_url: null

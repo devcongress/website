@@ -1,7 +1,7 @@
 ---
 interface Partner {
   id: string;
-  data: { name: string; logo: string; url?: string; };
+  data: { name: string; logo: string; url?: string; backgroundColor?: string; };
 }
 interface Props { partners: Partner[]; }
 const { partners } = Astro.props;
@@ -18,9 +18,21 @@ const sortedPartners = [...partners].sort((a, b) => a.data.name.localeCompare(b.
         <li class="partner-item">
           {p.data.url
             ? <a href={p.data.url} target="_blank" rel="noopener noreferrer" aria-label={p.data.name}>
-                <img src={p.data.logo} alt={p.data.name} loading="lazy" />
+                <img
+                  src={p.data.logo}
+                  alt={p.data.name}
+                  loading="lazy"
+                  class={p.data.backgroundColor ? 'has-bg' : ''}
+                  style={p.data.backgroundColor ? 'background-color:' + p.data.backgroundColor : ''}
+                />
               </a>
-            : <img src={p.data.logo} alt={p.data.name} loading="lazy" />
+            : <img
+                src={p.data.logo}
+                alt={p.data.name}
+                loading="lazy"
+                class={p.data.backgroundColor ? 'has-bg' : ''}
+                style={p.data.backgroundColor ? 'background-color:' + p.data.backgroundColor : ''}
+              />
           }
         </li>
       ))}
@@ -68,5 +80,10 @@ const sortedPartners = [...partners].sort((a, b) => a.data.name.localeCompare(b.
     width: auto;
     height: auto;
     object-fit: contain;
+  }
+
+  .partner-item img.has-bg {
+    padding: 20px;
+    border-radius: var(--r-md);
   }
 </style>

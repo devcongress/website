@@ -2,7 +2,7 @@
 import { defineConfig } from 'astro/config';
 
 export default defineConfig({
-  site: 'https://devcongress.github.io',
-  base: '/website',
+  site: 'https://devcongress.org',
+  base: '/',
   output: 'static',
 });

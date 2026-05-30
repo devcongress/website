@@ -43,7 +43,7 @@ const earlier = sorted.slice(3);
 
 const statusConfig = {
   upcoming: { label: 'Upcoming', cta: 'Register →' },
-  live:     { label: '● Live',   cta: 'Watch live →' },
+  live:     { label: '● Live',   cta: 'Follow live →' },
   past:     { label: 'Past',     cta: 'View recap →' },
 };
 ---
@@ -55,7 +55,7 @@ const statusConfig = {
       <span class="eyebrow">Meetups</span>
       <div class="meetups-title-row">
         <h2 class="heading-serif meetups-heading">Where we show up</h2>
-        <a href="/website/meetups/" class="btn btn-outline meetups-all-btn">
+        <a href="/meetups/" class="btn btn-outline meetups-all-btn">
           All Meetups →
         </a>
       </div>
@@ -69,7 +69,7 @@ const statusConfig = {
           const photoCount = meetup.data.photos?.length ?? 0;
           return (
             <li class="meetup-card card">
-              <a href={`/website/meetups/${meetup.slug}/`} class="meetup-cover-link" aria-hidden="true" tabindex="-1">
+              <a href={`/meetups/${meetup.slug}/`} class="meetup-cover-link" aria-hidden="true" tabindex="-1">
                 <div class="meetup-cover" style={`background-image: url('${meetup.data.cover}')`}>
                   <span class={`meetup-status-badge status-${meetup.status}`}>{cfg.label}</span>
                   {photoCount > 0 && (
@@ -83,10 +83,10 @@ const statusConfig = {
                   <span class="meetup-location">{meetup.data.location.name}</span>
                 </div>
                 <h3 class="heading-serif meetup-name">
-                  <a href={`/website/meetups/${meetup.slug}/`}>{meetup.data.name}</a>
+                  <a href={`/meetups/${meetup.slug}/`}>{meetup.data.name}</a>
                 </h3>
                 <p class="meetup-desc">{meetup.data.description}</p>
-                <a href={`/website/meetups/${meetup.slug}/`} class="btn btn-outline meetup-cta">
+                <a href={`/meetups/${meetup.slug}/`} class="btn btn-outline meetup-cta">
                   {cfg.cta}
                 </a>
               </div>

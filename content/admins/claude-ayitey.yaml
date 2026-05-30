@@ -1,6 +1,5 @@
-﻿name: Claude Ayitey
-avatar_seed: claude-ayitey
-image: null
+name: Claude Ayitey
+image: https://api.navii.dev/avatar/milo?size=192&animated=1
 socials:
   - platform: x
     url: https://twitter.com/mrayitey

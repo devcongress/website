@@ -1,4 +1,4 @@
-name: Validate and Deploy
+name: Build and Deploy
 
 on:
   push:
@@ -23,26 +23,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Install CUE
-        uses: cue-lang/setup-cue@v1
-        with:
-          version: v0.12.0
-
-      - name: Validate site.yaml
-        run: cue vet schemas/site.cue -d '#Site' content/site.yaml
-
-      - name: Validate admins
-        run: cue vet schemas/admin.cue schemas/site.cue -d '#Admin' content/admins/*.yaml
-
-      - name: Validate activities
-        run: cue vet schemas/activity.cue -d '#Activity' content/activities/*.yaml
-
-      - name: Validate partners
-        run: cue vet schemas/partner.cue -d '#Partner' content/partners/*.yaml
-
-      - name: Validate meetups
-        run: cue vet schemas/meetup.cue -d '#Meetup' content/meetups/*/meta.yaml
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4

@@ -27,7 +27,7 @@ const sorted = [...meetups]
 
 const statusConfig = {
   upcoming: { label: 'Upcoming', cta: 'Register →' },
-  live:     { label: '● Live',   cta: 'Watch live →' },
+  live:     { label: '● Live',   cta: 'Follow live →' },
   past:     { label: 'Past',     cta: 'View recap →' },
 };
 ---
@@ -39,9 +39,9 @@ const statusConfig = {
   <header class="mnav">
     <div class="container mnav-inner">
       <a href="/" class="mnav-logo">
-        <img src="/website/images/logo.png" alt="DevCongress" height="36" />
+        <img src="/images/logo.png" alt="DevCongress" height="36" />
       </a>
-      <a href="/website/" class="mnav-back">← Home</a>
+      <a href="/" class="mnav-back">← Home</a>
     </div>
   </header>
 
@@ -63,7 +63,7 @@ const statusConfig = {
           const photoCount = meetup.data.photos?.length ?? 0;
           return (
             <li class="meetup-card card">
-              <a href={`/website/meetups/${meetup.slug}/`} class="meetup-cover-link" aria-hidden="true" tabindex="-1">
+              <a href={`/meetups/${meetup.slug}/`} class="meetup-cover-link" aria-hidden="true" tabindex="-1">
                 <div class="meetup-cover" style={`background-image: url('${meetup.data.cover}')`}>
                   <span class={`meetup-status-badge status-${meetup.status}`}>{cfg.label}</span>
                   {photoCount > 0 && (
@@ -77,10 +77,10 @@ const statusConfig = {
                   <span class="meetup-location">{meetup.data.location.name}</span>
                 </div>
                 <h2 class="heading-serif meetup-name">
-                  <a href={`/website/meetups/${meetup.slug}/`}>{meetup.data.name}</a>
+                  <a href={`/meetups/${meetup.slug}/`}>{meetup.data.name}</a>
                 </h2>
                 <p class="meetup-desc">{meetup.data.description}</p>
-                <a href={`/website/meetups/${meetup.slug}/`} class="btn btn-outline meetup-cta">
+                <a href={`/meetups/${meetup.slug}/`} class="btn btn-outline meetup-cta">
                   {cfg.cta}
                 </a>
               </div>

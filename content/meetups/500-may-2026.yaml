@@ -32,7 +32,7 @@ schedule:
     type: talk
     lead: null
     resources: 
-      - title: ProblemDiscussion 
+      - title: Website 
         url: https://sankofa.dev
   - time: "11:30 AM"
     title: "Manny — Demo with Microcontrollers"
@@ -64,7 +64,7 @@ schedule:
     type: open_discussion
     lead: Tonny-Bright
     resources: 
-      - title: ProblemDiscussion 
+      - title: Problem Discription
         url: https://docs.google.com/document/d/1qGhdc7L_PoCPuEGaheQ5RT5C-ML9-BzzfVQjmKTfSTQ/edit?usp=sharing
   - time: "2:50 PM"
     title: DevCongress Support Announcement

@@ -58,7 +58,9 @@ schedule:
     title: "Product Demo: JestryAI"
     type: talk
     lead: null
-    resources: []
+    resources: 
+      - title: Website
+        url: https://www.jestryai.com/
   - time: "1:50 PM"
     title: System Design Session (Blacko's Detty December Concert)
     type: open_discussion

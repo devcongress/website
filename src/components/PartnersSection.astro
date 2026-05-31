@@ -51,14 +51,14 @@ const sortedPartners = [...partners].sort((a, b) => a.data.name.localeCompare(b.
     flex-wrap: wrap;
     align-items: center;
     justify-content: flex-start;
-    column-gap: 24px;
-    row-gap: 24px;
+    column-gap: clamp(12px, 3vw, 24px);
+    row-gap: clamp(12px, 3vw, 24px);
     list-style: none;
     margin: 0;
     padding: 0;
   }
 
-  .partner-item { flex: 0 0 auto; }
+  .partner-item { flex: 0 1 auto; }
 
   .partner-item a,
   .partner-item img {
@@ -66,13 +66,15 @@ const sortedPartners = [...partners].sort((a, b) => a.data.name.localeCompare(b.
   }
 
   .partner-item img {
-    height: 100px;
+    max-height: 100px;
+    max-width: 100%;
+    height: auto;
     width: auto;
     object-fit: contain;
   }
 
   .partner-item img.has-bg {
-    padding: 20px;
+    padding: clamp(8px, 2vw, 20px);
     border-radius: var(--r-md);
   }
 </style>

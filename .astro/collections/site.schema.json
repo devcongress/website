@@ -1,0 +1,472 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "anyOf": [
+    {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "community_slack_url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "paystack_url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "youtube_embed_url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "stats": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "value": {
+                  "type": "string"
+                },
+                "label": {
+                  "type": "string"
+                },
+                "description": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "value",
+                "label"
+              ]
+            }
+          },
+          "socials": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "platform": {
+                  "type": "string",
+                  "enum": [
+                    "x",
+                    "linkedin",
+                    "github",
+                    "website",
+                    "youtube",
+                    "instagram",
+                    "facebook",
+                    "discord",
+                    "slack"
+                  ]
+                },
+                "url": {
+                  "type": "string",
+                  "format": "uri"
+                }
+              },
+              "required": [
+                "platform",
+                "url"
+              ]
+            }
+          },
+          "roles": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "mission_section": {
+            "type": "object",
+            "properties": {
+              "eyebrow": {
+                "type": "string"
+              },
+              "headline": {
+                "type": "string"
+              },
+              "body": {
+                "type": "string"
+              },
+              "cta": {
+                "type": "string"
+              },
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "heading": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "heading",
+                    "description"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "eyebrow",
+              "headline",
+              "body",
+              "cta",
+              "items"
+            ]
+          },
+          "donate_section": {
+            "type": "object",
+            "properties": {
+              "eyebrow": {
+                "type": "string"
+              },
+              "heading": {
+                "type": "string"
+              },
+              "body": {
+                "type": "string"
+              },
+              "cta_text": {
+                "type": "string"
+              },
+              "uses_header": {
+                "type": "string"
+              },
+              "uses_items": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": [
+              "eyebrow",
+              "heading",
+              "body",
+              "cta_text",
+              "uses_header",
+              "uses_items"
+            ]
+          },
+          "hero": {
+            "type": "object",
+            "properties": {
+              "eyebrow": {
+                "type": "string"
+              },
+              "headline": {
+                "type": "string"
+              },
+              "cta_primary": {
+                "type": "object",
+                "properties": {
+                  "text": {
+                    "type": "string"
+                  },
+                  "color": {
+                    "type": "string",
+                    "enum": [
+                      "pink",
+                      "outline",
+                      "white",
+                      "yellow"
+                    ]
+                  }
+                },
+                "required": [
+                  "text",
+                  "color"
+                ]
+              },
+              "cta_secondary": {
+                "type": "object",
+                "properties": {
+                  "text": {
+                    "type": "string"
+                  },
+                  "color": {
+                    "type": "string",
+                    "enum": [
+                      "pink",
+                      "outline",
+                      "white",
+                      "yellow"
+                    ]
+                  }
+                },
+                "required": [
+                  "text",
+                  "color"
+                ]
+              },
+              "video_label": {
+                "type": "string"
+              },
+              "video_live": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "eyebrow",
+              "headline",
+              "cta_primary",
+              "cta_secondary",
+              "video_label",
+              "video_live"
+            ]
+          }
+        },
+        "required": [
+          "community_slack_url",
+          "paystack_url",
+          "youtube_embed_url",
+          "stats",
+          "socials",
+          "roles",
+          "mission_section",
+          "donate_section",
+          "hero"
+        ]
+      }
+    },
+    {
+      "type": "object",
+      "properties": {
+        "$schema": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "community_slack_url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "paystack_url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "youtube_embed_url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "stats": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "value": {
+                  "type": "string"
+                },
+                "label": {
+                  "type": "string"
+                },
+                "description": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "value",
+                "label"
+              ]
+            }
+          },
+          "socials": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "platform": {
+                  "type": "string",
+                  "enum": [
+                    "x",
+                    "linkedin",
+                    "github",
+                    "website",
+                    "youtube",
+                    "instagram",
+                    "facebook",
+                    "discord",
+                    "slack"
+                  ]
+                },
+                "url": {
+                  "type": "string",
+                  "format": "uri"
+                }
+              },
+              "required": [
+                "platform",
+                "url"
+              ]
+            }
+          },
+          "roles": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "mission_section": {
+            "type": "object",
+            "properties": {
+              "eyebrow": {
+                "type": "string"
+              },
+              "headline": {
+                "type": "string"
+              },
+              "body": {
+                "type": "string"
+              },
+              "cta": {
+                "type": "string"
+              },
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "heading": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "heading",
+                    "description"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "eyebrow",
+              "headline",
+              "body",
+              "cta",
+              "items"
+            ]
+          },
+          "donate_section": {
+            "type": "object",
+            "properties": {
+              "eyebrow": {
+                "type": "string"
+              },
+              "heading": {
+                "type": "string"
+              },
+              "body": {
+                "type": "string"
+              },
+              "cta_text": {
+                "type": "string"
+              },
+              "uses_header": {
+                "type": "string"
+              },
+              "uses_items": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": [
+              "eyebrow",
+              "heading",
+              "body",
+              "cta_text",
+              "uses_header",
+              "uses_items"
+            ]
+          },
+          "hero": {
+            "type": "object",
+            "properties": {
+              "eyebrow": {
+                "type": "string"
+              },
+              "headline": {
+                "type": "string"
+              },
+              "cta_primary": {
+                "type": "object",
+                "properties": {
+                  "text": {
+                    "type": "string"
+                  },
+                  "color": {
+                    "type": "string",
+                    "enum": [
+                      "pink",
+                      "outline",
+                      "white",
+                      "yellow"
+                    ]
+                  }
+                },
+                "required": [
+                  "text",
+                  "color"
+                ]
+              },
+              "cta_secondary": {
+                "type": "object",
+                "properties": {
+                  "text": {
+                    "type": "string"
+                  },
+                  "color": {
+                    "type": "string",
+                    "enum": [
+                      "pink",
+                      "outline",
+                      "white",
+                      "yellow"
+                    ]
+                  }
+                },
+                "required": [
+                  "text",
+                  "color"
+                ]
+              },
+              "video_label": {
+                "type": "string"
+              },
+              "video_live": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "eyebrow",
+              "headline",
+              "cta_primary",
+              "cta_secondary",
+              "video_label",
+              "video_live"
+            ]
+          }
+        },
+        "required": [
+          "community_slack_url",
+          "paystack_url",
+          "youtube_embed_url",
+          "stats",
+          "socials",
+          "roles",
+          "mission_section",
+          "donate_section",
+          "hero"
+        ]
+      }
+    }
+  ]
+}

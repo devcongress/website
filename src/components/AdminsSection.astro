@@ -1,4 +1,6 @@
 ---
+import { Image } from 'astro:assets';
+
 interface Social { platform: string; url: string; }
 interface Admin {
   id: string;
@@ -19,9 +21,11 @@ const sorted = [...admins].sort((a, b) => a.data.name.localeCompare(b.data.name)
       {sorted.map((admin) => (
         <li class="admin-card card">
           <div class="admin-img-wrap">
-            <img
+            <Image
               src={admin.data.image}
               alt={admin.data.name}
+              width={400}
+              height={400}
               loading="lazy"
               decoding="async"
               class="admin-img"

@@ -1,6 +1,8 @@
 ---
 import { getCollection } from 'astro:content';
+import { Image } from 'astro:assets';
 import Base from '../../layouts/Base.astro';
+import logo from '../../assets/logo.png';
 
 export async function getStaticPaths() {
   const meetups = await getCollection('meetups');
@@ -72,7 +74,7 @@ const folderPhotos = photos.filter((photo) => photo.type === 'folder');
   <header class="mnav">
     <div class="container mnav-inner">
       <a href="/" class="mnav-logo">
-        <img src="/images/logo.png" alt="DevCongress" height="36" />
+        <Image src={logo} alt="DevCongress" height="36" />
       </a>
       <a href="/#meetups" class="mnav-back">← All meetups</a>
     </div>
@@ -188,7 +190,7 @@ const folderPhotos = photos.filter((photo) => photo.type === 'folder');
             {d.speakers.map((speaker) => (
               <li class="speaker-card card">
                 <div class="speaker-img-wrap">
-                  <img src={speaker.image} alt={speaker.name} loading="lazy" decoding="async" class="speaker-img" />
+                  <Image src={speaker.image} alt={speaker.name} width={400} height={400} loading="lazy" decoding="async" class="speaker-img" />
                 </div>
                 <div class="speaker-body">
                   <h3 class="speaker-name">{speaker.name}</h3>
@@ -293,7 +295,7 @@ const folderPhotos = photos.filter((photo) => photo.type === 'folder');
                   data-photo-alt={`${d.name} — photo ${i + 1}`}
                   aria-label={`Expand photo ${i + 1}`}
                 >
-                  <img src={photo.url} alt={`${d.name} — photo ${i + 1}`} loading="lazy" decoding="async" />
+                  <Image src={photo.url} alt={`${d.name} — photo ${i + 1}`} width={1600} height={1200} loading="lazy" decoding="async" />
                 </button>
               </li>
             ))}

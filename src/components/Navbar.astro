@@ -1,4 +1,7 @@
 ---
+import { Image } from 'astro:assets';
+import logo from '../assets/logo.png';
+
 interface Props { slackUrl: string; paystackUrl: string; }
 const { slackUrl, paystackUrl } = Astro.props;
 ---
@@ -6,7 +9,7 @@ const { slackUrl, paystackUrl } = Astro.props;
 <header class="navbar">
   <div class="container navbar-inner">
     <a href="/" class="navbar-logo" aria-label="DevCongress home">
-      <img src="/images/logo.png" alt="dev:congress{};" height="40" />
+      <Image src={logo} alt="dev:congress{};" height="40" />
     </a>
 
     <nav class="navbar-links" aria-label="Primary">

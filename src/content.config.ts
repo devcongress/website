@@ -36,6 +36,8 @@ const partners = defineCollection({
     logo: z.string().url(),
     url: z.string().url().optional(),
     backgroundColor: z.string().regex(/^#([A-Fa-f0-9]{8}|[A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/).optional(),
+    width: z.number().int().positive().optional(),
+    height: z.number().int().positive().optional(),
   }),
 });
 

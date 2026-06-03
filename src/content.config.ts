@@ -20,7 +20,7 @@ const activities = defineCollection({
   schema: z.object({
     title: z.string().min(2),
     description: z.string().min(10),
-    link: z.string().optional().refine(v => !v || v.startsWith('/') || v.startsWith('http'), {
+    link: z.string().optional().refine(v => !v || v.startsWith('/') || v.startsWith('http') || v.startsWith('slack'), {
       message: 'link must be a relative path or full URL',
     }),
     color: z.string().regex(/^#[0-9a-fA-F]{6}$/),

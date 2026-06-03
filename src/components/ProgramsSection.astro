@@ -90,11 +90,11 @@ const isExternal = (url?: string) => Boolean(url && url.startsWith('http'));
 
   .programs-grid {
     display: grid;
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     gap: var(--s5);
   }
-  @media (min-width: 640px)  { .programs-grid { grid-template-columns: 1fr 1fr; } }
-  @media (min-width: 1024px) { .programs-grid { grid-template-columns: repeat(3, 1fr); } }
+  @media (min-width: 640px)  { .programs-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (min-width: 1024px) { .programs-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 
   .program-card {
     padding: var(--s6);

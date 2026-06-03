@@ -1,4 +1,6 @@
 ---
+import { Image } from 'astro:assets';
+
 interface Social { platform: string; url: string; }
 interface Admin {
   id: string;
@@ -19,9 +21,11 @@ const sorted = [...admins].sort((a, b) => a.data.name.localeCompare(b.data.name)
       {sorted.map((admin) => (
         <li class="admin-card card">
           <div class="admin-img-wrap">
-            <img
+            <Image
               src={admin.data.image}
               alt={admin.data.name}
+              width={400}
+              height={400}
               loading="lazy"
               decoding="async"
               class="admin-img"
@@ -66,12 +70,12 @@ const sorted = [...admins].sort((a, b) => a.data.name.localeCompare(b.data.name)
 
   .admins-grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: var(--s4);
   }
-  @media (min-width: 500px)  { .admins-grid { grid-template-columns: repeat(3, 1fr); } }
-  @media (min-width: 768px)  { .admins-grid { grid-template-columns: repeat(4, 1fr); } }
-  @media (min-width: 1024px) { .admins-grid { grid-template-columns: repeat(6, 1fr); } }
+  @media (min-width: 500px)  { .admins-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+  @media (min-width: 768px)  { .admins-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+  @media (min-width: 1024px) { .admins-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
 
   .admin-card {
     display: flex;

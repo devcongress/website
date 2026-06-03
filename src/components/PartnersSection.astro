@@ -1,7 +1,9 @@
 ---
+import { Image } from 'astro:assets';
+
 interface Partner {
   id: string;
-  data: { name: string; logo: string; url?: string; backgroundColor?: string; };
+  data: { name: string; logo: string; url?: string; backgroundColor?: string; width?: number; height?: number; };
 }
 interface Props { partners: Partner[]; }
 const { partners } = Astro.props;
@@ -14,28 +16,35 @@ const sortedPartners = [...partners].sort((a, b) => a.data.name.localeCompare(b.
     <h2 class="heading-serif partners-heading">Built with support</h2>
 
     <ul class="partner-row">
-      {sortedPartners.map((p) => (
-        <li class="partner-item">
-          {p.data.url
-            ? <a href={p.data.url} target="_blank" rel="noopener noreferrer" aria-label={p.data.name}>
-                <img
+      {sortedPartners.map((p) => {
+        const dims = { width: p.data.width ?? 300, height: p.data.height ?? 100 };
+        return (
+          <li class="partner-item">
+            {p.data.url
+              ? <a href={p.data.url} target="_blank" rel="noopener noreferrer" aria-label={p.data.name}>
+                  <Image
+                    src={p.data.logo}
+                    alt={p.data.name}
+                    width={dims.width}
+                    height={dims.height}
+                    loading="lazy"
+                    class={p.data.backgroundColor ? 'has-bg' : ''}
+                    style={p.data.backgroundColor ? 'background-color:' + p.data.backgroundColor : ''}
+                  />
+                </a>
+              : <Image
                   src={p.data.logo}
                   alt={p.data.name}
+                  width={dims.width}
+                  height={dims.height}
                   loading="lazy"
                   class={p.data.backgroundColor ? 'has-bg' : ''}
                   style={p.data.backgroundColor ? 'background-color:' + p.data.backgroundColor : ''}
                 />
-              </a>
-            : <img
-                src={p.data.logo}
-                alt={p.data.name}
-                loading="lazy"
-                class={p.data.backgroundColor ? 'has-bg' : ''}
-                style={p.data.backgroundColor ? 'background-color:' + p.data.backgroundColor : ''}
-              />
-          }
-        </li>
-      ))}
+            }
+          </li>
+        );
+      })}
     </ul>
   </div>
 </section>
@@ -47,10 +56,9 @@ const sortedPartners = [...partners].sort((a, b) => a.data.name.localeCompare(b.
   }
 
   .partner-row {
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     align-items: center;
-    justify-content: flex-start;
     column-gap: 24px;
     row-gap: 24px;
     list-style: none;
@@ -58,7 +66,11 @@ const sortedPartners = [...partners].sort((a, b) => a.data.name.localeCompare(b.
     padding: 0;
   }
 
-  .partner-item { flex: 0 0 auto; }
+  @media (min-width: 500px)  { .partner-row { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+  @media (min-width: 768px)  { .partner-row { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+  @media (min-width: 1024px) { .partner-row { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
+
+  .partner-item { display: flex; align-items: center; justify-content: center; }
 
   .partner-item a,
   .partner-item img {
@@ -66,13 +78,22 @@ const sortedPartners = [...partners].sort((a, b) => a.data.name.localeCompare(b.
   }
 
   .partner-item img {
-    height: 100px;
+    display: block;
+    max-width: 100%;
+    max-height: 72px;
     width: auto;
+    height: auto;
     object-fit: contain;
   }
 
+  @media (min-width: 768px) {
+    .partner-item img {
+      max-height: 100px;
+    }
+  }
+
   .partner-item img.has-bg {
-    padding: 20px;
+    padding: 8px;
     border-radius: var(--r-md);
   }
 </style>

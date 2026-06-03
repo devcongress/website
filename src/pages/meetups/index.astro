@@ -1,6 +1,8 @@
 ---
 import { getCollection } from 'astro:content';
+import { Image } from 'astro:assets';
 import Base from '../../layouts/Base.astro';
+import logo from '../../assets/logo.png';
 
 const meetups = await getCollection('meetups');
 
@@ -39,7 +41,7 @@ const statusConfig = {
   <header class="mnav">
     <div class="container mnav-inner">
       <a href="/" class="mnav-logo">
-        <img src="/images/logo.png" alt="DevCongress" height="36" />
+        <Image src={logo} alt="DevCongress" height="36" />
       </a>
       <a href="/" class="mnav-back">← Home</a>
     </div>
@@ -114,10 +116,10 @@ const statusConfig = {
 
   .meetups-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: var(--s5);
   }
-  @media (max-width: 640px) { .meetups-grid { grid-template-columns: 1fr; } }
+  @media (max-width: 640px) { .meetups-grid { grid-template-columns: minmax(0, 1fr); } }
 
   /* ── Shared card styles ─────────────────────────────────── */
   .meetup-card { overflow: hidden; display: flex; flex-direction: column; }

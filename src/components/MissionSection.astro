@@ -65,13 +65,13 @@ const headlineParts = parseEmphasis(mission.headline);
 <style>
   .mission-grid {
     display: grid;
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     gap: var(--s7);
   }
 
   @media (min-width: 900px) {
     .mission-grid {
-      grid-template-columns: 5fr 7fr;
+      grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
       gap: var(--s10);
       align-items: start;
     }
@@ -81,6 +81,13 @@ const headlineParts = parseEmphasis(mission.headline);
     display: flex;
     flex-direction: column;
     gap: var(--s5);
+    text-align: center;
+  }
+
+  @media (min-width: 900px) {
+    .mission-left {
+      text-align: left;
+    }
   }
 
   @media (min-width: 900px) {
@@ -98,6 +105,7 @@ const headlineParts = parseEmphasis(mission.headline);
   .mission-headline {
     font-size: clamp(var(--text-2xl), 3vw, var(--text-3xl));
     line-height: var(--leading-snug);
+    max-width: 100%;
   }
 
   .mission-pink { color: var(--pink); }
@@ -105,12 +113,21 @@ const headlineParts = parseEmphasis(mission.headline);
   .btn-mission {
     padding: var(--s4) var(--s8);
     font-size: var(--text-lg);
+    align-self: stretch;
+    justify-content: center;
+  }
+
+  @media (min-width: 900px) {
+    .btn-mission {
+      align-self: flex-start;
+    }
   }
 
   .mission-body {
     font-size: var(--text-base);
     color: var(--text-mid);
     line-height: var(--leading-body);
+    max-width: 100%;
   }
 
   .mission-list {
@@ -121,7 +138,7 @@ const headlineParts = parseEmphasis(mission.headline);
 
   .mission-item {
     display: grid;
-    grid-template-columns: 40px 1fr;
+    grid-template-columns: 40px minmax(0, 1fr);
     gap: var(--s5);
     padding-block: var(--s6);
     border-bottom: 2px solid var(--black);

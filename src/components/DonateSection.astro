@@ -61,12 +61,12 @@ const { paystackUrl, donate } = Astro.props;
 
   .donate-inner {
     display: grid;
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     gap: var(--s8);
   }
   @media (min-width: 860px) {
     .donate-inner {
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
       align-items: start;
       gap: var(--s10);
     }

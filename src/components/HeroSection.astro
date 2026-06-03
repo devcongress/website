@@ -100,8 +100,14 @@ const colorClass: Record<string, string> = {
   }
 
   .btn-hero {
-    padding: var(--s5) var(--s9);
+    padding: var(--s4) var(--s7);
     font-size: var(--text-lg);
+  }
+
+  @media (min-width: 600px) {
+    .btn-hero {
+      padding: var(--s5) var(--s9);
+    }
   }
 
   .hero-video-wrap {

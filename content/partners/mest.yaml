@@ -2,3 +2,5 @@ name: MEST Africa
 logo: https://meltwater.org/wp-content/uploads/2024/01/MEST-Logo_landscape_03-e1704132329210-300x49.png
 url: https://meltwater.org/
 backgroundColor: "#ffffff"
+width: 300
+height: 49

@@ -69,10 +69,13 @@ const meetups = defineCollection({
     start: z.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}$/),
     end: z.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}$/),
     description: z.string().min(10),
-    cover: z.string().url(),
+    cover: z.string().refine(v => v.startsWith('/') || URL.canParse(v), {
+      message: 'cover must be a relative path or full URL',
+    }),
     location: z.object({
+      label: z.string().min(2).optional(),
       name: z.string().min(2),
-      map_url: z.string().url().nullable().optional(),
+      url: z.string().url().nullable().optional(),
     }),
     stream_url: z.string().url().nullable().optional(),
     embed_stream: z.boolean().optional().default(false),
@@ -80,7 +83,9 @@ const meetups = defineCollection({
     speakers: z.array(meetupSpeakerSchema).optional(),
     schedule: z.array(scheduleItemSchema).optional(),
     photos: z.array(z.object({
-      url: z.string().url(),
+      url: z.string().refine(v => v.startsWith('/') || URL.canParse(v), {
+        message: 'photo url must be a relative path or full URL',
+      }),
       type: z.enum(['image', 'folder']).default('image'),
     })).optional(),
     videos: z.array(z.object({

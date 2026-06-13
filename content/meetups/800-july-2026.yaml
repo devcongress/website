@@ -1,0 +1,23 @@
+name: DevCongress Quarterly Meetup [online]
+start: "2026-07-04T18:00:00+00:00"
+end:   "2026-07-04T21:00:00+00:00"
+description: >
+  A casual virtual quarterly meetup for DevCongress members to chat about what
+  is happening in the ecosystem, catch up, and share knowledge with each other.
+  No agenda, no slides, no structure. Just casual banter and real talk.
+cover: /images/quarterly-meetup-template.avif
+
+location:
+  label: Google Meet
+  name: Google Meet
+  url: https://luma.com/1e9h6c34
+
+stream_url: null
+registration_url: https://luma.com/1e9h6c34
+
+speakers: []
+
+schedule: []
+
+photos: []
+videos: []

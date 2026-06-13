@@ -1,0 +1,56 @@
+name: DevCongress April Quarterly Meetup
+start: "2026-04-04T18:00:00+00:00"
+end:   "2026-04-04T21:45:00+00:00"
+description: >
+  An informal online quarterly meetup for DevCongress members in Ghana and
+  across the diaspora. The April conversation centered on AI, coding, community
+  feedback, and how we can keep monthly meetups funded and useful.
+cover: /images/quarterly-april-meet-up.jpeg
+
+location:
+  label: Google Meet
+  name: Google Meet
+  url: null
+
+stream_url: null
+registration_url: null
+
+speakers: []
+
+schedule:
+  - time: "6:00 PM"
+    title: Greetings, weather check & community banter
+    type: networking
+    lead: null
+    resources: []
+  - time: "6:30 PM"
+    title: What's happening in the tech ecosystem
+    type: open_discussion
+    lead: null
+    resources: []
+  - time: "6:45 PM"
+    title: "Open discussion: AI, coding, hallucinations & Leetcode for AI"
+    type: open_discussion
+    lead: null
+    resources: []
+  - time: "8:00 PM"
+    title: "Community feedback: what DevCongress can improve"
+    type: open_discussion
+    lead: null
+    resources: []
+  - time: "8:45 PM"
+    title: Funding monthly meetups and community support
+    type: open_discussion
+    lead: null
+    resources: []
+  - time: "9:30 PM"
+    title: Open banter & close
+    type: networking
+    lead: null
+    resources: []
+
+photos:
+  - url: /images/quarterly-april-meet-up.jpeg
+  - url: /images/quarterly-april-meetup-2.jpeg
+
+videos: []

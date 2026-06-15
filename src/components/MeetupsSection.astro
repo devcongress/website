@@ -1,5 +1,5 @@
 ---
-interface MeetupLocation { name: string; map_url?: string | null; }
+interface MeetupLocation { label?: string; name: string; url?: string | null; }
 interface Meetup {
   id: string;
   data: {
@@ -80,7 +80,7 @@ const statusConfig = {
               <div class="meetup-body">
                 <div class="meetup-meta">
                   <time datetime={meetup.data.start}>{formatDate(meetup.data.start)}</time>
-                  <span class="meetup-location">{meetup.data.location.name}</span>
+                  <span class="meetup-location">{meetup.data.location.label ?? meetup.data.location.name}</span>
                 </div>
                 <h3 class="heading-serif meetup-name">
                   <a href={`/meetups/${meetup.slug}/`}>{meetup.data.name}</a>

@@ -19,8 +19,7 @@
       "minLength": 10
     },
     "cover": {
-      "type": "string",
-      "format": "uri"
+      "type": "string"
     },
     "location": {
       "type": "object",
@@ -231,8 +230,7 @@
         "type": "object",
         "properties": {
           "url": {
-            "type": "string",
-            "format": "uri"
+            "type": "string"
           },
           "type": {
             "default": "image",

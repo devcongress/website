@@ -27,9 +27,9 @@ name: "City Meetup — Month Year"
 # Start and end datetimes in ISO 8601 with timezone offset.
 # Format: "YYYY-MM-DDTHH:MM:SS+HH:MM"
 # Examples:
-#   Accra (GMT+0):  "2025-06-14T18:00:00+00:00"
-#   Lagos (GMT+1):  "2025-06-14T18:00:00+01:00"
-#   Nairobi (GMT+3): "2025-06-14T18:00:00+03:00"
+#   Accra (UTC+0):  "2025-06-14T18:00:00+00:00"
+#   Lagos (UTC+1):  "2025-06-14T18:00:00+01:00"
+#   Nairobi (UTC+3): "2025-06-14T18:00:00+03:00"
 start: "2025-01-01T18:00:00+00:00"
 end:   "2025-01-01T21:00:00+00:00"
 
@@ -37,16 +37,19 @@ end:   "2025-01-01T21:00:00+00:00"
 description: >
   A short description of this meetup.
 
-# Cover image URL (Google Photos, Cloudinary, etc.)
+# Cover image URL or site-local image path (Google Photos, Cloudinary, /images/file.jpg, etc.)
 cover: https://lh3.googleusercontent.com/your-cover-image
 
 # ── LOCATION ─────────────────────────────────────────────────────────────────
 location:
+  # Short venue label shown on cards and listing pages.
+  # Keep this compact, e.g. "Fido, Accra".
+  label: "Venue, City"
   # Venue display name
   name: "Venue Name, City"
   # OPTIONAL: Google Maps or any map URL.
   # Remove this line or set to null if no map link.
-  map_url: https://maps.google.com/?q=Venue+Name+City
+  url: https://maps.google.com/?q=Venue+Name+City
 
 # ── STREAM / RECORDING ───────────────────────────────────────────────────────
 # OPTIONAL. One URL serves all three states:

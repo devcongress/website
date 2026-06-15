@@ -1,0 +1,69 @@
+name: DevCongress June Meetup
+start: "2026-06-20T10:00:00+00:00"
+end:   "2026-06-20T15:30:00+00:00"
+description: >
+  A builder-focused meetup for developers, engineers, and tech enthusiasts to
+  learn from real-world experiences, connect with other builders, and discuss
+  software engineering, cloud systems, AI/ML, cybersecurity, and the work of
+  people actively building in the ecosystem.
+cover: https://images.lumacdn.com/uploads/cr/1a1af572-a563-4695-8382-2e3063121a4e.png
+
+location:
+  label: Fido, Accra
+  name: Fido, Opposite SSNIT Guest House, Julius Nyerere Rd, Accra
+  url: https://www.google.com/maps/search/?api=1&query=5.5704282%2C-0.1888184
+
+stream_url: null
+registration_url: https://luma.com/uic56yjo
+
+speakers: []
+
+schedule:
+  - time: "11:00 AM - 11:05 AM"
+    title: Welcome address
+    type: talk
+    lead: null
+    resources: []
+  - time: "11:10 AM - 11:55 AM"
+    title: Your fired employee still has access. Here is why.
+    type: talk
+    lead: Jesse
+    resources: []
+  - time: "12:00 PM - 12:30 PM"
+    title: "Selling SaaS to Ghanaian Businesses: What's Working So Far"
+    type: talk
+    lead: Seth
+    resources: []
+  - time: "12:35 PM - 12:45 PM"
+    title: Jampoll session
+    type: open_discussion
+    lead: null
+    resources: []
+  - time: "12:45 PM - 1:30 PM"
+    title: Design in the age of AI
+    type: talk
+    lead: Jeffrey Hinson
+    resources: []
+  - time: "1:35 PM - 2:35 PM"
+    title: System Design session
+    type: open_discussion
+    lead: null
+    resources: []
+  - time: "2:40 PM - 2:55 PM"
+    title: QuiverFood demo
+    type: talk
+    lead: Christian
+    resources: []
+  - time: "3:00 PM - 3:15 PM"
+    title: FlameLink demo
+    type: talk
+    lead: Codekeyz
+    resources: []
+  - time: "3:15 PM - 3:30 PM"
+    title: Trospot demo
+    type: talk
+    lead: Joseph
+    resources: []
+
+photos: []
+videos: []

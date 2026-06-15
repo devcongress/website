@@ -20,6 +20,7 @@ const now    = new Date();
 const start  = new Date(d.start);
 const end    = new Date(d.end);
 const status = now < start ? 'upcoming' : now <= end ? 'live' : 'past';
+const schedulePeriod = d.name.toLowerCase().includes('quarterly') ? 'evening' : 'day';
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString('en-GB', {
@@ -29,7 +30,7 @@ function formatDate(iso: string): string {
 function formatTime(iso: string): string {
   return new Date(iso).toLocaleTimeString('en-GB', {
     hour: '2-digit', minute: '2-digit', timeZone: 'Africa/Accra', timeZoneName: 'short',
-  });
+  }).replace('GMT', 'UTC');
 }
 
 // ── Timezone helpers ────────────────────────────────────────
@@ -42,7 +43,8 @@ function parseTime12h(str: string): { h: number; m: number } | null {
   return { h, m: +m[2] };
 }
 function scheduleToISO(dateISO: string, timeStr: string): string | null {
-  const p = parseTime12h(timeStr);
+  const startTime = timeStr.split(/\s[-–]\s/)[0];
+  const p = parseTime12h(startTime);
   if (!p) return null;
   const d = new Date(dateISO);
   return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), p.h, p.m)).toISOString();
@@ -90,8 +92,8 @@ const folderPhotos = photos.filter((photo) => photo.type === 'folder');
           <h1 class="heading-serif meetup-title">{d.name}</h1>
           <div class="meetup-hero-meta">
             <span data-utc={d.start} data-display="datetime">{formatDate(d.start)} · {formatTime(d.start)}</span>
-            {d.location.map_url
-              ? <a href={d.location.map_url} target="_blank" rel="noopener noreferrer" class="meetup-location-link">
+            {d.location.url
+              ? <a href={d.location.url} target="_blank" rel="noopener noreferrer" class="meetup-location-link">
                   📍 {d.location.name}
                 </a>
               : <span>📍 {d.location.name}</span>
@@ -232,7 +234,7 @@ const folderPhotos = photos.filter((photo) => photo.type === 'folder');
           <div class="schedule-header-row">
             <span class="eyebrow">{status === 'past' ? 'Recap' : 'Schedule'}</span>
             <div class="tz-switch" role="radiogroup" aria-label="Time zone">
-              <span class="tz-switch-label tz-switch-label--active" data-tz-label="event">Event Time (GMT+0)</span>
+              <span class="tz-switch-label tz-switch-label--active" data-tz-label="event">Event Time (UTC+0)</span>
               <button class="tz-switch-track" role="radio" aria-checked="true" data-tz="event">
                 <span class="tz-switch-knob"></span>
               </button>
@@ -240,7 +242,7 @@ const folderPhotos = photos.filter((photo) => photo.type === 'folder');
             </div>
           </div>
           <h2 class="heading-serif section-heading">
-            {status === 'past' ? 'How the day went' : 'How the day will go'}
+            {status === 'past' ? `How the ${schedulePeriod} went` : `How the ${schedulePeriod} will go`}
           </h2>
           <ol class="schedule-list">
             {scheduleItems.map((item) => (
@@ -705,7 +707,8 @@ const folderPhotos = photos.filter((photo) => photo.type === 'folder');
     }
     function formatTime(iso, tz) {
       const d = new Date(iso);
-      return d.toLocaleTimeString('en-GB', fmtOpts(tz, { hour: '2-digit', minute: '2-digit', timeZoneName: 'short' }));
+      return d.toLocaleTimeString('en-GB', fmtOpts(tz, { hour: '2-digit', minute: '2-digit', timeZoneName: 'short' }))
+        .replace('GMT', 'UTC');
     }
 
     function getUserTZLabel() {
@@ -713,7 +716,7 @@ const folderPhotos = photos.filter((photo) => photo.type === 'folder');
       const parts = new Intl.DateTimeFormat('en', {
         timeZone: tz, timeZoneName: 'shortOffset',
       }).formatToParts();
-      return parts.find(p => p.type === 'timeZoneName')?.value || tz;
+      return (parts.find(p => p.type === 'timeZoneName')?.value || tz).replace('GMT', 'UTC');
     }
 
     function applyTimezone(tz) {

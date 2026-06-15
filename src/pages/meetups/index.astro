@@ -74,7 +74,7 @@ const statusConfig = {
               <div class="meetup-body">
                 <div class="meetup-meta">
                   <time datetime={meetup.data.start}>{formatDate(meetup.data.start)}</time>
-                  <span class="meetup-location">{meetup.data.location.name}</span>
+                  <span class="meetup-location">{meetup.data.location.label ?? meetup.data.location.name}</span>
                 </div>
                 <h2 class="heading-serif meetup-name">
                   <a href={`/meetups/${meetup.slug}/`}>{meetup.data.name}</a>

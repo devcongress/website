@@ -12,8 +12,9 @@ description: >
 cover: https://pbs.twimg.com/media/HCaAt7HWsAAWOcT?format=jpg&name=large
 
 location:
+  label: Fido, Accra
   name: Fido, Opposite SSNIT Guest House, Julius Nyerere Rd, Accra
-  map_url: https://www.google.com/maps/search/?api=1&query=5.570918%2C-0.18906119999999998
+  url: https://www.google.com/maps/search/?api=1&query=5.570918%2C-0.18906119999999998
 
 stream_url: null
 registration_url: https://luma.com/jf8pjncl

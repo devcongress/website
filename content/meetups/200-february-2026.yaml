@@ -10,8 +10,9 @@ description: >
 cover: https://pbs.twimg.com/media/HAGkdjbWEAAJFba?format=jpg&name=large
 
 location:
+  label: Nyansa Square, Accra
   name: Nyansa Square.
-  map_url: https://maps.app.goo.gl/NbaFFBcy89Dehq8VA
+  url: https://maps.app.goo.gl/NbaFFBcy89Dehq8VA
 
 stream_url: null
 registration_url: https://luma.com/frh11t0y

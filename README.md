@@ -38,6 +38,17 @@ All commands are run from the root of the project, from a terminal:
 | `pnpm astro ...`       | Run CLI commands like `astro add`, `astro check` |
 | `pnpm astro -- --help` | Get help using the Astro CLI                     |
 
+## Meetup data
+
+Meetup pages are built from the DevCongress Community public API by default:
+
+```txt
+DEVCONGRESS_COMM_API_BASE_URL=https://devcongress-comm-api.elvis-yt211.workers.dev
+DEVCONGRESS_COMM_ASSET_BASE_URL=https://devcon-comm.pages.dev
+```
+
+If the API cannot be reached during `pnpm build`, the site falls back to `content/meetups/*.yaml` so deploys do not fail because of a temporary API outage.
+
 ## 👀 Want to learn more?
 
 Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).

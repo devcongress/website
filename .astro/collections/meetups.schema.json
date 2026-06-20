@@ -24,11 +24,15 @@
     "location": {
       "type": "object",
       "properties": {
+        "label": {
+          "type": "string",
+          "minLength": 2
+        },
         "name": {
           "type": "string",
           "minLength": 2
         },
-        "map_url": {
+        "url": {
           "anyOf": [
             {
               "type": "string",

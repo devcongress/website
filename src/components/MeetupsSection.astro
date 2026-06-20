@@ -1,20 +1,8 @@
 ---
-interface MeetupLocation { label?: string; name: string; url?: string | null; }
-interface Meetup {
-  id: string;
-  data: {
-    name: string;
-    start: string;
-    end: string;
-    location: MeetupLocation;
-    description: string;
-    cover: string;
-    photos?: string[];
-    registration_url?: string | null;
-    stream_url?: string | null;
-  };
-}
+import type { WebsiteMeetup } from '../lib/meetups';
+
 interface Props { meetups: Meetup[]; }
+type Meetup = WebsiteMeetup;
 const { meetups } = Astro.props;
 
 function getMeetupStatus(start: string, end: string) {
@@ -39,8 +27,6 @@ const sorted = [...meetups]
   }));
 
 const recent  = sorted.slice(0, 3);
-const earlier = sorted.slice(3);
-
 const statusConfig = {
   upcoming: { label: 'Upcoming', cta: 'Register →' },
   live:     { label: '● Live',   cta: 'Follow live →' },

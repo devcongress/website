@@ -40,11 +40,16 @@ All commands are run from the root of the project, from a terminal:
 
 ## Meetup data
 
-Meetup pages are built from the DevCongress Community public API by default:
+Meetup pages are built from the DevCongress Events Management public API:
 
 ```txt
-DEVCONGRESS_COMM_API_BASE_URL=https://devcongress-comm-api.elvis-yt211.workers.dev
-DEVCONGRESS_COMM_ASSET_BASE_URL=https://devcon-comm.pages.dev
+https://events-management.pages.dev/api/public/meetups
+```
+
+To point the static build at another Events Management deployment, set one build-time variable:
+
+```txt
+EVENTS_MANAGEMENT_ORIGIN=https://events-management.pages.dev
 ```
 
 If the API cannot be reached during `pnpm build`, the site falls back to `content/meetups/*.yaml` so deploys do not fail because of a temporary API outage.

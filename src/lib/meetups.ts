@@ -1,17 +1,9 @@
 import { getCollection, type CollectionEntry } from 'astro:content';
 
-const DEFAULT_API_BASE_URL = 'https://devcongress-comm-api.elvis-yt211.workers.dev';
-const DEFAULT_ASSET_BASE_URL = 'https://devcon-comm.pages.dev';
-
-const apiBaseUrl =
-  import.meta.env.DEVCONGRESS_COMM_API_BASE_URL ??
-  import.meta.env.PUBLIC_DEVCONGRESS_COMM_API_BASE_URL ??
-  DEFAULT_API_BASE_URL;
-
-const assetBaseUrl =
-  import.meta.env.DEVCONGRESS_COMM_ASSET_BASE_URL ??
-  import.meta.env.PUBLIC_DEVCONGRESS_COMM_ASSET_BASE_URL ??
-  DEFAULT_ASSET_BASE_URL;
+const DEFAULT_EVENTS_MANAGEMENT_ORIGIN = 'https://events-management.pages.dev';
+const eventsManagementOrigin =
+  import.meta.env.EVENTS_MANAGEMENT_ORIGIN ??
+  DEFAULT_EVENTS_MANAGEMENT_ORIGIN;
 
 let meetupsPromise: Promise<WebsiteMeetup[]> | undefined;
 
@@ -202,7 +194,7 @@ function mapPublicMeetup(meetup: PublicMeetupDto): WebsiteMeetup | null {
 }
 
 function getApiUrl(path: string): string {
-  return new URL(path, ensureTrailingSlash(apiBaseUrl)).toString();
+  return new URL(path, ensureTrailingSlash(eventsManagementOrigin)).toString();
 }
 
 function resolveAssetUrl(url: string, fromRemote: boolean): string {
@@ -210,7 +202,7 @@ function resolveAssetUrl(url: string, fromRemote: boolean): string {
     return url;
   }
 
-  return new URL(url, ensureTrailingSlash(assetBaseUrl)).toString();
+  return new URL(url, ensureTrailingSlash(eventsManagementOrigin)).toString();
 }
 
 function ensureTrailingSlash(url: string): string {

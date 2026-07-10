@@ -1,5 +1,12 @@
 allowBuilds:
   esbuild: true
   sharp: true
+  workerd: true
+
 minimumReleaseAgeExclude:
   - astro@6.4.2
+
+onlyBuiltDependencies:
+  - esbuild
+  - sharp
+  - workerd

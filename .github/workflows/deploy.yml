@@ -1,4 +1,4 @@
-name: Build and Deploy
+name: Build and Deploy GitHub Pages
 
 on:
   push:
@@ -7,6 +7,9 @@ on:
   pull_request:
     branches:
       - main
+  workflow_dispatch:
+  schedule:
+    - cron: '0 6 * * 1,4'
 
 permissions:
   contents: read
@@ -14,11 +17,11 @@ permissions:
   id-token: write
 
 concurrency:
-  group: pages
+  group: github-pages
   cancel-in-progress: false
 
 jobs:
-  validate-and-build:
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -36,20 +39,20 @@ jobs:
           cache: pnpm
 
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --frozen-lockfile
 
       - name: Build
         run: pnpm build
 
-      - name: Upload Pages artifact
-        if: github.ref == 'refs/heads/main'
+      - name: Upload GitHub Pages artifact
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
         uses: actions/upload-pages-artifact@v3
         with:
           path: dist/
 
   deploy:
-    if: github.ref == 'refs/heads/main'
-    needs: validate-and-build
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    needs: build
     runs-on: ubuntu-latest
     environment:
       name: github-pages

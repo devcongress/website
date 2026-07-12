@@ -1,4 +1,4 @@
-name: Build and Deploy Cloudflare Worker
+name: Cloudflare Worker
 
 on:
   push:
@@ -20,6 +20,7 @@ concurrency:
 
 jobs:
   validate-and-build:
+    name: Build static site
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -43,10 +44,12 @@ jobs:
         run: pnpm build
 
       - name: Validate Worker deployment
+        if: github.repository == 'devcongress/website' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
         run: pnpm wrangler deploy --dry-run
 
   deploy:
-    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    name: Deploy Cloudflare Worker
+    if: github.repository == 'devcongress/website' && github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
     needs: validate-and-build
     runs-on: ubuntu-latest
     environment:
@@ -72,10 +75,22 @@ jobs:
       - name: Build
         run: pnpm build
 
-      - name: Deploy static site
-        uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          wranglerVersion: '4.107.1'
-          command: deploy
+      - name: Check production deployment configuration
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
+            echo "::error::Production deployment is not configured."
+            exit 1
+          fi
+
+      - name: Deploy Cloudflare Worker
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          if ! pnpm wrangler deploy > "$RUNNER_TEMP/wrangler-deploy.log" 2>&1; then
+            echo "::error::Production deployment failed."
+            exit 1
+          fi

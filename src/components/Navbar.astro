@@ -1,4 +1,6 @@
 ---
+import OrganizerActions from './OrganizerActions.astro';
+
 interface Props { slackUrl: string; paystackUrl: string; }
 const { slackUrl, paystackUrl } = Astro.props;
 ---
@@ -16,6 +18,7 @@ const { slackUrl, paystackUrl } = Astro.props;
     </nav>
 
     <div class="navbar-actions">
+      <OrganizerActions />
       <a href={paystackUrl} target="_blank" rel="noopener noreferrer" class="btn btn-outline">
         Support Us
       </a>
@@ -36,6 +39,7 @@ const { slackUrl, paystackUrl } = Astro.props;
       <a href="#meetups">Meetups</a>
     </nav>
     <div class="mobile-actions">
+      <OrganizerActions />
       <a href={paystackUrl} target="_blank" rel="noopener noreferrer" class="btn btn-outline">Support Us</a>
       <a href={slackUrl} target="_blank" rel="noopener noreferrer" class="btn btn-primary">Join Slack</a>
     </div>

@@ -1,0 +1,150 @@
+---
+import Base from '../../layouts/Base.astro';
+---
+
+<Base
+  title="Organizer Sign In — DevCongress"
+  description="Sign in to the DevCongress organizer console."
+  robots="noindex, nofollow"
+>
+  <main class="organizer-login-page">
+    <section class="organizer-login-card" aria-labelledby="organizer-login-title">
+      <a href="/" class="organizer-login-logo" aria-label="DevCongress home">
+        <img src="/images/logo.png" alt="dev:congress{};" height="42" />
+      </a>
+      <p class="eyebrow">Organizer access</p>
+      <h1 id="organizer-login-title" class="heading-serif">Sign in with Google</h1>
+      <p class="organizer-login-copy">
+        Only Google accounts already added as DevCongress organizers can continue.
+      </p>
+      <p class="organizer-login-message" data-organizer-login-message role="status" aria-live="polite"></p>
+      <button type="button" class="btn btn-primary organizer-login-button" data-organizer-login-button>
+        Continue with Google →
+      </button>
+      <a href="/" class="organizer-login-back">← Back to website</a>
+    </section>
+  </main>
+</Base>
+
+<style>
+  .organizer-login-page {
+    display: grid;
+    min-height: 100vh;
+    place-items: center;
+    padding: var(--s6);
+    background: var(--bg);
+  }
+
+  .organizer-login-card {
+    width: min(100%, 520px);
+    padding: clamp(var(--s6), 7vw, var(--s8));
+    border: 2px solid var(--black);
+    border-radius: var(--r-lg);
+    background: var(--bg-white);
+    box-shadow: var(--shadow-solid-lg);
+  }
+
+  .organizer-login-logo { display: inline-block; margin-bottom: var(--s8); }
+  .organizer-login-logo img { display: block; width: auto; }
+  .organizer-login-card h1 { font-size: clamp(var(--text-3xl), 8vw, var(--text-4xl)); }
+  .organizer-login-copy { margin-top: var(--s4); color: var(--text-mid); }
+
+  .organizer-login-message {
+    min-height: 1.6em;
+    margin-top: var(--s5);
+    color: var(--text-mid);
+    font-size: var(--text-sm);
+    font-weight: 600;
+  }
+
+  .organizer-login-message.is-error { color: #b42318; }
+  .organizer-login-button { width: 100%; justify-content: center; margin-top: var(--s3); }
+  .organizer-login-button:disabled { cursor: wait; opacity: 0.65; }
+
+  .organizer-login-back {
+    display: inline-block;
+    margin-top: var(--s6);
+    color: var(--text-mid);
+    font-size: var(--text-sm);
+    font-weight: 600;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .organizer-login-back:hover { color: var(--pink); }
+  }
+</style>
+
+<script>
+  import { createClient } from '@supabase/supabase-js';
+
+  type AuthConfig = {
+    supabaseUrl: string;
+    supabaseAnonKey: string;
+  };
+
+  const button = document.querySelector<HTMLButtonElement>('[data-organizer-login-button]');
+  const message = document.querySelector<HTMLElement>('[data-organizer-login-message]');
+
+  function safeNext(value: string | null): string {
+    return (value === '/organizer-console' || value?.startsWith('/organizer-console/')) && !value.startsWith('//')
+      ? value
+      : '/organizer-console/';
+  }
+
+  function setMessage(value: string, isError = false) {
+    if (!message) return;
+    message.textContent = value;
+    message.classList.toggle('is-error', isError);
+  }
+
+  async function authConfig(): Promise<AuthConfig> {
+    const response = await fetch('/api/auth/config', {
+      credentials: 'same-origin',
+      headers: { Accept: 'application/json' },
+    });
+    const payload = await response.json() as AuthConfig & { error?: string };
+
+    if (!response.ok || !payload.supabaseUrl || !payload.supabaseAnonKey) {
+      throw new Error(payload.error ?? 'Organizer sign-in is not configured.');
+    }
+
+    return payload;
+  }
+
+  button?.addEventListener('click', async () => {
+    button.disabled = true;
+    setMessage('Opening Google sign-in…');
+
+    try {
+      const config = await authConfig();
+      const next = safeNext(new URLSearchParams(window.location.search).get('next'));
+      const supabase = createClient(config.supabaseUrl, config.supabaseAnonKey, {
+        auth: {
+          persistSession: true,
+          autoRefreshToken: false,
+          detectSessionInUrl: false,
+          flowType: 'pkce',
+          storage: window.sessionStorage,
+          storageKey: 'devcon-organizer-auth',
+        },
+      });
+      const callbackUrl = new URL('/api/auth/admin/callback', window.location.origin);
+      callbackUrl.searchParams.set('next', next);
+      window.sessionStorage.setItem('devcon-organizer-next', next);
+
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: callbackUrl.toString(),
+          scopes: 'email profile',
+          queryParams: { prompt: 'select_account' },
+        },
+      });
+
+      if (error) throw error;
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : 'Unable to start Google sign-in. Please try again.', true);
+      button.disabled = false;
+    }
+  });
+</script>

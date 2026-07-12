@@ -1,6 +1,7 @@
 ---
 import { getCollection } from 'astro:content';
 import Base from '../../layouts/Base.astro';
+import OrganizerActions from '../../components/OrganizerActions.astro';
 
 const meetups = await getCollection('meetups');
 
@@ -41,7 +42,10 @@ const statusConfig = {
       <a href="/" class="mnav-logo">
         <img src="/images/logo.png" alt="DevCongress" height="36" />
       </a>
-      <a href="/" class="mnav-back">← Home</a>
+      <div class="mnav-actions">
+        <OrganizerActions />
+        <a href="/" class="mnav-back">← Home</a>
+      </div>
     </div>
   </header>
 
@@ -98,7 +102,8 @@ const statusConfig = {
     background: var(--bg); border-bottom: 2px solid var(--black);
     padding-block: var(--s4);
   }
-  .mnav-inner { display: flex; align-items: center; justify-content: space-between; }
+  .mnav-inner { display: flex; align-items: center; justify-content: space-between; gap: var(--s3); }
+  .mnav-actions { display: inline-flex; align-items: center; gap: var(--s3); }
   .mnav-back  { font-size: var(--text-sm); font-weight: 500; color: var(--text-mid); transition: color 150ms; }
   .mnav-back:hover { color: var(--pink); }
 

@@ -1,0 +1,136 @@
+---
+import Base from '../../../layouts/Base.astro';
+---
+
+<Base
+  title="Completing Sign In — DevCongress"
+  description="Completing DevCongress organizer sign-in."
+  robots="noindex, nofollow"
+>
+  <main class="organizer-callback-page">
+    <section class="organizer-callback-card" aria-labelledby="organizer-callback-title">
+      <img src="/images/logo.png" alt="dev:congress{};" height="42" />
+      <p class="eyebrow">Organizer access</p>
+      <h1 id="organizer-callback-title" class="heading-serif" data-organizer-callback-title>Checking your account</h1>
+      <p class="organizer-callback-copy" data-organizer-callback-message aria-live="polite">
+        Finishing Google sign-in securely.
+      </p>
+      <a href="/organizer-console/login/" class="btn btn-outline organizer-callback-back" data-organizer-callback-back hidden>
+        Back to sign in
+      </a>
+    </section>
+  </main>
+</Base>
+
+<style>
+  .organizer-callback-page {
+    display: grid;
+    min-height: 100vh;
+    place-items: center;
+    padding: var(--s6);
+    background: var(--bg);
+  }
+
+  .organizer-callback-card {
+    width: min(100%, 520px);
+    padding: clamp(var(--s6), 7vw, var(--s8));
+    border: 2px solid var(--black);
+    border-radius: var(--r-lg);
+    background: var(--bg-white);
+    box-shadow: var(--shadow-solid-lg);
+  }
+
+  .organizer-callback-card img { display: block; width: auto; margin-bottom: var(--s8); }
+  .organizer-callback-card h1 { font-size: clamp(var(--text-3xl), 8vw, var(--text-4xl)); }
+  .organizer-callback-copy { margin-top: var(--s4); color: var(--text-mid); }
+  .organizer-callback-back { margin-top: var(--s6); }
+</style>
+
+<script>
+  import { createClient } from '@supabase/supabase-js';
+
+  type AuthConfig = {
+    supabaseUrl: string;
+    supabaseAnonKey: string;
+  };
+
+  const title = document.querySelector<HTMLElement>('[data-organizer-callback-title]');
+  const message = document.querySelector<HTMLElement>('[data-organizer-callback-message]');
+  const back = document.querySelector<HTMLAnchorElement>('[data-organizer-callback-back]');
+
+  function safeNext(value: string | null): string {
+    return (value === '/organizer-console' || value?.startsWith('/organizer-console/')) && !value.startsWith('//')
+      ? value
+      : '/organizer-console/';
+  }
+
+  function showError(value: string) {
+    if (title) title.textContent = 'Sign-in unavailable';
+    if (message) message.textContent = value;
+    if (back) back.hidden = false;
+  }
+
+  async function authConfig(): Promise<AuthConfig> {
+    const response = await fetch('/api/auth/config', {
+      credentials: 'same-origin',
+      headers: { Accept: 'application/json' },
+    });
+    const payload = await response.json() as AuthConfig & { error?: string };
+
+    if (!response.ok || !payload.supabaseUrl || !payload.supabaseAnonKey) {
+      throw new Error(payload.error ?? 'Organizer sign-in is not configured.');
+    }
+
+    return payload;
+  }
+
+  async function completeSignIn() {
+    const parameters = new URLSearchParams(window.location.search);
+    const callbackError = parameters.get('error');
+    const code = parameters.get('code');
+    const next = safeNext(parameters.get('next') ?? window.sessionStorage.getItem('devcon-organizer-next'));
+
+    if (callbackError || !code) {
+      showError(callbackError ?? 'Google did not return a sign-in code. Please try again.');
+      return;
+    }
+
+    try {
+      const config = await authConfig();
+      const supabase = createClient(config.supabaseUrl, config.supabaseAnonKey, {
+        auth: {
+          persistSession: true,
+          autoRefreshToken: false,
+          detectSessionInUrl: false,
+          flowType: 'pkce',
+          storage: window.sessionStorage,
+          storageKey: 'devcon-organizer-auth',
+        },
+      });
+      const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+      if (error || !data.session?.access_token) {
+        throw new Error('Google organizer sign-in could not be completed. Please try again.');
+      }
+
+      const response = await fetch('/api/auth/admin/exchange', {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ access_token: data.session.access_token }),
+      });
+      const payload = await response.json().catch(() => null) as { error?: string } | null;
+      await supabase.auth.signOut();
+
+      if (!response.ok) {
+        throw new Error(payload?.error ?? 'Google organizer sign-in could not be completed. Please try again.');
+      }
+
+      window.sessionStorage.removeItem('devcon-organizer-next');
+      window.location.replace(next);
+    } catch (error) {
+      showError(error instanceof Error ? error.message : 'Google organizer sign-in could not be completed. Please try again.');
+    }
+  }
+
+  void completeSignIn();
+</script>

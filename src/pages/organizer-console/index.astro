@@ -1,0 +1,94 @@
+---
+import Base from '../../layouts/Base.astro';
+import OrganizerActions from '../../components/OrganizerActions.astro';
+---
+
+<Base
+  title="Organizer Console — DevCongress"
+  description="DevCongress organizer access."
+  robots="noindex, nofollow"
+>
+  <header class="organizer-nav">
+    <div class="container organizer-nav-inner">
+      <a href="/" class="organizer-logo" aria-label="DevCongress home">
+        <img src="/images/logo.png" alt="dev:congress{};" height="36" />
+      </a>
+      <span class="organizer-label">Organizer Console</span>
+      <OrganizerActions />
+    </div>
+  </header>
+
+  <main class="organizer-main">
+    <section class="container organizer-intro" aria-labelledby="organizer-console-title">
+      <p class="eyebrow">Organizer access</p>
+      <h1 id="organizer-console-title" class="heading-serif">You’re in.</h1>
+      <p class="organizer-copy">
+        Your approved Google account has an active DevCongress organizer session.
+      </p>
+    </section>
+
+    <section class="container organizer-next" aria-labelledby="organizer-next-title">
+      <div class="organizer-next-card">
+        <span class="organizer-status">Access ready</span>
+        <h2 id="organizer-next-title" class="heading-serif">Organizer tools are moving here next.</h2>
+        <p>
+          This console is intentionally limited to access control for now. Event, talk, attendance, feedback, and community tools will move here one capability at a time.
+        </p>
+        <a href="/" class="btn btn-outline">← Back to website</a>
+      </div>
+    </section>
+  </main>
+</Base>
+
+<style>
+  .organizer-nav {
+    border-bottom: 2px solid var(--black);
+    background: var(--bg);
+  }
+
+  .organizer-nav-inner {
+    display: flex;
+    min-height: 68px;
+    align-items: center;
+    gap: var(--s4);
+  }
+
+  .organizer-logo img { display: block; height: 36px; width: auto; }
+  .organizer-label { margin-right: auto; font-size: var(--text-sm); font-weight: 700; }
+
+  .organizer-main { padding-block: var(--s9); }
+
+  .organizer-intro { max-width: 900px; }
+  .organizer-intro h1 { font-size: clamp(var(--text-4xl), 10vw, var(--text-5xl)); }
+  .organizer-copy { max-width: 44rem; margin-top: var(--s4); color: var(--text-mid); font-size: var(--text-lg); }
+
+  .organizer-next { margin-top: var(--s8); }
+  .organizer-next-card {
+    max-width: 760px;
+    padding: clamp(var(--s6), 6vw, var(--s8));
+    border: 2px solid var(--black);
+    border-radius: var(--r-lg);
+    background: var(--bg-white);
+    box-shadow: var(--shadow-solid-lg);
+  }
+  .organizer-next-card h2 { margin-top: var(--s4); font-size: var(--text-3xl); }
+  .organizer-next-card p { max-width: 42rem; margin-top: var(--s4); color: var(--text-mid); }
+  .organizer-next-card .btn { margin-top: var(--s6); }
+
+  .organizer-status {
+    display: inline-flex;
+    padding: 4px var(--s3);
+    border: 2px solid var(--black);
+    border-radius: var(--r-full);
+    background: var(--yellow);
+    font-size: var(--text-xs);
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  @media (max-width: 560px) {
+    .organizer-label { display: none; }
+    .organizer-nav-inner { justify-content: space-between; }
+  }
+</style>

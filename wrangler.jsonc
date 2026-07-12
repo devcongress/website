@@ -1,12 +1,27 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "devcongress-website",
-  "compatibility_date": "2026-07-10",
+  "compatibility_date": "2026-07-09",
+  "main": "./src/worker/index.ts",
+  "keep_vars": true,
+  "secrets": {
+    "required": [
+      "SUPABASE_URL",
+      "SUPABASE_ANON_KEY",
+      "SUPABASE_SERVICE_ROLE_KEY"
+    ]
+  },
   "observability": {
     "enabled": true
   },
   "assets": {
     "directory": "./dist",
-    "html_handling": "auto-trailing-slash"
+    "html_handling": "auto-trailing-slash",
+    "binding": "ASSETS",
+    "run_worker_first": [
+      "/api/auth/*",
+      "/organizer-console",
+      "/organizer-console/*"
+    ]
   }
 }

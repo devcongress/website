@@ -1,0 +1,93 @@
+<div class="organizer-actions" data-organizer-actions>
+  <a href="/organizer-console/login/" class="organizer-link" data-organizer-link>Organizer</a>
+  <button type="button" class="organizer-signout" data-organizer-signout hidden>Sign out</button>
+</div>
+
+<style>
+  .organizer-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s2);
+  }
+
+  .organizer-link,
+  .organizer-signout {
+    min-height: 36px;
+    padding: 0 var(--s3);
+    border: 2px solid var(--black);
+    border-radius: var(--r-full);
+    background: var(--bg-white);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: var(--text-xs);
+    font-weight: 700;
+    line-height: 1;
+    transition: transform 150ms cubic-bezier(0.4, 0, 0.2, 1), background-color 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .organizer-link {
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .organizer-signout {
+    color: var(--text-mid);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .organizer-link:hover,
+    .organizer-signout:hover {
+      transform: translateY(-1px);
+      background: var(--yellow);
+    }
+  }
+
+  .organizer-link:active,
+  .organizer-signout:active {
+    transform: scale(0.97);
+  }
+</style>
+
+<script>
+  type OrganizerSession = {
+    authenticated: boolean;
+  };
+
+  async function updateOrganizerActions(actions: HTMLElement) {
+    const link = actions.querySelector<HTMLAnchorElement>('[data-organizer-link]');
+    const signOut = actions.querySelector<HTMLButtonElement>('[data-organizer-signout]');
+    if (!link || !signOut) return;
+
+    try {
+      const response = await fetch('/api/auth/session', {
+        credentials: 'same-origin',
+        headers: { Accept: 'application/json' },
+      });
+      const session = await response.json() as OrganizerSession;
+
+      if (session.authenticated) {
+        link.href = '/organizer-console/';
+        signOut.hidden = false;
+      }
+    } catch {
+      // Keep the safe, signed-out link when session verification is unavailable.
+    }
+
+    signOut.addEventListener('click', async () => {
+      signOut.disabled = true;
+      try {
+        await fetch('/api/auth/logout', {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json' },
+        });
+      } finally {
+        window.location.assign('/');
+      }
+    });
+  }
+
+  document.querySelectorAll<HTMLElement>('[data-organizer-actions]').forEach((actions) => {
+    void updateOrganizerActions(actions);
+  });
+</script>

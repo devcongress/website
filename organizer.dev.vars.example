@@ -1,0 +1,5 @@
+# Set these locally only after the organizer hostname is confirmed.
+ORGANIZER_ORIGIN=https://organizer.example.devcongress.org
+SUPABASE_URL=
+SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=

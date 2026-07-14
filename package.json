@@ -9,11 +9,14 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
+    "build:organizer": "astro build --config astro.organizer.config.mjs",
+    "deploy:organizer:dry-run": "pnpm build:organizer && wrangler deploy --config wrangler.organizer.jsonc --dry-run",
     "deploy": "pnpm build && wrangler deploy",
     "deploy:dry-run": "pnpm build && wrangler deploy --dry-run",
     "astro": "astro"
   },
   "dependencies": {
+    "@supabase/supabase-js": "2.106.2",
     "astro": "^6.4.2",
     "zod": "^4.4.3"
   },

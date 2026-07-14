@@ -1,0 +1,55 @@
+---
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>Completing sign in | DevCongress</title>
+  </head>
+  <body>
+    <main><section><h1 data-title>Checking your account</h1><p data-message>Finishing Google sign-in securely.</p><a href="/" data-back hidden>Back to sign in</a></section></main>
+  </body>
+</html>
+
+<style>
+  :root { color: #e5e5e5; background: #1c1c1c; font-family: Inter, ui-sans-serif, system-ui, sans-serif; }
+  body { margin: 0; } main { display: grid; min-height: 100vh; place-items: center; padding: 24px; }
+  section { width: min(100%, 460px); padding: 40px; border: 1px solid #3a3a3a; border-radius: 12px; background: #242424; }
+  h1 { margin: 0; letter-spacing: -0.15px; font-size: clamp(32px, 8vw, 44px); line-height: 1.05; } p, a { color: #a1a1a1; line-height: 1.6; }
+</style>
+
+<script>
+  import { createClient } from '@supabase/supabase-js';
+
+  type AuthConfig = { supabaseUrl: string; supabaseAnonKey: string };
+  const title = document.querySelector<HTMLElement>('[data-title]');
+  const message = document.querySelector<HTMLElement>('[data-message]');
+  const back = document.querySelector<HTMLAnchorElement>('[data-back]');
+  function showError(value: string) { if (title) title.textContent = 'Sign-in unavailable'; if (message) message.textContent = value; if (back) back.hidden = false; }
+
+  async function completeSignIn() {
+    const parameters = new URLSearchParams(window.location.search);
+    const code = parameters.get('code');
+    const callbackError = parameters.get('error');
+    if (callbackError || !code) return showError(callbackError ?? 'Google did not return a sign-in code. Please try again.');
+    try {
+      const response = await fetch('/api/auth/config', { credentials: 'same-origin' });
+      const config = await response.json() as AuthConfig & { error?: string };
+      if (!response.ok || !config.supabaseUrl || !config.supabaseAnonKey) throw new Error(config.error ?? 'Organizer sign-in is not configured.');
+      const supabase = createClient(config.supabaseUrl, config.supabaseAnonKey, {
+        auth: { persistSession: true, autoRefreshToken: false, detectSessionInUrl: false, flowType: 'pkce', storage: window.sessionStorage, storageKey: 'devcon-organizer-auth' },
+      });
+      const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+      if (error || !data.session?.access_token) throw new Error('Google organizer sign-in could not be completed. Please try again.');
+      const exchange = await fetch('/api/auth/admin/exchange', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ access_token: data.session.access_token }) });
+      const payload = await exchange.json().catch(() => null) as { error?: string } | null;
+      await supabase.auth.signOut();
+      if (!exchange.ok) throw new Error(payload?.error ?? 'Google organizer sign-in could not be completed. Please try again.');
+      window.location.replace('/');
+    } catch (error) { showError(error instanceof Error ? error.message : 'Google organizer sign-in could not be completed. Please try again.'); }
+  }
+  void completeSignIn();
+</script>

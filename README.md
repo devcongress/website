@@ -55,6 +55,17 @@ Before the first production deployment, repository administrators must create th
 The first deployment should be validated at its Workers preview URL. Attach `devcongress.org` only after URL/content parity checks pass. GitHub Pages continues to deploy independently during the agreed soak window and remains the rollback path.
 
 Forks and fork-origin pull requests run the build jobs only. GitHub Pages artifacts, Workers dry-run validation, protected environments, and production deployments run only from `devcongress/website` itself.
+
+## Organizer access (not deployed)
+
+The public website deliberately contains no organizer route or navigation link. A separate organizer-only Astro build and Worker configuration are prepared for the future confirmed subdomain.
+
+- `pnpm build:organizer` produces the private site in `dist-organizer/`.
+- `wrangler.organizer.jsonc` defines the separate `devcongress-organizer` Worker and intentionally has no route until the hostname is confirmed.
+- `ORGANIZER_ORIGIN` must be set to that exact HTTPS origin before the Worker will serve auth requests.
+- After the initial script deployment creates the Worker, set `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY` as Cloudflare secrets. Do not put them in this repository.
+
+When the hostname is confirmed, add it as a Cloudflare custom domain, then add the matching Supabase redirect URL and Google OAuth authorized JavaScript origin.
 ## 👀 Want to learn more?
 
 Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).

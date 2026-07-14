@@ -1,0 +1,22 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "devcongress-organizer",
+  "compatibility_date": "2026-07-14",
+  "main": "./src/worker/index.ts",
+  "workers_dev": false,
+  "keep_vars": true,
+  "observability": {
+    "enabled": true
+  },
+  "assets": {
+    "directory": "./dist-organizer",
+    "html_handling": "auto-trailing-slash",
+    "binding": "ASSETS",
+    "run_worker_first": [
+      "/",
+      "/auth/callback",
+      "/auth/callback/",
+      "/api/auth/*"
+    ]
+  }
+}

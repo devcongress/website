@@ -41,6 +41,8 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build
+        env:
+          EVENTS_MANAGEMENT_ORIGIN: ${{ vars.EVENTS_MANAGEMENT_ORIGIN }}
         run: pnpm build
 
       - name: Validate Worker deployment
@@ -73,6 +75,8 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build
+        env:
+          EVENTS_MANAGEMENT_ORIGIN: ${{ vars.EVENTS_MANAGEMENT_ORIGIN }}
         run: pnpm build
 
       - name: Check production deployment configuration

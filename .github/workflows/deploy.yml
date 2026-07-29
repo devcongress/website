@@ -41,6 +41,8 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build
+        env:
+          EVENTS_MANAGEMENT_ORIGIN: ${{ vars.EVENTS_MANAGEMENT_ORIGIN }}
         run: pnpm build
 
       - name: Upload GitHub Pages artifact

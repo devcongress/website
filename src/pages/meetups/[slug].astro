@@ -1,9 +1,9 @@
 ---
-import { getCollection } from 'astro:content';
 import Base from '../../layouts/Base.astro';
+import { canEmbedMeetupMedia, getMeetups } from '../../lib/meetups';
 
 export async function getStaticPaths() {
-  const meetups = await getCollection('meetups');
+  const meetups = await getMeetups();
   return meetups.map((meetup) => ({
     params: { slug: meetup.id },
     props:  { meetup },
@@ -57,8 +57,10 @@ const scheduleItems = (d.schedule ?? []).map(item => ({
 const scheduleTypeLabel: Record<string, string> = {
   networking:     'Networking',
   talk:           'Talk',
+  product_demo:   'Product Demo',
   panel:          'Panel',
   workshop:       'Workshop',
+  system_design:  'System Design',
   open_discussion:'Open Discussion',
   break:          'Break',
 };
@@ -66,6 +68,14 @@ const scheduleTypeLabel: Record<string, string> = {
 const photos = d.photos ?? [];
 const imagePhotos = photos.filter((photo) => !photo.type || photo.type === 'image');
 const folderPhotos = photos.filter((photo) => photo.type === 'folder');
+
+function sharedLinkLabel(value: string): string {
+  try {
+    return new URL(value).hostname.replace(/^www\./, '');
+  } catch {
+    return 'Shared link';
+  }
+}
 ---
 
 <Base title={`${d.name} — DevCongress`} description={d.description}>
@@ -83,7 +93,8 @@ const folderPhotos = photos.filter((photo) => photo.type === 'folder');
   <main>
 
     <!-- ── Hero ───────────────────────────────────────────── -->
-    <div class="meetup-hero" style={`background-image: url('${d.cover}')`} role="img" aria-label={`${d.name} cover`}>
+    <div class="meetup-hero">
+      <img class="meetup-hero-image" src={d.cover} alt="" fetchpriority="high" />
       <div class="meetup-hero-overlay">
         <div class="container">
           <span class={`meetup-status status-${status}`}>
@@ -110,7 +121,7 @@ const folderPhotos = photos.filter((photo) => photo.type === 'folder');
           <span class="eyebrow">About</span>
           <p class="about-desc">{d.description}</p>
         </div>
-        {status === 'past' && d.stream_url && !d.embed_stream && (
+        {status === 'past' && d.stream_url && (!d.embed_stream || !canEmbedMeetupMedia(d.stream_url)) && (
           <a href={d.stream_url} target="_blank" rel="noopener noreferrer" class="btn btn-outline">
             Watch recording →
           </a>
@@ -119,7 +130,7 @@ const folderPhotos = photos.filter((photo) => photo.type === 'folder');
     </div>
 
     <!-- ── Live: stream embed ─────────────────────────────── -->
-    {status === 'live' && d.stream_url && d.embed_stream && (
+    {status === 'live' && canEmbedMeetupMedia(d.stream_url) && d.embed_stream && (
       <div class="stream-section">
         <div class="container">
           <span class="eyebrow live-eyebrow">● Streaming now</span>
@@ -127,14 +138,16 @@ const folderPhotos = photos.filter((photo) => photo.type === 'folder');
             <iframe
               src={d.stream_url}
               title={`${d.name} — Live stream`}
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+              sandbox="allow-scripts allow-same-origin allow-presentation"
+              referrerpolicy="strict-origin-when-cross-origin"
               allowfullscreen
             ></iframe>
           </div>
         </div>
       </div>
     )}
-    {status === 'live' && d.stream_url && !d.embed_stream && (
+    {status === 'live' && d.stream_url && (!d.embed_stream || !canEmbedMeetupMedia(d.stream_url)) && (
       <div class="stream-section">
         <div class="container">
           <span class="eyebrow live-eyebrow">● Streaming now</span>
@@ -163,7 +176,7 @@ const folderPhotos = photos.filter((photo) => photo.type === 'folder');
       </div>
     )}
 
-    {status === 'past' && d.stream_url && d.embed_stream && (
+    {status === 'past' && canEmbedMeetupMedia(d.stream_url) && d.embed_stream && (
       <div class="stream-section">
         <div class="container">
           <span class="eyebrow">Recording</span>
@@ -171,7 +184,9 @@ const folderPhotos = photos.filter((photo) => photo.type === 'folder');
             <iframe
               src={d.stream_url}
               title={`${d.name} — Recording`}
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+              sandbox="allow-scripts allow-same-origin allow-presentation"
+              referrerpolicy="strict-origin-when-cross-origin"
               allowfullscreen
               loading="lazy"
             ></iframe>
@@ -269,6 +284,17 @@ const folderPhotos = photos.filter((photo) => photo.type === 'folder');
                       ))}
                     </ul>
                   )}
+                  {d.series_type === 'quarterly' && (!item.resources || item.resources.length === 0) && item.shared_links && item.shared_links.length > 0 && (
+                    <ul class="schedule-resources">
+                      {item.shared_links.map((url) => (
+                        <li>
+                          <a href={url} target="_blank" rel="noopener noreferrer" class="resource-link">
+                            {sharedLinkLabel(url)} →
+                          </a>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </div>
               </li>
             ))}
@@ -341,15 +367,24 @@ const folderPhotos = photos.filter((photo) => photo.type === 'folder');
           <ul class="videos-grid">
             {d.videos.map((video) => (
               <li class="video-card card">
-                <div class="video-wrap">
-                  <iframe
-                    src={video.embed_url}
-                    title={video.title}
-                    loading="lazy"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowfullscreen
-                  ></iframe>
-                </div>
+                {canEmbedMeetupMedia(video.embed_url)
+                  ? <div class="video-wrap">
+                      <iframe
+                        src={video.embed_url}
+                        title={video.title}
+                        loading="lazy"
+                        allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+                        sandbox="allow-scripts allow-same-origin allow-presentation"
+                        referrerpolicy="strict-origin-when-cross-origin"
+                        allowfullscreen
+                      ></iframe>
+                    </div>
+                  : <div class="video-wrap video-wrap--link">
+                      <a href={video.embed_url} target="_blank" rel="noopener noreferrer" class="btn btn-outline">
+                        Open recording →
+                      </a>
+                    </div>
+                }
                 <p class="video-title">{video.title}</p>
               </li>
             ))}
@@ -375,16 +410,36 @@ const folderPhotos = photos.filter((photo) => photo.type === 'folder');
   /* ── Hero ────────────────────────────────────────────── */
   .meetup-hero {
     width: 100%; aspect-ratio: 21/9;
-    background-size: cover; background-position: center;
     background-color: var(--border-light);
     position: relative; display: flex; align-items: flex-end;
   }
-  @media (max-width: 640px) { .meetup-hero { aspect-ratio: 4/3; } }
+  .meetup-hero-image {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%; object-fit: cover;
+  }
 
   .meetup-hero-overlay {
     position: absolute; inset: 0;
     background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.3) 50%, transparent 100%);
     display: flex; align-items: flex-end; padding-bottom: var(--s8); width: 100%;
+  }
+
+  @media (max-width: 640px) {
+    .meetup-hero {
+      display: block;
+      aspect-ratio: auto;
+      background: var(--black);
+    }
+    .meetup-hero-image {
+      position: relative;
+      display: block;
+      aspect-ratio: 16/9;
+    }
+    .meetup-hero-overlay {
+      position: relative;
+      padding-block: var(--s6);
+      background: var(--black);
+    }
   }
 
   .meetup-status {
@@ -564,8 +619,10 @@ const folderPhotos = photos.filter((photo) => photo.type === 'folder');
   }
   .type-networking     { color: #059669; }
   .type-talk           { color: var(--pink); }
+  .type-product_demo   { color: #be185d; }
   .type-panel          { color: #7c3aed; }
   .type-workshop       { color: #d97706; }
+  .type-system_design  { color: #4338ca; }
   .type-open_discussion{ color: #0284c7; }
   .type-break          { color: var(--text-muted); }
 
@@ -639,6 +696,10 @@ const folderPhotos = photos.filter((photo) => photo.type === 'folder');
   .video-card { overflow: hidden; }
   .video-wrap { border-bottom: 2px solid var(--black); }
   .video-wrap iframe { width: 100%; aspect-ratio: 16/9; border: none; display: block; }
+  .video-wrap--link {
+    display: flex; min-height: 12rem; align-items: center; justify-content: center;
+    padding: var(--s5); background: var(--bg-white);
+  }
   .video-title { padding: var(--s4) var(--s5); font-size: var(--text-sm); font-weight: 600; color: var(--text); }
 </style>
 

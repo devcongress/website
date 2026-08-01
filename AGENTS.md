@@ -7,7 +7,7 @@
 
 ## Architecture
 
-- **Astro 6.4.2** static site, deployed to GitHub Pages via `.github/workflows/deploy.yml`
+- **Astro 7.1.5** static site, deployed to GitHub Pages via `.github/workflows/deploy.yml`
 - Content collections in `src/content.config.ts` with YAML data files in `content/<name>/`
   - Partners: `content/partners/*.yaml`
   - Admins: `content/admins/*.yaml`

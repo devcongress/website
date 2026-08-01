@@ -11,13 +11,14 @@ import MeetupsSection from '../components/MeetupsSection.astro';
 import AdminsSection from '../components/AdminsSection.astro';
 import PartnersSection from '../components/PartnersSection.astro';
 import DonateSection from '../components/DonateSection.astro';
+import { getMeetups } from '../lib/meetups';
 
 const siteEntries = await getCollection('site');
 const site        = siteEntries[0]!.data;
 const admins      = await getCollection('admins');
 const activities  = await getCollection('activities');
 const partners    = await getCollection('partners');
-const meetups     = await getCollection('meetups');
+const meetups     = await getMeetups();
 ---
 
 <Base>

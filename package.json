@@ -14,10 +14,10 @@
     "astro": "astro"
   },
   "dependencies": {
-    "astro": "^6.4.2",
+    "astro": "^7.1.5",
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "wrangler": "^4.107.1"
+    "wrangler": "^4.115.0"
   }
 }

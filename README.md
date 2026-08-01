@@ -38,6 +38,24 @@ All commands are run from the root of the project, from a terminal:
 | `pnpm astro ...`       | Run CLI commands like `astro add`, `astro check` |
 | `pnpm astro -- --help` | Get help using the Astro CLI                     |
 
+## Meetup data
+
+The homepage and meetup pages are generated from the Events Management public
+meetup feed during each static build:
+
+```txt
+https://em.devcongress.org/api/public/meetups
+```
+
+The adapter validates the versioned public response before generating routes.
+If the feed is unreachable, times out, returns an error, or fails validation,
+the build uses `content/meetups/*.yaml` instead. This keeps the public site
+deployable during a temporary upstream incident without exposing organizer
+credentials or connecting the browser directly to the operational system.
+
+Pushes to `main`, manual workflow runs, and the existing Monday/Thursday
+scheduled builds refresh the static meetup snapshot.
+
 ## Cloudflare Workers deployment
 
 This site remains fully static. `wrangler.jsonc` publishes Astro's `dist/` output through Cloudflare Workers Static Assets; it does not add a server entrypoint, API routes, authentication, or database bindings.

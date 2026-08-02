@@ -5,10 +5,14 @@ import FooterSection from '../components/FooterSection.astro';
 interface Props {
   title?: string;
   description?: string;
+  showFooter?: boolean;
+  noindex?: boolean;
 }
 const {
   title = "DevCongress | Africa's home for builders",
   description = "DevCongress is a tech community where developers, designers, founders, and makers across Africa connect, grow, and build together.",
+  showFooter = true,
+  noindex = false,
 } = Astro.props;
 
 const siteEntries = await getCollection('site');
@@ -22,7 +26,7 @@ const site        = siteEntries[0]!.data;
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
     <meta name="description" content={description} />
-    <meta name="robots" content="index, follow" />
+    <meta name="robots" content={noindex ? 'noindex, nofollow' : 'index, follow'} />
     <meta name="theme-color" content="#F5F2E8" />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
@@ -41,7 +45,7 @@ const site        = siteEntries[0]!.data;
   </head>
   <body>
     <slot />
-    <FooterSection socials={site.socials} />
+    {showFooter && <FooterSection socials={site.socials} />}
   </body>
 </html>
 

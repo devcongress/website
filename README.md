@@ -56,6 +56,17 @@ credentials or connecting the browser directly to the operational system.
 Pushes to `main`, manual workflow runs, and the daily `06:17 UTC` scheduled
 build refresh the static event snapshot.
 
+## Event calendar subscription
+
+`/events/calendar.ics` is a public iCalendar subscription generated from the
+same validated Events Management feed as `/events/`. It includes only published
+events that are still in progress or have not started at build time; past events
+remain available on the website but are not carried into subscribers' calendars.
+
+The Events page links the feed to Google Calendar. The feed is refreshed by the
+same push, manual, and daily builds described above. No organizer credentials or
+unmoderated submissions are included.
+
 ## Public event submission launch controls
 
 Event submissions use one fail-closed build-time flag. Add it as a GitHub

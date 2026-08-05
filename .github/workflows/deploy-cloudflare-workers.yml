@@ -52,7 +52,10 @@ jobs:
 
   deploy:
     name: Deploy Cloudflare Worker
-    if: github.repository == 'devcongress/website' && github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    if: >-
+      github.repository == 'devcongress/website' &&
+      github.ref == 'refs/heads/main' &&
+      (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
     needs: validate-and-build
     runs-on: ubuntu-latest
     environment:

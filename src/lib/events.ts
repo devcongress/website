@@ -141,6 +141,7 @@ export interface WebsiteEvent {
   organizerWebsite: string | null;
   coverUrl: string | null;
   detailsUrl: string | null;
+  updatedAt: string;
 }
 
 let eventsPromise: Promise<WebsiteEvent[]> | undefined;
@@ -243,6 +244,7 @@ async function fetchMeetupFallback(): Promise<WebsiteEvent[]> {
     organizerWebsite: "https://devcongress.org",
     coverUrl: meetup.data.cover,
     detailsUrl: `/meetups/${meetup.id}/`,
+    updatedAt: meetup.data.start,
   }));
 }
 
@@ -268,6 +270,7 @@ function mapPublicEvent(event: PublicEvent): WebsiteEvent {
     coverUrl: resolveOptionalWebsiteUrl(event.cover_url),
     detailsUrl:
       event.ownership === "devcongress" ? `/meetups/${event.slug}/` : null,
+    updatedAt: event.updated_at,
   };
 }
 

@@ -1,0 +1,349 @@
+---
+interface Props {
+  id: string;
+  name: string;
+  label: string;
+  required?: boolean;
+}
+
+const { id, name, label, required = false } = Astro.props;
+---
+
+<div class="date-time-field" data-date-time-picker={name}>
+  <label for={`${id}-trigger`}>
+    {label} {required && <span aria-hidden="true">*</span>}
+  </label>
+  <input
+    id={id}
+    name={name}
+    type="datetime-local"
+    class="native-date-time"
+    autocomplete="off"
+    required={required}
+    tabindex="-1"
+    aria-hidden="true"
+  />
+  <button
+    type="button"
+    id={`${id}-trigger`}
+    class="date-time-trigger"
+    aria-haspopup="dialog"
+    aria-expanded="false"
+    aria-required={required ? 'true' : undefined}
+  >
+    <span data-date-time-label>Choose date and time</span>
+    <span class="calendar-icon" aria-hidden="true">
+      <svg viewBox="0 0 20 20" fill="none">
+        <path d="M5.5 3.5v2M14.5 3.5v2M4 7.5h12M6 2.75h8a1.75 1.75 0 0 1 1.75 1.75v10.5A1.75 1.75 0 0 1 14 16.75H6A1.75 1.75 0 0 1 4.25 15V4.5A1.75 1.75 0 0 1 6 2.75Z" />
+      </svg>
+    </span>
+  </button>
+
+  <div class="date-time-panel" role="dialog" aria-label={`Choose ${label.toLowerCase()}`} hidden>
+    <div class="calendar-header">
+      <button type="button" data-previous-month aria-label="Previous month">
+        <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M12.5 4.5 7 10l5.5 5.5" /></svg>
+      </button>
+      <p data-month-label></p>
+      <button type="button" data-next-month aria-label="Next month">
+        <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M7.5 4.5 13 10l-5.5 5.5" /></svg>
+      </button>
+    </div>
+
+    <div class="calendar-body">
+      <div class="weekday-row" aria-hidden="true">
+        <span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span>
+      </div>
+      <div class="calendar-grid" data-calendar-grid></div>
+
+      <div class="time-row">
+        <div>
+          <strong>Time</strong>
+          <span>24 hour</span>
+        </div>
+        <div class="time-inputs">
+          <label>
+            <span class="sr-only">Hour</span>
+            <input type="text" inputmode="numeric" maxlength="2" value="09" data-hour aria-label="Hour, 00 to 23" />
+          </label>
+          <span aria-hidden="true">:</span>
+          <label>
+            <span class="sr-only">Minute</span>
+            <input type="text" inputmode="numeric" maxlength="2" value="00" data-minute aria-label="Minute, 00 to 59" />
+          </label>
+        </div>
+      </div>
+
+      <div class="calendar-actions">
+        <button type="button" class="today-action" data-today>Today</button>
+        <button type="button" class="done-action" data-date-done>Done</button>
+      </div>
+    </div>
+  </div>
+  <p class="field-error" id={`${id}-error`}></p>
+</div>
+
+<script>
+  const pickerRoots = Array.from(document.querySelectorAll<HTMLElement>('[data-date-time-picker]'));
+
+  function padDatePart(value: number): string {
+    return String(value).padStart(2, '0');
+  }
+
+  function dateKey(date: Date): string {
+    return `${date.getFullYear()}-${padDatePart(date.getMonth() + 1)}-${padDatePart(date.getDate())}`;
+  }
+
+  function sameDate(first: Date | null, second: Date | null): boolean {
+    return Boolean(first && second && dateKey(first) === dateKey(second));
+  }
+
+  function parseLocalDateTime(value: string): Date | null {
+    const match = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/.exec(value);
+    if (!match) return null;
+    const parsed = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]), Number(match[4]), Number(match[5]));
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+  }
+
+  pickerRoots.forEach((root) => {
+    if (root.dataset.initialized === 'true') return;
+    root.dataset.initialized = 'true';
+    const input = root.querySelector<HTMLInputElement>('.native-date-time');
+    const trigger = root.querySelector<HTMLButtonElement>('.date-time-trigger');
+    const valueLabel = root.querySelector<HTMLElement>('[data-date-time-label]');
+    const panel = root.querySelector<HTMLElement>('.date-time-panel');
+    const monthLabel = root.querySelector<HTMLElement>('[data-month-label]');
+    const grid = root.querySelector<HTMLElement>('[data-calendar-grid]');
+    const hourInput = root.querySelector<HTMLInputElement>('[data-hour]');
+    const minuteInput = root.querySelector<HTMLInputElement>('[data-minute]');
+    if (!input || !trigger || !valueLabel || !panel || !monthLabel || !grid || !hourInput || !minuteInput) return;
+
+    let cursor = new Date();
+    let draftDate: Date | null = null;
+    let activeDate = new Date();
+    let closeTimer: number | undefined;
+
+    const normalizedNumber = (value: string, maximum: number) => {
+      const number = Number(value.replace(/\D/g, ''));
+      return padDatePart(Number.isFinite(number) ? Math.min(Math.max(number, 0), maximum) : 0);
+    };
+
+    function syncTrigger(): void {
+      const selected = parseLocalDateTime(input.value);
+      if (!selected) {
+        valueLabel.textContent = 'Choose date and time';
+        trigger.classList.add('is-placeholder');
+        return;
+      }
+      valueLabel.textContent = `${new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }).format(selected)} · ${padDatePart(selected.getHours())}:${padDatePart(selected.getMinutes())}`;
+      trigger.classList.remove('is-placeholder');
+    }
+
+    function isBeforeMinimum(date: Date): boolean {
+      const minimum = parseLocalDateTime(input.min);
+      if (!minimum) return false;
+      const dayEnd = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 23, 59, 59);
+      return dayEnd < minimum;
+    }
+
+    function renderCalendar(): void {
+      monthLabel.textContent = new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric' }).format(cursor);
+      grid.replaceChildren();
+      const year = cursor.getFullYear();
+      const month = cursor.getMonth();
+      const first = new Date(year, month, 1);
+      const start = new Date(year, month, 1 - first.getDay());
+      const today = new Date();
+
+      for (let index = 0; index < 42; index += 1) {
+        const date = new Date(start.getFullYear(), start.getMonth(), start.getDate() + index);
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.textContent = String(date.getDate());
+        button.dataset.date = dateKey(date);
+        button.className = 'calendar-day';
+        button.tabIndex = sameDate(date, activeDate) ? 0 : -1;
+        if (date.getMonth() !== month) button.classList.add('is-outside');
+        if (sameDate(date, today)) {
+          button.classList.add('is-today');
+          button.setAttribute('aria-current', 'date');
+        }
+        if (sameDate(date, draftDate)) {
+          button.classList.add('is-selected');
+          button.setAttribute('aria-pressed', 'true');
+        } else button.setAttribute('aria-pressed', 'false');
+        button.disabled = isBeforeMinimum(date);
+        button.setAttribute('aria-label', new Intl.DateTimeFormat('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(date));
+        button.addEventListener('click', () => {
+          draftDate = date;
+          activeDate = date;
+          cursor = new Date(date.getFullYear(), date.getMonth(), 1);
+          renderCalendar();
+        });
+        grid.append(button);
+      }
+    }
+
+    function closePicker(restoreFocus = false): void {
+      if (closeTimer) window.clearTimeout(closeTimer);
+      trigger.setAttribute('aria-expanded', 'false');
+      root.classList.remove('is-open');
+      panel.classList.remove('is-visible');
+      const finish = () => { panel.hidden = true; };
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) finish();
+      else closeTimer = window.setTimeout(finish, 160);
+      if (restoreFocus) trigger.focus();
+    }
+
+    function openPicker(): void {
+      document.dispatchEvent(new CustomEvent('public-date-picker:open', { detail: { root } }));
+      if (closeTimer) window.clearTimeout(closeTimer);
+      const selected = parseLocalDateTime(input.value) ?? new Date(Date.now() + 60 * 60 * 1000);
+      draftDate = new Date(selected.getFullYear(), selected.getMonth(), selected.getDate());
+      activeDate = new Date(selected.getFullYear(), selected.getMonth(), selected.getDate());
+      cursor = new Date(selected.getFullYear(), selected.getMonth(), 1);
+      hourInput.value = padDatePart(selected.getHours());
+      minuteInput.value = padDatePart(selected.getMinutes());
+      renderCalendar();
+      panel.hidden = false;
+      trigger.setAttribute('aria-expanded', 'true');
+      root.classList.add('is-open');
+      requestAnimationFrame(() => {
+        panel.classList.add('is-visible');
+        grid.querySelector<HTMLButtonElement>('[tabindex="0"]')?.focus();
+      });
+    }
+
+    function applySelection(): void {
+      if (!draftDate) return;
+      hourInput.value = normalizedNumber(hourInput.value, 23);
+      minuteInput.value = normalizedNumber(minuteInput.value, 59);
+      input.value = `${dateKey(draftDate)}T${hourInput.value}:${minuteInput.value}`;
+      trigger.removeAttribute('aria-invalid');
+      trigger.removeAttribute('aria-describedby');
+      trigger.removeAttribute('aria-errormessage');
+      const error = root.querySelector<HTMLElement>('.field-error');
+      if (error) error.textContent = '';
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+      input.dispatchEvent(new Event('change', { bubbles: true }));
+      syncTrigger();
+      closePicker(true);
+    }
+
+    trigger.addEventListener('click', () => {
+      if (trigger.getAttribute('aria-expanded') === 'true') closePicker();
+      else openPicker();
+    });
+    root.querySelector<HTMLButtonElement>('[data-previous-month]')?.addEventListener('click', () => {
+      cursor = new Date(cursor.getFullYear(), cursor.getMonth() - 1, 1);
+      renderCalendar();
+    });
+    root.querySelector<HTMLButtonElement>('[data-next-month]')?.addEventListener('click', () => {
+      cursor = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1);
+      renderCalendar();
+    });
+    root.querySelector<HTMLButtonElement>('[data-today]')?.addEventListener('click', () => {
+      const today = new Date();
+      draftDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      activeDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      cursor = new Date(today.getFullYear(), today.getMonth(), 1);
+      renderCalendar();
+    });
+    root.querySelector<HTMLButtonElement>('[data-date-done]')?.addEventListener('click', applySelection);
+    [hourInput, minuteInput].forEach((timeInput) => {
+      timeInput.addEventListener('input', () => { timeInput.value = timeInput.value.replace(/\D/g, '').slice(0, 2); });
+      timeInput.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') { event.preventDefault(); applySelection(); }
+      });
+    });
+    panel.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') { event.preventDefault(); closePicker(true); }
+    });
+    grid.addEventListener('keydown', (event) => {
+      const target = event.target instanceof HTMLButtonElement ? event.target : null;
+      const value = target?.dataset.date;
+      if (!value) return;
+      const current = parseLocalDateTime(`${value}T12:00`);
+      if (!current) return;
+      const moves: Record<string, number> = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -7, ArrowDown: 7 };
+      const offset = moves[event.key];
+      if (!offset) return;
+      event.preventDefault();
+      const next = new Date(current.getFullYear(), current.getMonth(), current.getDate() + offset);
+      activeDate = next;
+      cursor = new Date(next.getFullYear(), next.getMonth(), 1);
+      renderCalendar();
+      grid.querySelector<HTMLButtonElement>(`[data-date="${dateKey(next)}"]`)?.focus();
+    });
+    document.addEventListener('public-date-picker:open', (event) => {
+      const openedRoot = (event as CustomEvent<{ root?: HTMLElement }>).detail?.root;
+      if (openedRoot !== root) closePicker();
+    });
+    document.addEventListener('pointerdown', (event) => {
+      if (!root.contains(event.target as Node)) closePicker();
+    });
+    input.addEventListener('app-date-picker:sync', syncTrigger);
+    input.addEventListener('change', syncTrigger);
+    syncTrigger();
+  });
+</script>
+
+<style>
+  .date-time-field { position: relative; display: flex; min-width: 0; flex-direction: column; }
+  label { margin-bottom: var(--s2); font-size: var(--text-sm); font-weight: 700; }
+  label > span[aria-hidden='true'] { color: var(--pink); }
+  .native-date-time { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+  .date-time-trigger { display: flex; width: 100%; min-height: 48px; align-items: center; justify-content: space-between; gap: var(--s3); border: 2px solid var(--black); border-radius: var(--r-md); background: var(--bg-white); color: var(--text); padding: 0.8rem var(--s3); font-size: var(--text-sm); font-weight: 600; text-align: left; outline: none; touch-action: manipulation; }
+  .date-time-trigger > span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .date-time-trigger.is-placeholder { color: var(--text-muted); font-weight: 400; }
+  .date-time-trigger:focus-visible, .is-open .date-time-trigger { border-color: var(--pink); box-shadow: 0 0 0 3px rgba(232, 17, 127, 0.13); }
+  .date-time-trigger[aria-invalid='true'] { border-color: #be123c; box-shadow: 0 0 0 3px rgba(190, 18, 60, 0.12); }
+  .calendar-icon { display: grid; width: 25px; height: 25px; flex: none; place-items: center; border: 1px solid var(--border-light); border-radius: 50%; color: var(--pink); }
+  .calendar-icon svg { width: 15px; height: 15px; }
+  .calendar-icon path { stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .date-time-panel { position: absolute; z-index: 60; top: calc(100% - 10px); left: 0; width: min(330px, calc(100vw - 3rem)); overflow: hidden; overscroll-behavior: contain; border: 2px solid var(--black); border-radius: var(--r-md); background: var(--bg-white); box-shadow: var(--shadow-solid); opacity: 0; transform: translateY(-8px) scale(0.985); transform-origin: top left; transition: opacity 120ms cubic-bezier(0.4, 0, 0.2, 1), transform 180ms cubic-bezier(0.16, 1, 0.3, 1); }
+  .date-time-panel.is-visible { opacity: 1; transform: translateY(0) scale(1); }
+  .calendar-header { display: grid; grid-template-columns: 32px 1fr 32px; align-items: center; gap: var(--s2); border-bottom: 1px solid var(--border-light); background: var(--yellow-bg); padding: var(--s3); }
+  .calendar-header p { font-size: var(--text-xs); font-weight: 800; letter-spacing: 0.06em; text-align: center; text-transform: uppercase; }
+  .calendar-header button { display: grid; width: 32px; height: 32px; place-items: center; border: 1.5px solid var(--black); border-radius: 6px; background: var(--bg-white); }
+  .calendar-header svg { width: 16px; height: 16px; }
+  .calendar-header path { stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .calendar-body { padding: var(--s3); }
+  .weekday-row, .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
+  .weekday-row { margin-bottom: 3px; }
+  .weekday-row span { display: grid; height: 24px; place-items: center; color: var(--text-muted); font-size: 0.625rem; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; }
+  :global(.calendar-day) { position: relative; display: grid; height: 34px; place-items: center; border: 1.5px solid transparent; border-radius: 6px; color: var(--text); font-size: var(--text-xs); font-weight: 600; outline: none; transition: background 120ms cubic-bezier(0.4, 0, 0.2, 1), border-color 120ms cubic-bezier(0.4, 0, 0.2, 1), transform 100ms cubic-bezier(0.4, 0, 0.2, 1); }
+  :global(.calendar-day.is-outside) { color: var(--text-muted); opacity: 0.55; }
+  :global(.calendar-day.is-today) { border-color: var(--pink); color: var(--pink); }
+  :global(.calendar-day.is-selected) { border-color: var(--black); background: var(--yellow); color: var(--black); font-weight: 800; box-shadow: 2px 2px 0 var(--black); opacity: 1; }
+  :global(.calendar-day:focus-visible) { border-color: var(--pink); box-shadow: 0 0 0 2px rgba(232, 17, 127, 0.28); }
+  :global(.calendar-day:disabled) { cursor: not-allowed; opacity: 0.22; }
+  .time-row { display: flex; align-items: end; justify-content: space-between; gap: var(--s3); margin-top: var(--s3); border-top: 1px solid var(--border-light); padding-top: var(--s3); }
+  .time-row > div:first-child { display: grid; }
+  .time-row strong { font-size: var(--text-xs); text-transform: uppercase; }
+  .time-row > div:first-child span { color: var(--text-muted); font-size: 0.625rem; }
+  .time-inputs { display: flex; align-items: center; gap: 5px; font-weight: 800; }
+  .time-inputs label { margin: 0; }
+  .time-inputs input { width: 44px; height: 38px; border: 1.5px solid var(--black); border-radius: 6px; background: white; font: inherit; font-size: var(--text-xs); font-weight: 700; text-align: center; outline: none; }
+  .time-inputs input:focus { border-color: var(--pink); box-shadow: 0 0 0 2px rgba(232, 17, 127, 0.15); }
+  .calendar-actions { display: flex; align-items: center; justify-content: space-between; margin-top: var(--s3); border-top: 1px solid var(--border-light); padding-top: var(--s3); }
+  .today-action { color: var(--text-mid); font-size: var(--text-xs); font-weight: 700; }
+  .done-action { border: 2px solid var(--black); border-radius: 6px; background: var(--pink); color: white; padding: 0.55rem var(--s4); font-size: var(--text-xs); font-weight: 800; box-shadow: 2px 2px 0 var(--black); }
+  .calendar-header button:focus-visible, .today-action:focus-visible, .done-action:focus-visible { outline: 2px solid var(--pink); outline-offset: 2px; }
+  .calendar-header button:active, :global(.calendar-day:active), .done-action:active { transform: scale(0.97); }
+  .field-error { min-height: 1.2em; color: #be123c; font-size: var(--text-xs); font-weight: 650; line-height: 1.2; margin-top: var(--s1); }
+  .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+  [hidden] { display: none !important; }
+  @media (hover: hover) and (pointer: fine) {
+    .calendar-header button:hover { background: var(--yellow); }
+    :global(.calendar-day:not(:disabled):hover) { border-color: var(--black); background: var(--yellow-bg); }
+    .today-action:hover { color: var(--pink); }
+  }
+  @media (max-width: 600px) {
+    .date-time-panel { position: fixed; top: 50%; left: 50%; width: min(330px, calc(100vw - 2rem)); transform: translate(-50%, calc(-50% - 8px)) scale(0.985); transform-origin: center; }
+    .date-time-panel.is-visible { transform: translate(-50%, -50%) scale(1); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .date-time-panel, :global(.calendar-day) { transition: none; }
+  }
+</style>

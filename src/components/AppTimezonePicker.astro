@@ -1,0 +1,357 @@
+---
+interface Props {
+  id: string;
+  name: string;
+  label: string;
+  hint?: string;
+  required?: boolean;
+}
+
+const {
+  id,
+  name,
+  label,
+  hint = 'Detected from your device. Change it if the event uses another time zone.',
+  required = false,
+} = Astro.props;
+---
+
+<div class="timezone-field" data-timezone-picker>
+  <label for={`${id}-trigger`}>
+    {label} {required && <span aria-hidden="true">*</span>}
+  </label>
+  <input
+    id={id}
+    name={name}
+    type="text"
+    class="native-timezone"
+    autocomplete="off"
+    required={required}
+    tabindex="-1"
+    aria-hidden="true"
+  />
+
+  <div class="timezone-select">
+    <button
+      type="button"
+      id={`${id}-trigger`}
+      class="timezone-trigger"
+      role="combobox"
+      aria-label={label}
+      aria-controls={`${id}-options`}
+      aria-expanded="false"
+      aria-haspopup="listbox"
+      aria-required={required ? 'true' : undefined}
+    >
+      <span class="timezone-value">
+        <strong data-timezone-label>Detecting time zone…</strong>
+        <small data-timezone-offset></small>
+      </span>
+      <svg class="timezone-chevron" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+        <path d="m5.5 7.5 4.5 4.5 4.5-4.5" />
+      </svg>
+    </button>
+
+    <div class="timezone-menu" hidden>
+      <div class="timezone-search-wrap">
+        <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+          <circle cx="8.75" cy="8.75" r="5.25" />
+          <path d="m12.75 12.75 3.5 3.5" />
+        </svg>
+        <label class="sr-only" for={`${id}-search`}>Search time zones</label>
+        <input
+          id={`${id}-search`}
+          type="search"
+          class="timezone-search"
+          placeholder="Search city or time zone"
+          autocomplete="off"
+          spellcheck="false"
+        />
+      </div>
+      <div class="timezone-menu-meta">
+        <span data-timezone-result-count></span>
+        <span>Current UTC offsets</span>
+      </div>
+      <div id={`${id}-options`} class="timezone-options" role="listbox" aria-label={label}></div>
+      <p class="timezone-empty" data-timezone-empty hidden>No matching time zone.</p>
+    </div>
+  </div>
+
+  <p class="timezone-hint">{hint}</p>
+  <p class="field-error" id={`${id}-error`}></p>
+</div>
+
+<script>
+  type IntlWithSupportedValues = typeof Intl & {
+    supportedValuesOf?: (key: 'timeZone') => string[];
+  };
+
+  const fallbackTimezones = [
+    'Africa/Accra', 'Africa/Cairo', 'Africa/Johannesburg', 'Africa/Lagos', 'Africa/Nairobi',
+    'America/Chicago', 'America/Los_Angeles', 'America/New_York', 'America/Sao_Paulo',
+    'Asia/Dubai', 'Asia/Kolkata', 'Asia/Singapore', 'Asia/Tokyo',
+    'Australia/Sydney', 'Europe/Berlin', 'Europe/London', 'Europe/Paris', 'Pacific/Auckland', 'UTC',
+  ];
+
+  const timezoneRoots = Array.from(document.querySelectorAll<HTMLElement>('[data-timezone-picker]'));
+
+  function timezoneOffset(timezone: string): string {
+    try {
+      const parts = new Intl.DateTimeFormat('en-GB', {
+        timeZone: timezone,
+        timeZoneName: 'shortOffset',
+      }).formatToParts(new Date());
+      return parts.find((part) => part.type === 'timeZoneName')?.value.replace('GMT', 'UTC') ?? '';
+    } catch {
+      return '';
+    }
+  }
+
+  function timezoneCity(timezone: string): string {
+    const city = timezone.split('/').at(-1) ?? timezone;
+    return city.replaceAll('_', ' ');
+  }
+
+  function searchText(value: string): string {
+    return value.toLocaleLowerCase().replaceAll('_', ' ').replaceAll('/', ' ');
+  }
+
+  timezoneRoots.forEach((root) => {
+    if (root.dataset.initialized === 'true') return;
+    root.dataset.initialized = 'true';
+    const input = root.querySelector<HTMLInputElement>('.native-timezone');
+    const select = root.querySelector<HTMLElement>('.timezone-select');
+    const trigger = root.querySelector<HTMLButtonElement>('.timezone-trigger');
+    const selectedLabel = root.querySelector<HTMLElement>('[data-timezone-label]');
+    const selectedOffset = root.querySelector<HTMLElement>('[data-timezone-offset]');
+    const menu = root.querySelector<HTMLElement>('.timezone-menu');
+    const search = root.querySelector<HTMLInputElement>('.timezone-search');
+    const optionsRoot = root.querySelector<HTMLElement>('.timezone-options');
+    const resultCount = root.querySelector<HTMLElement>('[data-timezone-result-count]');
+    const empty = root.querySelector<HTMLElement>('[data-timezone-empty]');
+    if (!input || !select || !trigger || !selectedLabel || !selectedOffset || !menu || !search || !optionsRoot || !resultCount || !empty) return;
+
+    const detected = Intl.DateTimeFormat().resolvedOptions().timeZone || 'Africa/Accra';
+    let timezones: string[];
+    try {
+      timezones = (Intl as IntlWithSupportedValues).supportedValuesOf?.('timeZone') ?? fallbackTimezones;
+    } catch {
+      timezones = fallbackTimezones;
+    }
+    timezones = Array.from(new Set([detected, 'UTC', ...timezones])).sort((first, second) => (
+      timezoneCity(first).localeCompare(timezoneCity(second), 'en', { sensitivity: 'base' })
+    ));
+    const timezoneRecords = timezones.map((timezone) => {
+      const city = timezoneCity(timezone);
+      const offset = timezoneOffset(timezone);
+      return {
+        timezone,
+        city,
+        offset,
+        search: searchText(`${timezone} ${city} ${offset}`),
+      };
+    });
+    let closeTimer: number | undefined;
+
+    function syncSelection(timezone: string, announce = true): void {
+      input.value = timezone;
+      selectedLabel.textContent = timezoneCity(timezone);
+      selectedOffset.textContent = `${timezone} · ${timezoneOffset(timezone)}`;
+      trigger.removeAttribute('aria-invalid');
+      trigger.removeAttribute('aria-describedby');
+      trigger.removeAttribute('aria-errormessage');
+      const error = root.querySelector<HTMLElement>('.field-error');
+      if (error) error.textContent = '';
+      if (announce) {
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+    }
+
+    function closeMenu(restoreFocus = false): void {
+      if (closeTimer) window.clearTimeout(closeTimer);
+      trigger.setAttribute('aria-expanded', 'false');
+      select.classList.remove('is-open');
+      menu.classList.remove('is-visible');
+      const finish = () => { menu.hidden = true; };
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) finish();
+      else closeTimer = window.setTimeout(finish, 160);
+      if (restoreFocus) trigger.focus();
+    }
+
+    function selectTimezone(timezone: string): void {
+      syncSelection(timezone);
+      renderOptions(search.value);
+      closeMenu(true);
+    }
+
+    function optionButtons(): HTMLButtonElement[] {
+      return Array.from(optionsRoot.querySelectorAll<HTMLButtonElement>('[role="option"]'));
+    }
+
+    function handleOptionKeydown(event: KeyboardEvent, index: number): void {
+      const options = optionButtons();
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        closeMenu(true);
+        return;
+      }
+      if (!['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) return;
+      event.preventDefault();
+      const nextIndex = event.key === 'Home'
+        ? 0
+        : event.key === 'End'
+          ? options.length - 1
+          : (index + (event.key === 'ArrowDown' ? 1 : -1) + options.length) % options.length;
+      options[nextIndex]?.focus();
+    }
+
+    function renderOptions(query = ''): void {
+      const normalizedQuery = searchText(query.trim());
+      const matches = normalizedQuery
+        ? timezoneRecords.filter((record) => record.search.includes(normalizedQuery))
+        : timezoneRecords;
+      optionsRoot.replaceChildren();
+      resultCount.textContent = `${matches.length} time zone${matches.length === 1 ? '' : 's'}`;
+      empty.hidden = matches.length > 0;
+      optionsRoot.hidden = matches.length === 0;
+
+      matches.forEach((record, index) => {
+        const option = document.createElement('button');
+        const label = document.createElement('span');
+        const city = document.createElement('strong');
+        const canonical = document.createElement('small');
+        const offset = document.createElement('span');
+        option.type = 'button';
+        option.className = 'timezone-option';
+        option.setAttribute('role', 'option');
+        option.setAttribute('aria-selected', String(record.timezone === input.value));
+        option.dataset.timezone = record.timezone;
+        label.className = 'timezone-option-label';
+        city.textContent = record.city;
+        canonical.textContent = record.timezone;
+        offset.className = 'timezone-option-offset';
+        offset.textContent = record.offset;
+        label.append(city, canonical);
+        option.append(label, offset);
+        option.addEventListener('click', () => selectTimezone(record.timezone));
+        option.addEventListener('keydown', (event) => handleOptionKeydown(event, index));
+        optionsRoot.append(option);
+      });
+    }
+
+    function openMenu(): void {
+      if (closeTimer) window.clearTimeout(closeTimer);
+      renderOptions(search.value);
+      menu.hidden = false;
+      trigger.setAttribute('aria-expanded', 'true');
+      select.classList.add('is-open');
+      requestAnimationFrame(() => {
+        menu.classList.add('is-visible');
+        search.focus();
+        search.select();
+      });
+    }
+
+    trigger.addEventListener('click', () => {
+      if (trigger.getAttribute('aria-expanded') === 'true') closeMenu();
+      else openMenu();
+    });
+    trigger.addEventListener('keydown', (event) => {
+      if (!['ArrowDown', 'ArrowUp', 'Enter', ' '].includes(event.key)) return;
+      event.preventDefault();
+      openMenu();
+    });
+    search.addEventListener('input', () => renderOptions(search.value));
+    search.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        closeMenu(true);
+        return;
+      }
+      if (event.key !== 'ArrowDown') return;
+      event.preventDefault();
+      optionButtons()[0]?.focus();
+    });
+    document.addEventListener('click', (event) => {
+      if (!select.contains(event.target as Node)) closeMenu();
+    });
+    input.addEventListener('app-timezone-picker:reset', () => {
+      search.value = '';
+      syncSelection(detected, false);
+      renderOptions();
+    });
+    input.addEventListener('app-timezone-picker:sync', () => {
+      const restoredTimezone = timezoneRecords.some((record) => record.timezone === input.value)
+        ? input.value
+        : detected;
+      search.value = '';
+      syncSelection(restoredTimezone, false);
+      renderOptions();
+    });
+
+    syncSelection(detected, false);
+    renderOptions();
+  });
+</script>
+
+<style>
+  .timezone-field { position: relative; display: flex; flex-direction: column; grid-column: 1 / -1; min-width: 0; }
+  label { font-size: var(--text-sm); font-weight: 700; margin-bottom: var(--s2); }
+  label > span[aria-hidden='true'] { color: var(--pink); }
+  .native-timezone { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+  .timezone-select { position: relative; }
+  .timezone-trigger {
+    display: flex; align-items: center; justify-content: space-between; gap: var(--s3); width: 100%; min-height: 50px;
+    border: 2px solid var(--black); border-radius: var(--r-md); background: var(--bg-white); color: var(--text);
+    padding: 0.7rem var(--s3); font: inherit; text-align: left; outline: none; cursor: pointer;
+  }
+  .timezone-trigger:focus-visible { border-color: var(--pink); box-shadow: 0 0 0 3px rgba(232, 17, 127, 0.13); }
+  .timezone-trigger[aria-invalid='true'] { border-color: #be123c; box-shadow: 0 0 0 3px rgba(190, 18, 60, 0.12); }
+  .timezone-value { display: flex; flex-direction: column; min-width: 0; }
+  .timezone-value strong { overflow: hidden; color: var(--text); font-size: var(--text-sm); font-weight: 650; text-overflow: ellipsis; white-space: nowrap; }
+  .timezone-value small { overflow: hidden; color: var(--text-muted); font-size: 0.6875rem; line-height: 1.3; text-overflow: ellipsis; white-space: nowrap; }
+  .timezone-chevron { flex: 0 0 auto; width: 20px; height: 20px; stroke: var(--pink); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; transition: transform 150ms cubic-bezier(0.4, 0, 0.2, 1); }
+  .timezone-select.is-open .timezone-chevron { transform: rotate(180deg); }
+  .timezone-menu {
+    position: absolute; z-index: 40; top: calc(100% + 8px); left: 0; right: 0;
+    border: 2px solid var(--black); border-radius: var(--r-md); background: var(--bg-white); box-shadow: var(--shadow-solid);
+    padding: var(--s2); opacity: 0; transform: translateY(-8px) scale(0.985); transform-origin: top;
+    transition: opacity 120ms cubic-bezier(0.4, 0, 0.2, 1), transform 180ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .timezone-menu.is-visible { opacity: 1; transform: translateY(0) scale(1); }
+  .timezone-search-wrap { position: relative; display: flex; align-items: center; }
+  .timezone-search-wrap > svg { position: absolute; left: var(--s3); width: 18px; height: 18px; stroke: var(--text-muted); stroke-width: 1.8; pointer-events: none; }
+  .timezone-search {
+    width: 100%; min-height: 42px; border: 1px solid var(--border-light); border-radius: calc(var(--r-md) - 2px);
+    background: var(--yellow-bg); color: var(--text); font: inherit; font-size: var(--text-sm); padding: 0.6rem var(--s3) 0.6rem 2.5rem; outline: none;
+  }
+  .timezone-search:focus { border-color: var(--pink); box-shadow: inset 0 0 0 1px var(--pink); }
+  .timezone-search::-webkit-search-cancel-button { cursor: pointer; }
+  .timezone-menu-meta { display: flex; justify-content: space-between; gap: var(--s3); padding: var(--s2) var(--s2) var(--s1); color: var(--text-muted); font-size: 0.6875rem; }
+  .timezone-options { display: grid; gap: 2px; max-height: min(272px, 38vh); overflow-y: auto; overscroll-behavior: contain; scrollbar-color: var(--pink) var(--yellow-bg); }
+  :global(.timezone-option) {
+    display: flex; align-items: center; justify-content: space-between; gap: var(--s3); width: 100%; min-height: 48px;
+    border-radius: calc(var(--r-md) - 2px); padding: 0.5rem var(--s3); color: var(--text-mid); font: inherit; text-align: left;
+    transition: color 120ms cubic-bezier(0.4, 0, 0.2, 1), background 120ms cubic-bezier(0.4, 0, 0.2, 1), transform 100ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  :global(.timezone-option:hover), :global(.timezone-option:focus-visible) { color: var(--text); background: var(--yellow-bg); outline: 2px solid var(--pink); outline-offset: -2px; }
+  :global(.timezone-option[aria-selected='true']) { color: var(--text); background: var(--yellow); }
+  :global(.timezone-option:active) { transform: scale(0.985); }
+  :global(.timezone-option-label) { display: flex; align-items: baseline; gap: var(--s2); min-width: 0; }
+  :global(.timezone-option-label strong) { flex: 0 0 auto; font-size: var(--text-sm); font-weight: 650; white-space: nowrap; }
+  :global(.timezone-option-label small) { overflow: hidden; color: var(--text-muted); font-size: var(--text-xs); text-overflow: ellipsis; white-space: nowrap; }
+  :global(.timezone-option-offset) { flex: 0 0 auto; color: var(--text-muted); font-size: var(--text-xs); font-variant-numeric: tabular-nums; }
+  .timezone-empty { padding: var(--s5) var(--s3); color: var(--text-muted); font-size: var(--text-sm); text-align: center; }
+  .timezone-hint { color: var(--text-muted); font-size: var(--text-xs); margin-top: var(--s2); }
+  .field-error { min-height: 1.2em; color: #be123c; font-size: var(--text-xs); font-weight: 650; line-height: 1.2; margin-top: var(--s1); }
+  .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+  @media (max-width: 600px) {
+    .timezone-menu-meta span:last-child { display: none; }
+    .timezone-menu { right: 0; }
+    :global(.timezone-option-label small) { display: none; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .timezone-chevron, .timezone-menu, :global(.timezone-option) { transition: none; }
+  }
+</style>

@@ -53,8 +53,29 @@ the build uses `content/meetups/*.yaml` instead. This keeps the public site
 deployable during a temporary upstream incident without exposing organizer
 credentials or connecting the browser directly to the operational system.
 
-Pushes to `main`, manual workflow runs, and the existing Monday/Thursday
-scheduled builds refresh the static meetup snapshot.
+Pushes to `main`, manual workflow runs, and the daily `06:17 UTC` scheduled
+build refresh the static event snapshot.
+
+## Public event submission launch controls
+
+Event submissions use one fail-closed build-time flag. Add it as a GitHub
+Actions repository variable so GitHub Pages and Cloudflare produce the same
+static release:
+
+| Variable | Purpose |
+| :-- | :-- |
+| `PUBLIC_EVENT_SUBMISSIONS_ENABLED` | Hard website safety switch. When it is not `true`, `/events/submit/` redirects to `/events/`. |
+
+- Private beta: set the variable to `true`, then share `/events/submit/`
+  directly with testers.
+- Safety shutdown: set enabled to `false` and rebuild both static deployments.
+
+The website does not render an event-submission link during beta, and the form
+page remains `noindex`. Its permanent public entry point will be chosen after
+beta. An unset variable is treated as `false`. Local development can copy
+`.env.example` to `.env` and opt in explicitly. This website flag does not
+disable direct requests to Events Management; the backend needs its own runtime
+switch for a system-wide shutdown.
 
 ## Cloudflare Workers deployment
 

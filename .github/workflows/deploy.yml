@@ -18,6 +18,9 @@ concurrency:
   group: github-pages
   cancel-in-progress: false
 
+env:
+  PUBLIC_EVENT_SUBMISSIONS_ENABLED: ${{ vars.PUBLIC_EVENT_SUBMISSIONS_ENABLED }}
+
 jobs:
   build:
     name: Build static site

@@ -1,0 +1,215 @@
+---
+import Base from '../../layouts/Base.astro';
+import { getEvents, sortEventsBySoonest, type WebsiteEvent } from '../../lib/events';
+
+const events = sortEventsBySoonest(await getEvents()).map((event) => ({
+  ...event,
+  status: getEventStatus(event),
+}));
+
+function getEventStatus(event: WebsiteEvent): 'upcoming' | 'live' | 'past' {
+  const now = new Date();
+  const start = new Date(event.startsAt);
+  const end = new Date(event.endsAt);
+  return now < start ? 'upcoming' : now <= end ? 'live' : 'past';
+}
+
+function formatDate(iso: string, timezone: string): string {
+  return new Date(iso).toLocaleDateString('en-GB', {
+    day: 'numeric', month: 'long', year: 'numeric', timeZone: timezone,
+  });
+}
+
+function formatLabel(value: string): string {
+  if (value === 'conference') return 'Conference / congress';
+  return value.replaceAll('_', ' ').replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
+function getLocation(event: WebsiteEvent): string {
+  if (event.locationType === 'online') return 'Online';
+  if (event.locationType === 'hybrid') return event.venueName ? `${event.venueName} + online` : 'Hybrid';
+  return event.venueName ?? 'In person';
+}
+
+function getEventUrl(event: WebsiteEvent): string | null {
+  return event.detailsUrl ?? event.registrationUrl ?? event.onlineUrl;
+}
+
+const statusConfig = {
+  upcoming: { label: 'Upcoming', cta: 'Register →' },
+  live: { label: '● Live', cta: 'Follow live →' },
+  past: { label: 'Past', cta: 'View event →' },
+};
+---
+
+<Base
+  title="Events — DevCongress"
+  description="DevCongress events, upcoming, live, and past. Find community meetups, workshops, hackathons, and conferences."
+>
+  <header class="mnav">
+    <div class="container mnav-inner">
+      <a href="/" class="mnav-logo">
+        <img src="/images/logo.png" alt="DevCongress" height="36" />
+      </a>
+      <a href="/" class="mnav-back">← Home</a>
+    </div>
+  </header>
+
+  <main>
+    <div class="page-header">
+      <div class="container">
+        <span class="eyebrow">Events</span>
+        <h1 class="heading-serif page-title">Where we show up</h1>
+        <p class="page-sub">
+          {events.length} event{events.length !== 1 ? 's' : ''} and counting.
+        </p>
+      </div>
+    </div>
+
+    <div class="container events-body">
+      <ul class="events-grid">
+        {events.map((event) => {
+          const config = statusConfig[event.status];
+          const eventUrl = getEventUrl(event);
+          const external = eventUrl?.startsWith('http');
+          return (
+            <li class="event-card card">
+              {eventUrl ? (
+                <a
+                  href={eventUrl}
+                  class="event-cover-link"
+                  aria-hidden="true"
+                  tabindex="-1"
+                  target={external ? '_blank' : undefined}
+                  rel={external ? 'noopener noreferrer' : undefined}
+                >
+                  <div class="event-cover">
+                    {event.coverUrl && <img class="event-cover-image" src={event.coverUrl} alt="" loading="lazy" decoding="async" />}
+                    <span class={`event-status-badge status-${event.status}`}>{config.label}</span>
+                    <span class="event-type-badge">{formatLabel(event.format)}</span>
+                  </div>
+                </a>
+              ) : (
+                <div class="event-cover">
+                  {event.coverUrl && <img class="event-cover-image" src={event.coverUrl} alt="" loading="lazy" decoding="async" />}
+                  <span class={`event-status-badge status-${event.status}`}>{config.label}</span>
+                  <span class="event-type-badge">{formatLabel(event.format)}</span>
+                </div>
+              )}
+              <div class="event-body">
+                <div class="event-meta">
+                  <time datetime={event.startsAt}>{formatDate(event.startsAt, event.timezone)}</time>
+                  <span class="event-location">{getLocation(event)}</span>
+                </div>
+                <h2 class="heading-serif event-name">
+                  {eventUrl ? (
+                    <a
+                      href={eventUrl}
+                      target={external ? '_blank' : undefined}
+                      rel={external ? 'noopener noreferrer' : undefined}
+                    >
+                      {event.title}
+                    </a>
+                  ) : event.title}
+                </h2>
+                <p class="event-desc">{event.summary}</p>
+                {eventUrl && (
+                  <a
+                    href={eventUrl}
+                    class="btn btn-outline event-cta"
+                    target={external ? '_blank' : undefined}
+                    rel={external ? 'noopener noreferrer' : undefined}
+                  >
+                    {config.cta}
+                  </a>
+                )}
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  </main>
+</Base>
+
+<style>
+  .mnav {
+    position: sticky; top: 0; z-index: 100;
+    background: var(--bg); border-bottom: 2px solid var(--black);
+    padding-block: var(--s4);
+  }
+  .mnav-inner { display: flex; align-items: center; justify-content: space-between; }
+  .mnav-back { font-size: var(--text-sm); font-weight: 500; color: var(--text-mid); transition: color 150ms; }
+  .mnav-back:hover { color: var(--pink); }
+
+  .page-header {
+    padding-block: var(--s9);
+    border-bottom: 2px solid var(--black);
+    background: var(--bg-white);
+  }
+  .page-title { font-size: clamp(var(--text-3xl), 6vw, var(--text-4xl)); margin-bottom: var(--s3); }
+  .page-sub { font-size: var(--text-lg); color: var(--text-mid); }
+
+  .events-body { padding-block: var(--s9); }
+  .events-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--s5);
+  }
+
+  .event-card { overflow: hidden; display: flex; flex-direction: column; }
+  .event-cover-link { display: block; }
+  .event-cover {
+    width: 100%; aspect-ratio: 16/9;
+    background-color: var(--border-light);
+    position: relative; display: flex;
+    align-items: flex-end; justify-content: space-between;
+    padding: var(--s3); transition: opacity 200ms ease;
+  }
+  .event-cover-image {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%; object-fit: cover;
+  }
+  .event-status-badge,
+  .event-type-badge { position: relative; }
+  .event-card:hover .event-cover { opacity: 0.9; }
+
+  .event-status-badge {
+    font-size: var(--text-xs); font-weight: 700;
+    border: 2px solid var(--black); border-radius: var(--r-sm);
+    padding: 2px var(--s2);
+  }
+  .status-upcoming { background: var(--yellow); color: var(--black); }
+  .status-live { background: var(--pink); color: #fff; }
+  .status-past { background: var(--bg-white); color: var(--text-muted); }
+
+  .event-type-badge {
+    font-size: var(--text-xs); font-weight: 700;
+    background: rgba(0, 0, 0, 0.68); color: #fff;
+    border-radius: var(--r-sm); padding: 2px var(--s2);
+  }
+
+  .event-body {
+    padding: var(--s5); display: flex; flex-direction: column;
+    gap: var(--s3); flex: 1; border-top: 2px solid var(--black);
+  }
+  .event-meta {
+    display: flex; align-items: center; justify-content: space-between;
+    font-size: var(--text-xs); font-weight: 600; color: var(--text-muted);
+    letter-spacing: 0.04em; text-transform: uppercase;
+    flex-wrap: wrap; gap: var(--s2);
+  }
+  .event-location { color: var(--pink); }
+  .event-name { font-size: var(--text-xl); line-height: var(--leading-snug); }
+  .event-name a:hover { color: var(--pink); }
+  .event-desc {
+    font-size: var(--text-sm); color: var(--text-mid);
+    line-height: var(--leading-body);
+    display: -webkit-box; -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical; overflow: hidden; flex: 1;
+  }
+  .event-cta { align-self: flex-start; margin-top: var(--s2); }
+
+  @media (max-width: 640px) { .events-grid { grid-template-columns: 1fr; } }
+  @media (prefers-reduced-motion: reduce) { .mnav-back, .event-cover { transition: none; } }
+</style>

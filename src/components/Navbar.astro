@@ -1,5 +1,9 @@
 ---
-interface Props { slackUrl: string; paystackUrl: string; }
+interface Props {
+  slackUrl: string;
+  paystackUrl: string;
+}
+
 const { slackUrl, paystackUrl } = Astro.props;
 ---
 
@@ -10,9 +14,9 @@ const { slackUrl, paystackUrl } = Astro.props;
     </a>
 
     <nav class="navbar-links" aria-label="Primary">
-      <a href="#community">Community</a>
-      <a href="#programs">Programs</a>
-      <a href="#meetups">Meetups</a>
+      <a href="/#community">Community</a>
+      <a href="/#programs">Programs</a>
+      <a href="/#events">Events</a>
     </nav>
 
     <div class="navbar-actions">
@@ -31,9 +35,9 @@ const { slackUrl, paystackUrl } = Astro.props;
 
   <div class="mobile-menu" id="mobile-menu" aria-hidden="true">
     <nav>
-      <a href="#community">Community</a>
-      <a href="#programs">Programs</a>
-      <a href="#meetups">Meetups</a>
+      <a href="/#community">Community</a>
+      <a href="/#programs">Programs</a>
+      <a href="/#events">Events</a>
     </nav>
     <div class="mobile-actions">
       <a href={paystackUrl} target="_blank" rel="noopener noreferrer" class="btn btn-outline">Support Us</a>
@@ -94,6 +98,11 @@ const { slackUrl, paystackUrl } = Astro.props;
     align-items: center;
     gap: var(--s3);
   }
+  .navbar-actions .btn { padding-inline: var(--s4); }
+  @media (hover: hover) and (pointer: fine) {
+    .navbar-actions .btn:hover { transform: translateX(-2px); }
+    .navbar-actions .btn:active { transform: translate(0, 0); }
+  }
 
   .burger {
     display: none;
@@ -138,7 +147,7 @@ const { slackUrl, paystackUrl } = Astro.props;
   }
   .mobile-menu.is-open { display: block; }
 
-  @media (max-width: 700px) {
+  @media (max-width: 960px) {
     .navbar-links, .navbar-actions { display: none; }
     .burger { display: flex; }
   }

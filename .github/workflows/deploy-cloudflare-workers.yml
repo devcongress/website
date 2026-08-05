@@ -18,6 +18,9 @@ concurrency:
   group: cloudflare-workers-production
   cancel-in-progress: false
 
+env:
+  PUBLIC_EVENT_SUBMISSIONS_ENABLED: ${{ vars.PUBLIC_EVENT_SUBMISSIONS_ENABLED }}
+
 jobs:
   validate-and-build:
     name: Build static site

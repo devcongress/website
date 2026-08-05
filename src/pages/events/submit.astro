@@ -1,0 +1,1652 @@
+---
+import Base from '../../layouts/Base.astro';
+import AppDateTimePicker from '../../components/AppDateTimePicker.astro';
+import AppTimezonePicker from '../../components/AppTimezonePicker.astro';
+import {
+  EVENT_SUBMISSIONS_API_URL,
+  EVENT_SUBMISSION_TURNSTILE_ACTION,
+  EVENT_SUBMISSION_TURNSTILE_SITE_KEY,
+} from '../../lib/events';
+import { EVENT_SUBMISSIONS_ENABLED } from '../../lib/features';
+
+if (!EVENT_SUBMISSIONS_ENABLED) {
+  return Astro.redirect('/events/');
+}
+---
+
+<Base
+  title="Create Event | DevCongress"
+  description="Submit a technology event for review and inclusion in the DevCongress community calendar."
+  showFooter={false}
+  noindex
+>
+  <header class="page-nav">
+    <div class="container page-nav-inner">
+      <a href="/" class="page-logo" aria-label="DevCongress home" data-confirm-navigation>
+        <img src="/images/logo.png" alt="DevCongress" height="36" />
+      </a>
+    </div>
+  </header>
+
+  <main>
+    <section class="form-hero">
+      <div class="container form-hero-inner">
+        <span class="hero-kicker">Community calendar</span>
+        <h1>
+          Bring people<br />
+          together.
+        </h1>
+        <p>
+          Planning a meetup, workshop, hackathon, or conference? Share the essentials for the
+          community calendar.
+        </p>
+      </div>
+    </section>
+
+    <section class="container form-layout">
+      <div class="form-shell card">
+        <form
+          id="event-submission-form"
+          data-endpoint={EVENT_SUBMISSIONS_API_URL}
+          data-turnstile-action={EVENT_SUBMISSION_TURNSTILE_ACTION}
+          novalidate
+        >
+          <nav class="step-progress" aria-label="Event submission progress">
+            <ol>
+              <li class="is-current" data-step-indicator="0" aria-current="step">
+                <span class="step-dot"><span class="step-number">1</span><span class="step-check" hidden aria-label="Completed"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m3.25 8.25 3 3 6.5-6.5" /></svg></span></span>
+                <span class="step-label">Event</span>
+              </li>
+              <li data-step-indicator="1">
+                <span class="step-dot"><span class="step-number">2</span><span class="step-check" hidden aria-label="Completed"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m3.25 8.25 3 3 6.5-6.5" /></svg></span></span>
+                <span class="step-label">Place &amp; time</span>
+              </li>
+              <li data-step-indicator="2">
+                <span class="step-dot"><span class="step-number">3</span><span class="step-check" hidden aria-label="Completed"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m3.25 8.25 3 3 6.5-6.5" /></svg></span></span>
+                <span class="step-label">Contact</span>
+              </li>
+            </ol>
+          </nav>
+
+          <div class="step-panels">
+          <div class="form-section" data-step="0">
+            <div class="section-heading">
+              <div>
+                <h2 tabindex="-1">Tell us about it</h2>
+                <p>The details people use to decide if the event is for them.</p>
+              </div>
+              <div id="draft-restored-notice" class="draft-notice" hidden>
+                <span>Draft restored</span>
+                <span class="draft-notice-divider" aria-hidden="true">·</span>
+                <button
+                  type="button"
+                  id="discard-draft"
+                  class="draft-discard"
+                  aria-label="Discard restored draft and start over"
+                >Start over</button>
+              </div>
+            </div>
+
+            <div class="field full-field">
+              <label for="title">Event name <span aria-hidden="true">*</span></label>
+              <input id="title" name="title" type="text" minlength="3" maxlength="160" autocomplete="off" required />
+              <p class="field-error" id="title-error"></p>
+            </div>
+
+            <div class="field full-field" id="summary-field">
+              <label for="summary">Short description <span aria-hidden="true">*</span></label>
+              <textarea id="summary" name="summary" rows="4" minlength="20" data-character-limit="1200" autocomplete="off" required></textarea>
+              <div class="field-hint-row">
+                <p>What will happen, and who should attend?</p>
+                <span class="character-count" aria-live="polite"><output id="summary-count">0</output>/1200</span>
+              </div>
+              <p class="field-error" id="summary-error"></p>
+            </div>
+
+            <div class="field full-field">
+              <label for="format">Event type <span aria-hidden="true">*</span></label>
+              <select id="format" name="format" class="native-select" required tabindex="-1" aria-hidden="true">
+                <option value="">Choose one</option>
+                <option value="meetup">Meetup</option>
+                <option value="conference">Conference</option>
+                <option value="workshop">Workshop</option>
+                <option value="hackathon">Hackathon</option>
+                <option value="webinar">Webinar</option>
+                <option value="other">Other</option>
+              </select>
+              <div class="app-select" data-app-select>
+                <button
+                  type="button"
+                  id="format-trigger"
+                  class="app-select-trigger"
+                  role="combobox"
+                  aria-controls="format-options"
+                  aria-expanded="false"
+                  aria-haspopup="listbox"
+                  aria-required="true"
+                >
+                  <span data-select-label>Choose one</span>
+                  <span class="app-select-chevron" aria-hidden="true">⌄</span>
+                </button>
+                <div id="format-options" class="app-select-menu" role="listbox" aria-label="Event type" hidden>
+                  <button type="button" role="option" aria-selected="false" data-select-value="meetup">Meetup</button>
+                  <button type="button" role="option" aria-selected="false" data-select-value="conference">Conference</button>
+                  <button type="button" role="option" aria-selected="false" data-select-value="workshop">Workshop</button>
+                  <button type="button" role="option" aria-selected="false" data-select-value="hackathon">Hackathon</button>
+                  <button type="button" role="option" aria-selected="false" data-select-value="webinar">Webinar</button>
+                  <button type="button" role="option" aria-selected="false" data-select-value="other">Other</button>
+                </div>
+              </div>
+              <p class="field-error" id="format-error"></p>
+            </div>
+
+            <div class="step-actions">
+              <span class="sr-only" data-step-status="0" aria-live="polite">Complete the required event details to continue.</span>
+              <button type="button" class="btn btn-primary step-next" data-next-step="1" disabled>
+                Continue to place &amp; time <span aria-hidden="true">→</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="form-section" data-step="1" hidden>
+            <div class="section-heading">
+              <div>
+                <h2 tabindex="-1">When and where</h2>
+                <p>Times are saved in your detected time zone.</p>
+              </div>
+            </div>
+
+            <div class="field-grid">
+              <AppDateTimePicker id="starts_at" name="starts_at" label="Starts" required />
+              <AppDateTimePicker id="ends_at" name="ends_at" label="Ends" required />
+            </div>
+            <AppTimezonePicker
+              id="timezone"
+              name="timezone"
+              label="Event time zone"
+              required
+            />
+
+            <fieldset class="location-choice">
+              <legend>How can people attend? <span aria-hidden="true">*</span></legend>
+              <div class="segmented-control">
+                <label><input type="radio" name="location_type" value="in_person" checked /> <span>In person</span></label>
+                <label><input type="radio" name="location_type" value="online" /> <span>Online</span></label>
+                <label><input type="radio" name="location_type" value="hybrid" /> <span>Hybrid</span></label>
+              </div>
+              <p class="field-error" id="location_type-error"></p>
+            </fieldset>
+
+            <div id="venue-fields" class="conditional-fields">
+              <div class="field">
+                <label for="venue_name">Venue name <span aria-hidden="true">*</span></label>
+                <input id="venue_name" name="venue_name" type="text" maxlength="200" autocomplete="organization" />
+                <p class="field-error" id="venue_name-error"></p>
+              </div>
+              <div class="field">
+                <label for="venue_address">Venue address <span class="optional">Optional</span></label>
+                <input id="venue_address" name="venue_address" type="text" maxlength="300" autocomplete="street-address" />
+                <p class="field-error" id="venue_address-error"></p>
+              </div>
+            </div>
+
+            <div id="online-fields" class="conditional-fields" hidden>
+              <div class="field full-field">
+                <label for="online_url">Online event link <span aria-hidden="true">*</span></label>
+                <input id="online_url" name="online_url" type="url" maxlength="2048" inputmode="url" autocomplete="url" autocapitalize="none" spellcheck="false" placeholder="https://example.com/…" />
+                <p class="field-hint">A meeting, stream, or virtual venue link.</p>
+                <p class="field-error" id="online_url-error"></p>
+              </div>
+            </div>
+
+            <div class="field full-field">
+              <label for="registration_url">Registration or event page <span aria-hidden="true">*</span> <span class="optional">Required unless an online link is provided</span></label>
+              <input id="registration_url" name="registration_url" type="url" maxlength="2048" inputmode="url" autocomplete="url" autocapitalize="none" spellcheck="false" placeholder="https://example.com/…" />
+              <p class="field-hint">Provide this or an online event link so people know where to join.</p>
+              <p class="field-error" id="registration_url-error"></p>
+            </div>
+
+            <div class="step-actions">
+              <button type="button" class="step-back" data-previous-step="0">← Back</button>
+              <span class="sr-only" data-step-status="1" aria-live="polite">Complete the required place and time details to continue.</span>
+              <button type="button" class="btn btn-primary step-next" data-next-step="2" disabled>
+                Continue to contact <span aria-hidden="true">→</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="form-section" data-step="2" hidden>
+            <div class="section-heading">
+              <div>
+                <h2 tabindex="-1">Who is organizing?</h2>
+                <p>Your email is only used to contact you about this submission.</p>
+              </div>
+            </div>
+
+            <div class="field-grid">
+              <div class="field">
+                <label for="organizer_name">Organizer name <span aria-hidden="true">*</span></label>
+                <input id="organizer_name" name="organizer_name" type="text" minlength="2" maxlength="160" autocomplete="organization" required />
+                <p class="field-error" id="organizer_name-error"></p>
+              </div>
+              <div class="field">
+                <label for="organizer_email">Contact email <span aria-hidden="true">*</span></label>
+                <input id="organizer_email" name="organizer_email" type="email" maxlength="254" autocomplete="email" autocapitalize="none" spellcheck="false" required />
+                <p class="field-error" id="organizer_email-error"></p>
+              </div>
+            </div>
+
+            <div class="field full-field extra-details">
+              <label for="notes">Anything else our reviewer should know? <span class="optional">Optional</span></label>
+              <textarea id="notes" name="notes" rows="3" maxlength="500" autocomplete="off" placeholder="Add context that could help us review your event."></textarea>
+              <div class="notes-meta">
+                <p class="field-error" id="notes-error"></p>
+                <span class="character-count notes-count" aria-live="polite"><output id="notes-count">0</output>/500</span>
+              </div>
+            </div>
+
+            <div class="final-field-row">
+              <div class="field">
+                <label for="organizer_website">Organizer website <span class="optional">Optional</span></label>
+                <input id="organizer_website" name="organizer_website" type="url" maxlength="2048" inputmode="url" autocomplete="url" autocapitalize="none" spellcheck="false" placeholder="https://example.com/…" />
+                <p class="field-error" id="organizer_website-error"></p>
+              </div>
+
+              <div class="field verification-field">
+                <span class="verification-label" id="turnstile-label">Human check <span aria-hidden="true">*</span></span>
+                <div>
+                  <div
+                    class="cf-turnstile"
+                    aria-labelledby="turnstile-label"
+                    data-sitekey={EVENT_SUBMISSION_TURNSTILE_SITE_KEY}
+                    data-action={EVENT_SUBMISSION_TURNSTILE_ACTION}
+                    data-theme="light"
+                    data-appearance="always"
+                    tabindex="-1"
+                  ></div>
+                  <p class="field-error" id="turnstile-error" aria-live="polite"></p>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-submit">
+              <div id="form-status" class="form-status" role="alert" aria-live="assertive" tabindex="-1" hidden></div>
+              <div class="final-actions">
+                <button type="button" class="step-back" data-previous-step="1">← Back</button>
+                <button type="submit" class="btn btn-primary submit-button">
+                  <span class="submit-label">Submit for review</span>
+                  <span class="submit-loading" hidden>Submitting…</span>
+                  <span aria-hidden="true">→</span>
+                </button>
+              </div>
+              <p class="submission-note">
+                By submitting, you confirm the details are accurate and that DevCongress may publish them.
+              </p>
+            </div>
+          </div>
+          </div>
+
+          <div class="trap-field" aria-hidden="true">
+            <label for="contact_website">Leave this field empty</label>
+            <input id="contact_website" name="contact_website" type="text" tabindex="-1" autocomplete="off" />
+          </div>
+        </form>
+
+        <div id="success-panel" class="success-panel" tabindex="-1" hidden>
+          <span class="success-mark" aria-hidden="true">✓</span>
+          <span class="eyebrow">Submitted for review</span>
+          <h2 class="heading-serif">Thank you for sharing.</h2>
+          <p>
+            Your event is now with the DevCongress organizers. We’ll use the email you provided if
+            we need anything else.
+          </p>
+          <div class="success-actions">
+            <a href="/events/" class="btn btn-primary">Browse events</a>
+            <button type="button" id="submit-another" class="btn btn-outline">Submit another</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <dialog
+    id="leave-form-dialog"
+    class="leave-dialog"
+    aria-labelledby="leave-dialog-title"
+    aria-describedby="leave-dialog-description"
+  >
+    <div class="leave-dialog-content">
+      <span class="leave-dialog-kicker">Unsaved event</span>
+      <h2 id="leave-dialog-title">Leave this form?</h2>
+      <p id="leave-dialog-description">
+        Your event details haven’t been submitted. If you leave now, they’ll be discarded.
+      </p>
+      <div class="leave-dialog-actions">
+        <button type="button" class="btn btn-primary" id="keep-editing" autofocus>Keep editing</button>
+        <button type="button" class="btn btn-outline" id="leave-form">Leave form</button>
+      </div>
+    </div>
+  </dialog>
+  <p class="sr-only" id="draft-status" aria-live="polite"></p>
+
+  <script id="turnstile-script" is:inline src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
+</Base>
+
+<script>
+  interface SubmissionErrorResponse {
+    error?: {
+      code?: string;
+      message?: string;
+      field_errors?: Record<string, string>;
+    };
+  }
+
+  interface TurnstileApi {
+    render: (container: HTMLElement, options: Record<string, string | (() => void)>) => string;
+    reset: (widget?: string) => void;
+  }
+
+  declare global {
+    interface Window { turnstile?: TurnstileApi; }
+  }
+
+  const DRAFT_STORAGE_KEY = 'devcongress:event-submission-draft:v1';
+  const DRAFT_TTL_MS = 24 * 60 * 60 * 1000;
+  const DRAFT_SAVE_DELAY_MS = 250;
+  const DRAFT_FIELD_NAMES = [
+    'title', 'summary', 'format', 'starts_at', 'ends_at', 'timezone', 'location_type',
+    'venue_name', 'venue_address', 'online_url', 'registration_url', 'organizer_name',
+    'organizer_email', 'organizer_website', 'notes',
+  ] as const;
+  type DraftFieldName = typeof DRAFT_FIELD_NAMES[number];
+  interface EventSubmissionDraft {
+    version: 1;
+    savedAt: number;
+    fields: Partial<Record<DraftFieldName, string>>;
+  }
+
+  const form = document.querySelector<HTMLFormElement>('#event-submission-form');
+  const successPanel = document.querySelector<HTMLElement>('#success-panel');
+  const statusPanel = document.querySelector<HTMLElement>('#form-status');
+  const submitButton = form?.querySelector<HTMLButtonElement>('.submit-button');
+  const submitLabel = form?.querySelector<HTMLElement>('.submit-label');
+  const submitLoading = form?.querySelector<HTMLElement>('.submit-loading');
+  const startsInput = document.querySelector<HTMLInputElement>('#starts_at');
+  const endsInput = document.querySelector<HTMLInputElement>('#ends_at');
+  const summaryInput = document.querySelector<HTMLTextAreaElement>('#summary');
+  const summaryField = document.querySelector<HTMLElement>('#summary-field');
+  const summaryCount = document.querySelector<HTMLOutputElement>('#summary-count');
+  const notesInput = document.querySelector<HTMLTextAreaElement>('#notes');
+  const notesCount = document.querySelector<HTMLOutputElement>('#notes-count');
+  const formatSelect = document.querySelector<HTMLSelectElement>('#format');
+  const formatSelectRoot = document.querySelector<HTMLElement>('[data-app-select]');
+  const formatTrigger = document.querySelector<HTMLButtonElement>('#format-trigger');
+  const formatMenu = document.querySelector<HTMLElement>('#format-options');
+  const formatLabel = formatTrigger?.querySelector<HTMLElement>('[data-select-label]');
+  const formatOptions = Array.from(formatMenu?.querySelectorAll<HTMLButtonElement>('[data-select-value]') ?? []);
+  const timezoneInput = document.querySelector<HTMLInputElement>('#timezone');
+  const venueFields = document.querySelector<HTMLElement>('#venue-fields');
+  const onlineFields = document.querySelector<HTMLElement>('#online-fields');
+  const venueName = document.querySelector<HTMLInputElement>('#venue_name');
+  const onlineUrl = document.querySelector<HTMLInputElement>('#online_url');
+  const submitAnother = document.querySelector<HTMLButtonElement>('#submit-another');
+  const leaveDialog = document.querySelector<HTMLDialogElement>('#leave-form-dialog');
+  const keepEditingButton = document.querySelector<HTMLButtonElement>('#keep-editing');
+  const leaveFormButton = document.querySelector<HTMLButtonElement>('#leave-form');
+  const draftStatus = document.querySelector<HTMLElement>('#draft-status');
+  const draftNotice = document.querySelector<HTMLElement>('#draft-restored-notice');
+  const discardDraftButton = document.querySelector<HTMLButtonElement>('#discard-draft');
+  const guardedNavigationLinks = Array.from(document.querySelectorAll<HTMLAnchorElement>('[data-confirm-navigation]'));
+  const stepPanels = Array.from(form?.querySelectorAll<HTMLElement>('[data-step]') ?? []);
+  const stepIndicators = Array.from(form?.querySelectorAll<HTMLElement>('[data-step-indicator]') ?? []);
+  const nextButtons = Array.from(form?.querySelectorAll<HTMLButtonElement>('[data-next-step]') ?? []);
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+  const detectedTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'Africa/Accra';
+  let currentStep = 0;
+  let turnstileWidgetId: string | undefined;
+  let transitionTimer: number | undefined;
+  let selectCloseTimer: number | undefined;
+  let draftSaveTimer: number | undefined;
+  let dialogCloseTimer: number | undefined;
+  let draftNoticeTimer: number | undefined;
+  let pendingNavigationUrl = '';
+  let navigationTrigger: HTMLAnchorElement | null = null;
+  let hasUnsavedChanges = false;
+  let submissionComplete = false;
+
+  if (timezoneInput) timezoneInput.value = detectedTimezone;
+
+  function toLocalInputValue(date: Date): string {
+    const offset = date.getTimezoneOffset();
+    return new Date(date.getTime() - offset * 60_000).toISOString().slice(0, 16);
+  }
+
+  function localDateTimeToIso(value: string, timeZone: string): string {
+    const match = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/.exec(value);
+    if (!match) throw new Error('Invalid local datetime');
+    const [, year, month, day, hour, minute] = match;
+    const desiredUtc = Date.UTC(Number(year), Number(month) - 1, Number(day), Number(hour), Number(minute));
+    const formatter = new Intl.DateTimeFormat('en-CA', {
+      timeZone,
+      year: 'numeric', month: '2-digit', day: '2-digit',
+      hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23',
+    });
+    let instant = desiredUtc;
+    let offsetMinutes = 0;
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      const parts = Object.fromEntries(
+        formatter.formatToParts(new Date(instant)).map((part) => [part.type, part.value]),
+      );
+      const representedUtc = Date.UTC(
+        Number(parts.year), Number(parts.month) - 1, Number(parts.day),
+        Number(parts.hour), Number(parts.minute), Number(parts.second),
+      );
+      offsetMinutes = Math.round((representedUtc - instant) / 60_000);
+      instant = desiredUtc - offsetMinutes * 60_000;
+    }
+    const sign = offsetMinutes >= 0 ? '+' : '-';
+    const absoluteOffset = Math.abs(offsetMinutes);
+    const offsetHours = String(Math.floor(absoluteOffset / 60)).padStart(2, '0');
+    const offsetRemainder = String(absoluteOffset % 60).padStart(2, '0');
+    return `${value}:00${sign}${offsetHours}:${offsetRemainder}`;
+  }
+
+  function draftFieldValue(name: DraftFieldName, value: string): string {
+    const element = form?.elements.namedItem(name);
+    const control = element instanceof RadioNodeList ? null : element;
+    const declaredLimit = control instanceof HTMLInputElement || control instanceof HTMLTextAreaElement
+      ? control.maxLength
+      : -1;
+    const dataLimit = control instanceof HTMLTextAreaElement
+      ? Number(control.dataset.characterLimit ?? 0)
+      : 0;
+    const fallbackLimits: Partial<Record<DraftFieldName, number>> = {
+      format: 20,
+      starts_at: 16,
+      ends_at: 16,
+      timezone: 100,
+      location_type: 20,
+    };
+    const limit = declaredLimit > 0 ? declaredLimit : dataLimit > 0 ? dataLimit : fallbackLimits[name] ?? 2_048;
+    return value
+      .normalize('NFC')
+      .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, '')
+      .slice(0, limit);
+  }
+
+  function clearDraft(): void {
+    if (draftSaveTimer) window.clearTimeout(draftSaveTimer);
+    draftSaveTimer = undefined;
+    try { localStorage.removeItem(DRAFT_STORAGE_KEY); } catch { /* Storage can be unavailable. */ }
+  }
+
+  function showDraftNotice(): void {
+    if (!draftNotice) return;
+    if (draftNoticeTimer) window.clearTimeout(draftNoticeTimer);
+    draftNotice.hidden = false;
+    requestAnimationFrame(() => draftNotice.classList.add('is-visible'));
+  }
+
+  function hideDraftNotice(): void {
+    if (!draftNotice || draftNotice.hidden) return;
+    if (draftNoticeTimer) window.clearTimeout(draftNoticeTimer);
+    draftNotice.classList.remove('is-visible');
+    const finish = () => {
+      draftNoticeTimer = undefined;
+      draftNotice.hidden = true;
+    };
+    if (reduceMotion.matches) finish();
+    else draftNoticeTimer = window.setTimeout(finish, 160);
+  }
+
+  function persistDraft(): void {
+    if (!form || !hasUnsavedChanges || submissionComplete) return;
+    const data = new FormData(form);
+    const fields: EventSubmissionDraft['fields'] = {};
+    DRAFT_FIELD_NAMES.forEach((name) => {
+      const value = data.get(name);
+      if (typeof value === 'string') fields[name] = draftFieldValue(name, value);
+    });
+    const draft: EventSubmissionDraft = { version: 1, savedAt: Date.now(), fields };
+    try { localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(draft)); } catch { /* Draft recovery is best effort. */ }
+  }
+
+  function scheduleDraftSave(): void {
+    if (draftSaveTimer) window.clearTimeout(draftSaveTimer);
+    draftSaveTimer = window.setTimeout(() => {
+      draftSaveTimer = undefined;
+      persistDraft();
+    }, DRAFT_SAVE_DELAY_MS);
+  }
+
+  function readDraft(): EventSubmissionDraft | null {
+    try {
+      const rawDraft = localStorage.getItem(DRAFT_STORAGE_KEY);
+      if (!rawDraft) return null;
+      const parsed = JSON.parse(rawDraft) as Partial<EventSubmissionDraft>;
+      if (parsed.version !== 1 || typeof parsed.savedAt !== 'number' || !parsed.fields || typeof parsed.fields !== 'object') {
+        clearDraft();
+        return null;
+      }
+      if (Date.now() - parsed.savedAt > DRAFT_TTL_MS || parsed.savedAt > Date.now() + 60_000) {
+        clearDraft();
+        return null;
+      }
+      const fields: EventSubmissionDraft['fields'] = {};
+      DRAFT_FIELD_NAMES.forEach((name) => {
+        const value = parsed.fields?.[name];
+        if (typeof value === 'string') fields[name] = draftFieldValue(name, value);
+      });
+      return { version: 1, savedAt: parsed.savedAt, fields };
+    } catch {
+      clearDraft();
+      return null;
+    }
+  }
+
+  function restoreDraft(): void {
+    if (!form) return;
+    const draft = readDraft();
+    if (!draft) return;
+    const allowedFormats = new Set(formatOptions.map((option) => option.dataset.selectValue ?? ''));
+    const allowedLocations = new Set(['in_person', 'online', 'hybrid']);
+
+    DRAFT_FIELD_NAMES.forEach((name) => {
+      const value = draft.fields[name];
+      if (typeof value !== 'string' || name === 'format' || name === 'location_type') return;
+      const element = form.elements.namedItem(name);
+      if (element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement || element instanceof HTMLSelectElement) {
+        element.value = value;
+      }
+    });
+
+    const format = draft.fields.format ?? '';
+    if (allowedFormats.has(format)) selectFormat(format);
+    const location = draft.fields.location_type ?? '';
+    if (allowedLocations.has(location)) {
+      form.querySelector<HTMLInputElement>(`input[name="location_type"][value="${location}"]`)?.click();
+    }
+    startsInput?.dispatchEvent(new Event('app-date-picker:sync'));
+    endsInput?.dispatchEvent(new Event('app-date-picker:sync'));
+    timezoneInput?.dispatchEvent(new Event('app-timezone-picker:sync'));
+    syncLocationFields();
+    syncSummaryState();
+    syncNotesCount();
+    updateContinueButtonStates();
+    hasUnsavedChanges = true;
+    if (draftStatus) draftStatus.textContent = 'Your unfinished event draft was restored on this device.';
+    showDraftNotice();
+  }
+
+  function discardRestoredDraft(): void {
+    form?.reset();
+    selectFormat('');
+    timezoneInput?.dispatchEvent(new Event('app-timezone-picker:reset'));
+    initializeDateLimits();
+    syncLocationFields();
+    syncSummaryState();
+    syncNotesCount();
+    clearErrors();
+    form?.querySelectorAll<HTMLElement>('[data-dirty], [data-touched]').forEach((control) => {
+      delete control.dataset.dirty;
+      delete control.dataset.touched;
+    });
+    currentStep = 0;
+    stepPanels.forEach((panel, index) => {
+      panel.hidden = index !== 0;
+      panel.classList.remove('is-leaving-forward', 'is-leaving-back', 'is-entering-forward', 'is-entering-back');
+    });
+    updateStepProgress();
+    updateContinueButtonStates();
+    hasUnsavedChanges = false;
+    clearDraft();
+    hideDraftNotice();
+    if (draftStatus) draftStatus.textContent = 'Restored draft discarded. Starting a new event.';
+    form?.querySelector<HTMLInputElement>('#title')?.focus();
+  }
+
+  function finishClosingLeaveDialog(): void {
+    dialogCloseTimer = undefined;
+    leaveDialog?.classList.remove('is-closing');
+    leaveDialog?.close();
+    navigationTrigger?.focus();
+    pendingNavigationUrl = '';
+    navigationTrigger = null;
+  }
+
+  function closeLeaveDialog(): void {
+    if (!leaveDialog?.open) return;
+    if (dialogCloseTimer) window.clearTimeout(dialogCloseTimer);
+    if (reduceMotion.matches) {
+      finishClosingLeaveDialog();
+      return;
+    }
+    leaveDialog.classList.add('is-closing');
+    dialogCloseTimer = window.setTimeout(finishClosingLeaveDialog, 160);
+  }
+
+  function requestGuardedNavigation(link: HTMLAnchorElement): void {
+    pendingNavigationUrl = link.href;
+    navigationTrigger = link;
+    if (!leaveDialog || typeof leaveDialog.showModal !== 'function') {
+      if (window.confirm('Leave this form? Your unsaved event details will be discarded.')) {
+        clearDraft();
+        hasUnsavedChanges = false;
+        window.location.assign(pendingNavigationUrl);
+      }
+      return;
+    }
+    if (dialogCloseTimer) window.clearTimeout(dialogCloseTimer);
+    leaveDialog.classList.remove('is-closing');
+    leaveDialog.showModal();
+  }
+
+  function initializeDateLimits(): void {
+    if (!startsInput || !endsInput) return;
+    const now = new Date();
+    const soon = new Date(now.getTime() + 60 * 60 * 1000);
+    const defaultEnd = new Date(soon.getTime() + 2 * 60 * 60 * 1000);
+    startsInput.min = toLocalInputValue(now);
+    endsInput.min = toLocalInputValue(soon);
+    if (!startsInput.value) startsInput.value = toLocalInputValue(soon);
+    if (!endsInput.value) endsInput.value = toLocalInputValue(defaultEnd);
+    startsInput.dispatchEvent(new Event('app-date-picker:sync'));
+    endsInput.dispatchEvent(new Event('app-date-picker:sync'));
+  }
+
+  function syncEndDate(): void {
+    if (!startsInput || !endsInput || !startsInput.value) return;
+    endsInput.min = startsInput.value;
+    if (!endsInput.value || new Date(endsInput.value) <= new Date(startsInput.value)) {
+      const suggestedEnd = new Date(new Date(startsInput.value).getTime() + 2 * 60 * 60 * 1000);
+      endsInput.value = toLocalInputValue(suggestedEnd);
+    }
+    endsInput.dispatchEvent(new Event('app-date-picker:sync'));
+  }
+
+  function syncLocationFields(): void {
+    if (!form || !venueFields || !onlineFields || !venueName || !onlineUrl) return;
+    const selected = new FormData(form).get('location_type');
+    const needsVenue = selected === 'in_person' || selected === 'hybrid';
+    const needsOnline = selected === 'online' || selected === 'hybrid';
+    venueFields.hidden = !needsVenue;
+    onlineFields.hidden = !needsOnline;
+    venueName.required = needsVenue;
+    onlineUrl.required = needsOnline;
+    if (!needsVenue) {
+      venueName.value = '';
+      const address = document.querySelector<HTMLInputElement>('#venue_address');
+      if (address) address.value = '';
+      clearFieldError('venue_name');
+      clearFieldError('venue_address');
+    }
+    if (!needsOnline) {
+      onlineUrl.value = '';
+      clearFieldError('online_url');
+    }
+  }
+
+  function clearErrors(): void {
+    if (!form || !statusPanel) return;
+    form.querySelectorAll<HTMLElement>('.field-error').forEach((element) => { element.textContent = ''; });
+    form.querySelectorAll<HTMLElement>('[aria-invalid="true"]').forEach((element) => {
+      element.removeAttribute('aria-invalid');
+      element.removeAttribute('aria-describedby');
+      element.removeAttribute('aria-errormessage');
+    });
+    statusPanel.hidden = true;
+    statusPanel.textContent = '';
+  }
+
+  function clearFieldError(fieldName: string): void {
+    const field = form?.elements.namedItem(fieldName);
+    const input = field instanceof RadioNodeList ? field[0] : field;
+    const fieldElement = input instanceof HTMLElement ? input : null;
+    const dateTimeTrigger = ['starts_at', 'ends_at'].includes(fieldName)
+      ? document.querySelector<HTMLElement>(`[data-date-time-picker="${fieldName}"] .date-time-trigger`)
+      : null;
+    const timezoneTrigger = fieldName === 'timezone'
+      ? document.querySelector<HTMLElement>('[data-timezone-picker] .timezone-trigger')
+      : null;
+    const element = fieldName === 'format'
+      ? formatTrigger ?? fieldElement
+      : timezoneTrigger ?? dateTimeTrigger ?? fieldElement;
+    const error = document.getElementById(`${fieldName}-error`);
+    if (error) error.textContent = '';
+    element?.removeAttribute('aria-invalid');
+    element?.removeAttribute('aria-describedby');
+    element?.removeAttribute('aria-errormessage');
+  }
+
+  function syncSummaryState(): void {
+    if (!summaryInput || !summaryCount || !summaryField) return;
+    const limit = Number(summaryInput.dataset.characterLimit ?? 1200);
+    const overLimit = summaryInput.value.length > limit;
+    summaryCount.value = String(summaryInput.value.length);
+    summaryField.classList.toggle('is-over-limit', overLimit);
+
+    if (overLimit) {
+      showFieldError('summary', `Shorten the description by ${summaryInput.value.length - limit} character${summaryInput.value.length - limit === 1 ? '' : 's'}.`);
+      return;
+    }
+
+    const error = document.getElementById('summary-error');
+    if (error?.textContent?.startsWith('Shorten the description by')) error.textContent = '';
+    if (summaryInput.getAttribute('aria-describedby') === 'summary-error') {
+      summaryInput.removeAttribute('aria-invalid');
+      summaryInput.removeAttribute('aria-describedby');
+      summaryInput.removeAttribute('aria-errormessage');
+    }
+  }
+
+  function syncNotesCount(): void {
+    if (notesInput && notesCount) notesCount.value = String(notesInput.value.length);
+  }
+
+  function setFormatMenuOpen(open: boolean): void {
+    if (!formatMenu || !formatTrigger || !formatSelectRoot) return;
+    if (selectCloseTimer) window.clearTimeout(selectCloseTimer);
+    formatTrigger.setAttribute('aria-expanded', String(open));
+    formatSelectRoot.classList.toggle('is-open', open);
+
+    if (open) {
+      formatMenu.hidden = false;
+      requestAnimationFrame(() => formatMenu.classList.add('is-visible'));
+      return;
+    }
+
+    formatMenu.classList.remove('is-visible');
+    const finish = () => { formatMenu.hidden = true; };
+    if (reduceMotion.matches) finish();
+    else selectCloseTimer = window.setTimeout(finish, 150);
+  }
+
+  function selectFormat(value: string): void {
+    if (!formatSelect || !formatLabel) return;
+    formatSelect.value = value;
+    const selected = formatOptions.find((option) => option.dataset.selectValue === value);
+    formatLabel.textContent = selected?.textContent?.trim() || 'Choose one';
+    formatOptions.forEach((option) => {
+      option.setAttribute('aria-selected', String(option === selected));
+    });
+    formatTrigger?.removeAttribute('aria-invalid');
+    formatTrigger?.removeAttribute('aria-describedby');
+    formatTrigger?.removeAttribute('aria-errormessage');
+    const error = document.getElementById('format-error');
+    if (error) error.textContent = '';
+    formatSelect.dispatchEvent(new Event('change', { bubbles: true }));
+    setFormatMenuOpen(false);
+  }
+
+  function isSafeHttpUrl(value: string): boolean {
+    if (!value.trim()) return true;
+    try {
+      const parsed = new URL(value.trim());
+      return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+    } catch {
+      return false;
+    }
+  }
+
+  function stepIsReady(step: number): boolean {
+    if (!form || !startsInput || !endsInput) return false;
+    const panel = stepPanels[step];
+    if (!panel) return false;
+    const controls = Array.from(panel.querySelectorAll<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>('input, textarea, select'));
+    for (const control of controls) {
+      if (control.disabled || control.type === 'hidden') continue;
+      if (!control.checkValidity()) return false;
+      if ((control instanceof HTMLInputElement || control instanceof HTMLTextAreaElement) && control.required) {
+        const trimmedValue = control.value.trim();
+        if (!trimmedValue || (control.minLength > 0 && trimmedValue.length < control.minLength)) return false;
+      }
+      if (control instanceof HTMLInputElement && control.type === 'url' && !isSafeHttpUrl(control.value)) return false;
+    }
+
+    if (step === 0) {
+      const limit = Number(summaryInput?.dataset.characterLimit ?? 1200);
+      return Boolean(summaryInput && summaryInput.value.trim().length >= 20 && summaryInput.value.length <= limit && formatSelect?.value);
+    }
+
+    if (step === 1) {
+      const eventTimezone = timezoneInput?.value.trim() ?? '';
+      try {
+        Intl.DateTimeFormat('en', { timeZone: eventTimezone }).format();
+        const start = new Date(localDateTimeToIso(startsInput.value, eventTimezone));
+        const end = new Date(localDateTimeToIso(endsInput.value, eventTimezone));
+        if (start.getTime() <= Date.now() || end <= start || end.getTime() - start.getTime() > 31 * 24 * 60 * 60 * 1000) return false;
+      } catch {
+        return false;
+      }
+      const data = new FormData(form);
+      if (!String(data.get('registration_url') ?? '').trim() && !String(data.get('online_url') ?? '').trim()) return false;
+    }
+
+    return true;
+  }
+
+  function updateContinueButtonStates(): void {
+    nextButtons.forEach((button) => {
+      const step = Number(button.closest<HTMLElement>('[data-step]')?.dataset.step ?? -1);
+      const ready = stepIsReady(step);
+      button.disabled = !ready;
+      const status = form?.querySelector<HTMLElement>(`[data-step-status="${step}"]`);
+      if (status) status.textContent = ready ? 'Required fields complete. You can continue.' : 'Complete all required fields to continue.';
+    });
+  }
+
+  function showFieldError(fieldName: string, message: string): HTMLElement | null {
+    const field = form?.elements.namedItem(fieldName);
+    const input = field instanceof RadioNodeList ? field[0] : field;
+    const fieldElement = input instanceof HTMLElement ? input : null;
+    const dateTimeTrigger = ['starts_at', 'ends_at'].includes(fieldName)
+      ? document.querySelector<HTMLElement>(`[data-date-time-picker="${fieldName}"] .date-time-trigger`)
+      : null;
+    const timezoneTrigger = fieldName === 'timezone'
+      ? document.querySelector<HTMLElement>('[data-timezone-picker] .timezone-trigger')
+      : null;
+    const element = fieldName === 'format'
+      ? formatTrigger ?? fieldElement
+      : timezoneTrigger ?? dateTimeTrigger ?? fieldElement;
+    const error = document.getElementById(`${fieldName}-error`);
+    if (error) error.textContent = message;
+    if (element) {
+      element.setAttribute('aria-invalid', 'true');
+      element.setAttribute('aria-describedby', `${fieldName}-error`);
+      element.setAttribute('aria-errormessage', `${fieldName}-error`);
+    }
+    return element;
+  }
+
+  function liveValidationMessage(element: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement): string | null {
+    const value = element.value.trim();
+    const labels: Record<string, string> = {
+      title: 'event name',
+      summary: 'short description',
+      format: 'event type',
+      starts_at: 'start date and time',
+      ends_at: 'end date and time',
+      timezone: 'time zone',
+      venue_name: 'venue name',
+      online_url: 'online event link',
+      organizer_name: 'organizer name',
+      organizer_email: 'contact email',
+    };
+
+    if (element.required && !value) {
+      if (element.name === 'format') return 'Choose an event type.';
+      return `Enter the ${labels[element.name] ?? 'required value'}.`;
+    }
+    if (!value) return null;
+    if ((element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement)
+      && element.minLength > 0
+      && value.length < element.minLength) {
+      return `Enter at least ${element.minLength} characters.`;
+    }
+    if (element instanceof HTMLInputElement && element.type === 'email' && element.validity.typeMismatch) {
+      return 'Enter a valid email address.';
+    }
+    if (element instanceof HTMLInputElement && element.type === 'url' && !isSafeHttpUrl(value)) {
+      return 'Use a complete http(s) URL.';
+    }
+    if (!element.checkValidity()) return element.validationMessage;
+
+    if (element.name === 'summary' && summaryInput) {
+      const limit = Number(summaryInput.dataset.characterLimit ?? 1200);
+      if (summaryInput.value.length > limit) {
+        const extra = summaryInput.value.length - limit;
+        return `Shorten this by ${extra} character${extra === 1 ? '' : 's'}.`;
+      }
+    }
+
+    if (element.name === 'timezone') {
+      try { Intl.DateTimeFormat('en', { timeZone: value }).format(); }
+      catch { return 'Use a valid time zone, such as Africa/Accra.'; }
+    }
+
+    if ((element.name === 'starts_at' || element.name === 'ends_at') && startsInput && endsInput && timezoneInput) {
+      try {
+        const start = new Date(localDateTimeToIso(startsInput.value, timezoneInput.value.trim()));
+        const end = new Date(localDateTimeToIso(endsInput.value, timezoneInput.value.trim()));
+        if (element.name === 'starts_at' && start.getTime() <= Date.now()) return 'Choose a start time in the future.';
+        if (element.name === 'ends_at' && end <= start) return 'Choose an end time after the start.';
+        if (element.name === 'ends_at' && end.getTime() - start.getTime() > 31 * 24 * 60 * 60 * 1000) {
+          return 'Keep the event within 31 days.';
+        }
+      } catch {
+        return 'Choose a valid date and time.';
+      }
+    }
+
+    return null;
+  }
+
+  function validateScheduleFields(): void {
+    if (!startsInput || !endsInput || !timezoneInput) return;
+    try { Intl.DateTimeFormat('en', { timeZone: timezoneInput.value.trim() }).format(); }
+    catch { return; }
+
+    [startsInput, endsInput].forEach((input) => {
+      const message = liveValidationMessage(input);
+      if (message) showFieldError(input.name, message);
+      else clearFieldError(input.name);
+    });
+  }
+
+  function validateDirtyControl(element: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement): void {
+    if (!element.name || element.disabled || element.type === 'hidden' || element.closest('.trap-field')) return;
+    const message = liveValidationMessage(element);
+    if (message) showFieldError(element.name, message);
+    else clearFieldError(element.name);
+
+    if (['starts_at', 'ends_at', 'timezone'].includes(element.name)) {
+      validateScheduleFields();
+    }
+
+    if (element.name === 'registration_url' || element.name === 'online_url') {
+      const registration = form?.elements.namedItem('registration_url');
+      const online = form?.elements.namedItem('online_url');
+      const registrationInput = registration instanceof HTMLInputElement ? registration : null;
+      const onlineInput = online instanceof HTMLInputElement ? online : null;
+      if (registrationInput && onlineInput) {
+        const hasJoinLink = Boolean(registrationInput.value.trim() || onlineInput.value.trim());
+        if (!hasJoinLink) showFieldError('registration_url', 'Add a registration or online link.');
+        else if (!liveValidationMessage(registrationInput)) clearFieldError('registration_url');
+      }
+    }
+  }
+
+  function updateStepProgress(): void {
+    stepIndicators.forEach((indicator, index) => {
+      const completed = index < currentStep;
+      const current = index === currentStep;
+      indicator.classList.toggle('is-complete', completed);
+      indicator.classList.toggle('is-current', current);
+      if (current) indicator.setAttribute('aria-current', 'step');
+      else indicator.removeAttribute('aria-current');
+      const number = indicator.querySelector<HTMLElement>('.step-number');
+      const check = indicator.querySelector<HTMLElement>('.step-check');
+      if (number) number.hidden = completed;
+      if (check) check.hidden = !completed;
+    });
+  }
+
+  function renderTurnstile(): void {
+    if (turnstileWidgetId) return;
+    const container = form?.querySelector<HTMLElement>('.cf-turnstile');
+    if (!container || !window.turnstile) return;
+    const error = document.getElementById('turnstile-error');
+    const clearError = () => {
+      if (error) error.textContent = '';
+      container.removeAttribute('aria-invalid');
+      container.removeAttribute('aria-describedby');
+    };
+    const showError = (message: string) => {
+      if (error) error.textContent = message;
+      container.setAttribute('aria-invalid', 'true');
+      container.setAttribute('aria-describedby', 'turnstile-error');
+    };
+    turnstileWidgetId = window.turnstile.render(container, {
+      sitekey: container.dataset.sitekey ?? '',
+      action: container.dataset.action ?? '',
+      theme: 'light',
+      appearance: 'always',
+      callback: clearError,
+      'expired-callback': () => showError('The human check expired. Please complete it again.'),
+      'error-callback': () => showError('The human check could not load. Please refresh and try again.'),
+    });
+  }
+
+  function resetTurnstile(): void {
+    if (turnstileWidgetId) window.turnstile?.reset(turnstileWidgetId);
+  }
+
+  function goToStep(nextStep: number, focusTarget?: HTMLElement | null): void {
+    if (nextStep < 0 || nextStep >= stepPanels.length) return;
+    const outgoing = stepPanels[currentStep];
+    const incoming = stepPanels[nextStep];
+    if (!outgoing || !incoming) return;
+    if (nextStep === currentStep) {
+      focusTarget?.focus();
+      return;
+    }
+
+    if (transitionTimer) window.clearTimeout(transitionTimer);
+    stepPanels.forEach((panel) => {
+      panel.classList.remove('is-leaving-forward', 'is-leaving-back', 'is-entering-forward', 'is-entering-back');
+      if (panel !== outgoing && panel !== incoming) panel.hidden = true;
+    });
+
+    const forward = nextStep > currentStep;
+    outgoing.classList.add(forward ? 'is-leaving-forward' : 'is-leaving-back');
+    incoming.classList.add(forward ? 'is-entering-forward' : 'is-entering-back');
+    incoming.hidden = false;
+    currentStep = nextStep;
+    updateStepProgress();
+    updateContinueButtonStates();
+    if (currentStep === 2) {
+      renderTurnstile();
+      document.getElementById('turnstile-script')?.addEventListener('load', renderTurnstile, { once: true });
+    }
+
+    const finish = () => {
+      outgoing.hidden = true;
+      outgoing.classList.remove('is-leaving-forward', 'is-leaving-back');
+      incoming.classList.remove('is-entering-forward', 'is-entering-back');
+      (focusTarget ?? incoming.querySelector<HTMLElement>('h2'))?.focus();
+    };
+
+    if (reduceMotion.matches) finish();
+    else {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => incoming.classList.remove('is-entering-forward', 'is-entering-back'));
+      });
+      transitionTimer = window.setTimeout(finish, 230);
+    }
+  }
+
+  function validateStep(step: number, includeTurnstile = false): HTMLElement | null {
+    if (!form || !startsInput || !endsInput) return null;
+    const panel = stepPanels[step];
+    if (!panel) return null;
+    let firstInvalid: HTMLElement | null = null;
+
+    for (const element of Array.from(panel.querySelectorAll<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>('input, textarea, select'))) {
+      if (!(element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement || element instanceof HTMLSelectElement)) continue;
+      if (element.type === 'hidden' || element.disabled) continue;
+      if (!element.checkValidity()) {
+        const invalid = showFieldError(element.name, element.validationMessage);
+        firstInvalid ??= invalid;
+      }
+      if ((element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement) && element.required) {
+        const trimmedValue = element.value.trim();
+        if (!trimmedValue) firstInvalid ??= showFieldError(element.name, 'Enter a value without using only spaces.');
+        else if (element.minLength > 0 && trimmedValue.length < element.minLength) {
+          firstInvalid ??= showFieldError(element.name, `Enter at least ${element.minLength} characters.`);
+        }
+      }
+    }
+
+    for (const urlInput of Array.from(panel.querySelectorAll<HTMLInputElement>('input[type="url"]'))) {
+      if (urlInput.value.trim() && !isSafeHttpUrl(urlInput.value)) {
+        firstInvalid ??= showFieldError(urlInput.name, 'Use a complete http(s) URL, such as https://example.com/.');
+      }
+    }
+
+    if (step === 0 && summaryInput) {
+      const limit = Number(summaryInput.dataset.characterLimit ?? 1200);
+      if (summaryInput.value.length > limit) {
+        firstInvalid ??= showFieldError('summary', `Shorten the description by ${summaryInput.value.length - limit} character${summaryInput.value.length - limit === 1 ? '' : 's'}.`);
+      }
+    }
+
+    if (step === 1) {
+      const eventTimezone = String(new FormData(form).get('timezone') ?? '').trim();
+      try {
+        Intl.DateTimeFormat('en', { timeZone: eventTimezone }).format();
+        const start = new Date(localDateTimeToIso(startsInput.value, eventTimezone));
+        const end = new Date(localDateTimeToIso(endsInput.value, eventTimezone));
+        if (start.getTime() <= Date.now()) firstInvalid ??= showFieldError('starts_at', 'Choose a start time in the future.');
+        if (end <= start) firstInvalid ??= showFieldError('ends_at', 'The end time must be after the start time.');
+        if (end.getTime() - start.getTime() > 31 * 24 * 60 * 60 * 1000) {
+          firstInvalid ??= showFieldError('ends_at', 'An event cannot run for more than 31 days.');
+        }
+      } catch {
+        firstInvalid ??= showFieldError('timezone', 'Enter a valid IANA time zone, such as Africa/Accra.');
+      }
+
+      const data = new FormData(form);
+      if (!String(data.get('registration_url') ?? '').trim() && !String(data.get('online_url') ?? '').trim()) {
+        firstInvalid ??= showFieldError('registration_url', 'Add a registration page or online event link.');
+      }
+    }
+
+    if (includeTurnstile && !String(new FormData(form).get('cf-turnstile-response') ?? '')) {
+      const error = document.getElementById('turnstile-error');
+      if (error) error.textContent = 'Please complete the security check.';
+      const turnstile = form.querySelector<HTMLElement>('.cf-turnstile');
+      turnstile?.setAttribute('aria-invalid', 'true');
+      turnstile?.setAttribute('aria-describedby', 'turnstile-error');
+      firstInvalid ??= turnstile;
+    }
+    return firstInvalid;
+  }
+
+  function findInvalidStep(includeTurnstile: boolean): { element: HTMLElement; step: number } | null {
+    for (let step = 0; step < stepPanels.length; step += 1) {
+      const element = validateStep(step, includeTurnstile && step === 2);
+      if (element) return { element, step };
+    }
+    return null;
+  }
+
+  function revealAndFocus(element: HTMLElement): void {
+    const panel = element.closest<HTMLElement>('[data-step]');
+    const step = Number(panel?.dataset.step ?? currentStep);
+    if (step !== currentStep) goToStep(step, element);
+    else element.focus();
+  }
+
+  function sanitizePlainText(value: FormDataEntryValue | null): string {
+    return String(value ?? '')
+      .normalize('NFC')
+      .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, '')
+      .trim();
+  }
+
+  function optionalValue(data: FormData, name: string): string | undefined {
+    const value = sanitizePlainText(data.get(name));
+    return value || undefined;
+  }
+
+  function setSubmitting(submitting: boolean): void {
+    if (!submitButton || !submitLabel || !submitLoading) return;
+    submitButton.disabled = submitting;
+    submitButton.setAttribute('aria-busy', String(submitting));
+    submitLabel.hidden = submitting;
+    submitLoading.hidden = !submitting;
+  }
+
+  async function parseError(response: Response): Promise<SubmissionErrorResponse> {
+    const contentType = response.headers.get('content-type') ?? '';
+    if (!contentType.toLowerCase().includes('application/json')) return {};
+    try { return await response.json() as SubmissionErrorResponse; } catch { return {}; }
+  }
+
+  initializeDateLimits();
+  syncLocationFields();
+  form?.querySelectorAll<HTMLElement>('.field-error').forEach((error) => error.setAttribute('aria-live', 'polite'));
+  form?.addEventListener('input', (event) => {
+    const target = event.target;
+    if ((target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement || target instanceof HTMLSelectElement)
+      && target.name
+      && !target.closest('.trap-field')) {
+      hasUnsavedChanges = true;
+      hideDraftNotice();
+      target.dataset.dirty = 'true';
+      validateDirtyControl(target);
+      updateContinueButtonStates();
+      scheduleDraftSave();
+    }
+  });
+  form?.addEventListener('change', (event) => {
+    const target = event.target;
+    if ((target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement || target instanceof HTMLSelectElement)
+      && target.name
+      && !target.closest('.trap-field')) {
+      hasUnsavedChanges = true;
+      hideDraftNotice();
+      target.dataset.dirty = 'true';
+      validateDirtyControl(target);
+      updateContinueButtonStates();
+      scheduleDraftSave();
+    }
+  });
+  form?.addEventListener('focusout', (event) => {
+    const target = event.target;
+    if (!(target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement || target instanceof HTMLSelectElement)) return;
+    if (!target.name || target.closest('.date-time-panel')) return;
+    target.dataset.touched = 'true';
+    validateDirtyControl(target);
+  });
+  startsInput?.addEventListener('change', syncEndDate);
+  form?.querySelectorAll<HTMLInputElement>('input[name="location_type"]').forEach((input) => {
+    input.addEventListener('change', syncLocationFields);
+  });
+  summaryInput?.addEventListener('input', () => {
+    syncSummaryState();
+  });
+  notesInput?.addEventListener('input', syncNotesCount);
+  syncNotesCount();
+  updateContinueButtonStates();
+  formatTrigger?.addEventListener('click', () => {
+    const open = formatTrigger.getAttribute('aria-expanded') !== 'true';
+    setFormatMenuOpen(open);
+    if (open) (formatOptions.find((option) => option.getAttribute('aria-selected') === 'true') ?? formatOptions[0])?.focus();
+  });
+  formatTrigger?.addEventListener('keydown', (event) => {
+    if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return;
+    event.preventDefault();
+    setFormatMenuOpen(true);
+    (event.key === 'ArrowDown' ? formatOptions[0] : formatOptions.at(-1))?.focus();
+  });
+  formatSelectRoot?.addEventListener('focusout', () => {
+    requestAnimationFrame(() => {
+      if (formatSelectRoot.contains(document.activeElement)) return;
+      if (formatSelect) {
+        formatSelect.dataset.touched = 'true';
+        validateDirtyControl(formatSelect);
+      }
+    });
+  });
+  formatOptions.forEach((option, index) => {
+    option.addEventListener('click', () => {
+      selectFormat(option.dataset.selectValue ?? '');
+      formatTrigger?.focus();
+    });
+    option.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        setFormatMenuOpen(false);
+        formatTrigger?.focus();
+        return;
+      }
+      if (!['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) return;
+      event.preventDefault();
+      const nextIndex = event.key === 'Home'
+        ? 0
+        : event.key === 'End'
+          ? formatOptions.length - 1
+          : (index + (event.key === 'ArrowDown' ? 1 : -1) + formatOptions.length) % formatOptions.length;
+      formatOptions[nextIndex]?.focus();
+    });
+  });
+  document.addEventListener('click', (event) => {
+    if (formatSelectRoot && !formatSelectRoot.contains(event.target as Node)) setFormatMenuOpen(false);
+  });
+  nextButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      clearErrors();
+      const invalid = validateStep(currentStep);
+      if (invalid) revealAndFocus(invalid);
+      else goToStep(Number(button.dataset.nextStep));
+    });
+  });
+  form?.querySelectorAll<HTMLButtonElement>('[data-previous-step]').forEach((button) => {
+    button.addEventListener('click', () => goToStep(Number(button.dataset.previousStep)));
+  });
+
+  form?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    clearErrors();
+    const invalid = findInvalidStep(true);
+    if (invalid) {
+      if (invalid.step !== currentStep) goToStep(invalid.step, invalid.element);
+      else invalid.element.focus();
+      return;
+    }
+    const data = new FormData(form);
+
+    // A filled honeypot is treated as accepted without sending anything.
+    if (String(data.get('contact_website') ?? '').trim()) {
+      submissionComplete = true;
+      hasUnsavedChanges = false;
+      clearDraft();
+      form.hidden = true;
+      if (successPanel) { successPanel.hidden = false; successPanel.focus(); }
+      return;
+    }
+
+    const endpoint = form.dataset.endpoint;
+    const turnstileAction = form.dataset.turnstileAction;
+    if (!endpoint || !turnstileAction) return;
+
+    const payload = {
+      title: sanitizePlainText(data.get('title')),
+      summary: sanitizePlainText(data.get('summary')),
+      format: sanitizePlainText(data.get('format')),
+      starts_at: localDateTimeToIso(sanitizePlainText(data.get('starts_at')), sanitizePlainText(data.get('timezone'))),
+      ends_at: localDateTimeToIso(sanitizePlainText(data.get('ends_at')), sanitizePlainText(data.get('timezone'))),
+      timezone: sanitizePlainText(data.get('timezone')),
+      location_type: sanitizePlainText(data.get('location_type')),
+      venue_name: optionalValue(data, 'venue_name'),
+      venue_address: optionalValue(data, 'venue_address'),
+      online_url: optionalValue(data, 'online_url'),
+      registration_url: optionalValue(data, 'registration_url'),
+      organizer_name: sanitizePlainText(data.get('organizer_name')),
+      organizer_email: sanitizePlainText(data.get('organizer_email')).toLowerCase(),
+      organizer_website: optionalValue(data, 'organizer_website'),
+      notes: optionalValue(data, 'notes'),
+      turnstile_action: turnstileAction,
+      turnstile_token: String(data.get('cf-turnstile-response')),
+    };
+
+    setSubmitting(true);
+    try {
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { accept: 'application/json', 'content-type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      if (response.status !== 202) {
+        const body = await parseError(response);
+        const fieldErrors = body.error?.field_errors ?? {};
+        let firstServerError: HTMLElement | null = null;
+        Object.entries(fieldErrors).forEach(([fieldName, message]) => {
+          firstServerError ??= showFieldError(fieldName, message);
+        });
+
+        const retryAfter = response.headers.get('retry-after');
+        let message = body.error?.message || 'We could not submit your event. Please try again.';
+        if (response.status === 429 && retryAfter) {
+          const seconds = Number(retryAfter);
+          if (Number.isFinite(seconds)) message = `Too many attempts. Please try again in ${Math.ceil(seconds / 60)} minute(s).`;
+        }
+        if (statusPanel) {
+          statusPanel.textContent = message;
+          statusPanel.hidden = false;
+          statusPanel.focus();
+        }
+        if (firstServerError) revealAndFocus(firstServerError);
+        else statusPanel?.focus();
+        resetTurnstile();
+        throw new Error('Submission rejected');
+      }
+
+      form.hidden = true;
+      submissionComplete = true;
+      hasUnsavedChanges = false;
+      clearDraft();
+      if (successPanel) {
+        successPanel.hidden = false;
+        successPanel.focus();
+      }
+    } catch (error) {
+      if (error instanceof Error && error.message === 'Submission rejected') return;
+      if (statusPanel) {
+        statusPanel.textContent = 'We could not reach the review service. Check your connection and try again.';
+        statusPanel.hidden = false;
+        statusPanel.focus();
+      }
+      resetTurnstile();
+    } finally {
+      setSubmitting(false);
+    }
+  });
+
+  submitAnother?.addEventListener('click', () => {
+    clearDraft();
+    form?.reset();
+    selectFormat('');
+    timezoneInput?.dispatchEvent(new Event('app-timezone-picker:reset'));
+    syncSummaryState();
+    initializeDateLimits();
+    syncLocationFields();
+    clearErrors();
+    resetTurnstile();
+    if (successPanel) successPanel.hidden = true;
+    currentStep = 0;
+    stepPanels.forEach((panel, index) => {
+      panel.hidden = index !== 0;
+      panel.classList.remove('is-leaving-forward', 'is-leaving-back', 'is-entering-forward', 'is-entering-back');
+    });
+    updateStepProgress();
+    updateContinueButtonStates();
+    submissionComplete = false;
+    hasUnsavedChanges = false;
+    if (form) { form.hidden = false; form.querySelector<HTMLInputElement>('#title')?.focus(); }
+  });
+
+  discardDraftButton?.addEventListener('click', discardRestoredDraft);
+
+  guardedNavigationLinks.forEach((link) => {
+    link.addEventListener('click', (event) => {
+      if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+      if (!hasUnsavedChanges || submissionComplete) return;
+      event.preventDefault();
+      requestGuardedNavigation(link);
+    });
+  });
+  keepEditingButton?.addEventListener('click', closeLeaveDialog);
+  leaveFormButton?.addEventListener('click', () => {
+    if (!pendingNavigationUrl) return;
+    clearDraft();
+    hasUnsavedChanges = false;
+    window.location.assign(pendingNavigationUrl);
+  });
+  leaveDialog?.addEventListener('cancel', (event) => {
+    event.preventDefault();
+    closeLeaveDialog();
+  });
+
+  restoreDraft();
+
+  window.addEventListener('beforeunload', (event) => {
+    if (!hasUnsavedChanges || submissionComplete) return;
+    persistDraft();
+    event.preventDefault();
+    event.returnValue = '';
+  });
+  window.addEventListener('pagehide', persistDraft);
+</script>
+
+<style>
+  .page-nav { position: sticky; top: 0; z-index: 100; background: var(--bg); border-bottom: 2px solid var(--black); }
+  .page-nav-inner { min-height: 68px; display: flex; align-items: center; }
+  .page-logo img { height: 36px; width: auto; }
+  .leave-dialog {
+    width: min(460px, calc(100vw - 2rem));
+    max-height: calc(100svh - 2rem);
+    margin: auto;
+    overflow: auto;
+    border: 2px solid var(--black);
+    border-radius: var(--r-md);
+    padding: 0;
+    background: var(--bg-white);
+    color: var(--text);
+    box-shadow: 8px 8px 0 var(--black);
+    opacity: 0;
+    transform: translateY(10px) scale(0.985);
+    transition: opacity 160ms cubic-bezier(0.4, 0, 0.2, 1), transform 220ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .leave-dialog[open] { opacity: 1; transform: translateY(0) scale(1); }
+  .leave-dialog.is-closing { opacity: 0; transform: translateY(6px) scale(0.99); }
+  .leave-dialog::backdrop { background: rgba(17, 17, 17, 0.58); }
+  .leave-dialog-content { padding: var(--s6); }
+  .leave-dialog-kicker {
+    display: block;
+    color: var(--pink);
+    font-size: var(--text-xs);
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .leave-dialog h2 { margin-top: var(--s2); font-size: var(--text-2xl); line-height: var(--leading-snug); }
+  .leave-dialog p { max-width: 38ch; margin-top: var(--s2); color: var(--text-mid); font-size: var(--text-sm); }
+  .leave-dialog-actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: var(--s3); margin-top: var(--s6); }
+  .leave-dialog .btn { min-height: 44px; border-radius: var(--r-sm); padding: var(--s3) var(--s5); }
+  @starting-style {
+    .leave-dialog[open] { opacity: 0; transform: translateY(10px) scale(0.985); }
+  }
+  .form-hero { position: relative; overflow: hidden; isolation: isolate; padding-block: clamp(3rem, 7vw, 6rem); background: var(--yellow); border-bottom: 2px solid var(--black); }
+  .form-hero::before {
+    content: '';
+    position: absolute;
+    z-index: 0;
+    inset: 0;
+    background-image:
+      linear-gradient(to right, color-mix(in oklch, var(--black) 11%, transparent) 1px, transparent 1px),
+      linear-gradient(to bottom, color-mix(in oklch, var(--black) 11%, transparent) 1px, transparent 1px);
+    background-size: clamp(56px, 6vw, 76px) clamp(56px, 6vw, 76px);
+    -webkit-mask-image: linear-gradient(140deg, transparent 5%, black 52%, transparent 100%);
+    mask-image: linear-gradient(140deg, transparent 5%, black 52%, transparent 100%);
+    pointer-events: none;
+  }
+  .form-hero::after {
+    content: '';
+    position: absolute;
+    z-index: 0;
+    right: 10%;
+    bottom: 12%;
+    width: clamp(56px, 6vw, 76px);
+    aspect-ratio: 1;
+    border: 1px solid color-mix(in oklch, var(--pink) 44%, transparent);
+    background: color-mix(in oklch, var(--pink) 18%, transparent);
+    pointer-events: none;
+  }
+  .form-hero-inner { position: relative; z-index: 1; max-width: 900px; }
+  .hero-kicker { display: block; color: color-mix(in oklch, var(--black) 72%, var(--yellow)); font-size: 0.75rem; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; }
+  .form-hero h1 { margin-top: var(--s5); font-family: var(--font-body); font-size: clamp(3.25rem, 6vw, 5.75rem); font-weight: 600; letter-spacing: -0.045em; line-height: 0.95; text-wrap: balance; }
+  .form-hero h1::after { content: ''; display: block; width: clamp(76px, 13vw, 142px); height: 10px; margin-top: var(--s5); background: var(--pink); }
+  .form-hero p { color: var(--text); font-size: var(--text-base); font-weight: 550; max-width: 46ch; margin-top: var(--s5); text-wrap: pretty; }
+  .form-layout { max-width: 900px; padding-block: var(--s9); }
+  .form-shell { overflow: visible; transition: none; }
+  .form-shell .btn { border-radius: var(--r-sm); }
+  .form-shell:hover { transform: none; box-shadow: none; }
+  .step-progress {
+    padding: var(--s5) var(--s7);
+    border-bottom: 2px solid var(--black);
+    border-radius: calc(var(--r-md) - 2px) calc(var(--r-md) - 2px) 0 0;
+    background: var(--yellow-bg);
+  }
+  .step-progress ol { display: grid; grid-template-columns: repeat(3, 1fr); }
+  .step-progress li { position: relative; display: flex; flex-direction: column; align-items: center; gap: var(--s2); color: var(--text-muted); font-size: var(--text-xs); font-weight: 700; text-align: center; }
+  .step-progress li:not(:last-child)::after { content: ''; position: absolute; z-index: 0; top: 16px; left: calc(50% + 22px); width: calc(100% - 44px); border-top: 2px solid var(--border-light); }
+  .step-progress li.is-complete:not(:last-child)::after { border-color: var(--black); }
+  .step-dot { position: relative; z-index: 1; display: grid; place-items: center; width: 34px; height: 34px; border: 2px solid var(--border-light); border-radius: 50%; background: var(--bg-white); transition: transform 160ms cubic-bezier(0.34, 1.56, 0.64, 1), background 150ms cubic-bezier(0.4, 0, 0.2, 1), border-color 150ms cubic-bezier(0.4, 0, 0.2, 1); }
+  .step-progress li.is-current { color: var(--text); }
+  .step-progress li.is-current .step-dot { border-color: var(--black); background: var(--pink); color: white; transform: scale(1.06); }
+  .step-progress li.is-complete { color: var(--text); }
+  .step-progress li.is-complete .step-dot { border-color: var(--black); background: var(--yellow); color: var(--black); }
+  .step-check { display: grid; place-items: center; }
+  .step-check svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2.25; stroke-linecap: round; stroke-linejoin: round; }
+  .draft-notice { display: flex; flex: 0 0 auto; align-items: baseline; gap: var(--s2); margin-left: auto; color: var(--text-muted); font-size: var(--text-xs); opacity: 0; transform: translateY(-4px); transition: opacity 140ms cubic-bezier(0.4, 0, 0.2, 1), transform 200ms cubic-bezier(0.16, 1, 0.3, 1); }
+  .draft-notice.is-visible { opacity: 1; transform: translateY(0); }
+  .draft-notice > span:first-child { color: var(--text); font-weight: 700; }
+  .draft-notice-divider { color: var(--border-light); }
+  .draft-discard {
+    min-height: 28px;
+    border-bottom: 1px solid currentColor;
+    border-radius: 0;
+    padding: 0;
+    color: var(--pink);
+    font-size: var(--text-xs);
+    font-weight: 700;
+    transition: color 120ms cubic-bezier(0.4, 0, 0.2, 1), transform 100ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .draft-discard:hover { color: var(--black); }
+  .draft-discard:focus-visible { outline: 2px solid var(--pink); outline-offset: 2px; }
+  .draft-discard:active { transform: scale(0.97); }
+  .step-panels { position: relative; }
+  .form-section { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s5); padding: var(--s7); border-radius: 0 0 calc(var(--r-md) - 2px) calc(var(--r-md) - 2px); background: var(--bg-white); transition: transform 220ms cubic-bezier(0.16, 1, 0.3, 1), opacity 160ms cubic-bezier(0.4, 0, 0.2, 1); }
+  .form-section.is-leaving-forward, .form-section.is-leaving-back { position: absolute; inset: 0; z-index: 0; width: 100%; pointer-events: none; }
+  .form-section.is-leaving-forward { transform: translateX(-24px); opacity: 0; }
+  .form-section.is-leaving-back { transform: translateX(24px); opacity: 0; }
+  .form-section.is-entering-forward { transform: translateX(24px); opacity: 0; }
+  .form-section.is-entering-back { transform: translateX(-24px); opacity: 0; }
+  .section-heading { grid-column: 1 / -1; display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: var(--s3) var(--s4); margin-bottom: var(--s2); }
+  .section-heading h2 { font-size: var(--text-xl); line-height: var(--leading-snug); }
+  .section-heading h2:focus { outline: none; }
+  .section-heading p { color: var(--text-muted); font-size: var(--text-sm); margin-top: 2px; }
+  .field-grid, .conditional-fields { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr; gap: var(--s5); }
+  .full-field, .location-choice, .timezone-note, .extra-details { grid-column: 1 / -1; }
+  .field { display: flex; flex-direction: column; min-width: 0; }
+  label, legend { font-size: var(--text-sm); font-weight: 700; margin-bottom: var(--s2); }
+  label > span[aria-hidden='true'], legend > span[aria-hidden='true'] { color: var(--pink); }
+  .optional { color: var(--text-muted); font-size: var(--text-xs); font-weight: 500; margin-left: var(--s1); }
+  input, textarea, select, .app-select-trigger {
+    width: 100%; border: 2px solid var(--black); border-radius: var(--r-md); background: var(--bg-white);
+    color: var(--text); font: inherit; font-size: var(--text-sm); padding: 0.8rem var(--s3); outline: none;
+  }
+  textarea { resize: none; min-height: 96px; }
+  input:focus, textarea:focus, select:focus, .app-select-trigger:focus-visible { border-color: var(--pink); box-shadow: 0 0 0 3px rgba(232, 17, 127, 0.13); }
+  input[aria-invalid='true'], textarea[aria-invalid='true'], select[aria-invalid='true'], .app-select-trigger[aria-invalid='true'] { border-color: #be123c; box-shadow: 0 0 0 3px rgba(190, 18, 60, 0.12); }
+  .native-select { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+  .app-select { position: relative; }
+  .app-select-trigger { display: flex; align-items: center; justify-content: space-between; gap: var(--s3); min-height: 48px; text-align: left; cursor: pointer; }
+  .app-select-chevron { color: var(--pink); font-size: 1.25rem; line-height: 1; transform: translateY(-2px); transition: transform 150ms cubic-bezier(0.4, 0, 0.2, 1); }
+  .app-select.is-open .app-select-chevron { transform: translateY(2px) rotate(180deg); }
+  .app-select-menu {
+    position: absolute; z-index: 30; top: calc(100% + 8px); left: 0; right: 0;
+    display: grid; gap: 2px; max-height: min(224px, 40vh); overflow-y: auto; overscroll-behavior: contain;
+    padding: var(--s2); border: 2px solid var(--black); border-radius: var(--r-md); scrollbar-color: var(--pink) var(--yellow-bg);
+    background: var(--bg-white); box-shadow: var(--shadow-solid); opacity: 0; transform: translateY(-8px) scale(0.985);
+    transform-origin: top; transition: opacity 120ms cubic-bezier(0.4, 0, 0.2, 1), transform 180ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .app-select-menu.is-visible { opacity: 1; transform: translateY(0) scale(1); }
+  .app-select-menu button { width: 100%; min-height: 42px; border-radius: calc(var(--r-md) - 2px); padding: 0.55rem var(--s3); color: var(--text-mid); font-size: var(--text-sm); font-weight: 650; text-align: left; transition: color 120ms cubic-bezier(0.4, 0, 0.2, 1), background 120ms cubic-bezier(0.4, 0, 0.2, 1), transform 100ms cubic-bezier(0.4, 0, 0.2, 1); }
+  .app-select-menu button:hover, .app-select-menu button:focus-visible { color: var(--text); background: var(--yellow-bg); outline: 2px solid var(--pink); outline-offset: -2px; }
+  .app-select-menu button[aria-selected='true'] { color: var(--text); background: var(--yellow); }
+  .app-select-menu button:active { transform: scale(0.985); }
+  .field-hint, .field-hint-row { color: var(--text-muted); font-size: var(--text-xs); margin-top: var(--s2); }
+  .field-hint-row { display: flex; justify-content: space-between; gap: var(--s3); }
+  .character-count { font-variant-numeric: tabular-nums; transition: color 150ms cubic-bezier(0.4, 0, 0.2, 1); }
+  #summary-field.is-over-limit textarea { border-color: #be123c; box-shadow: 0 0 0 3px rgba(190, 18, 60, 0.12); }
+  #summary-field.is-over-limit .character-count { color: #be123c; font-weight: 800; }
+  .field-error { min-height: 1.2em; color: #be123c; font-size: var(--text-xs); font-weight: 650; line-height: 1.2; margin-top: var(--s1); }
+  fieldset { border: 0; }
+  .segmented-control { display: grid; grid-template-columns: repeat(3, 1fr); border: 2px solid var(--black); border-radius: var(--r-md); overflow: hidden; }
+  .segmented-control label { margin: 0; cursor: pointer; }
+  .segmented-control label + label { border-left: 2px solid var(--black); }
+  .segmented-control input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .segmented-control span { display: grid; place-items: center; min-height: 46px; padding: var(--s2); background: var(--bg-white); font-size: var(--text-sm); text-align: center; }
+  .segmented-control input:checked + span { background: var(--yellow); }
+  .segmented-control input:focus-visible + span { box-shadow: inset 0 0 0 3px var(--pink); }
+  [hidden] { display: none !important; }
+  .extra-details textarea { background: var(--bg-white); resize: none; }
+  .notes-meta { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--s3); margin-top: var(--s1); }
+  .notes-meta .field-error { flex: 1; margin-top: 0; }
+  .notes-count { color: var(--text-muted); font-size: var(--text-xs); }
+  .step-actions, .final-actions { grid-column: 1 / -1; display: flex; align-items: center; justify-content: flex-end; gap: var(--s4); padding-top: var(--s3); }
+  .step-back { min-height: 44px; padding: var(--s2) var(--s3); color: var(--text-mid); font-size: var(--text-sm); font-weight: 700; transition: color 150ms cubic-bezier(0.4, 0, 0.2, 1), transform 100ms cubic-bezier(0.4, 0, 0.2, 1); }
+  .step-back:hover { color: var(--pink); }
+  .step-back:active { transform: scale(0.97); }
+  .step-next:active, .submit-button:active { transform: scale(0.97); }
+  .step-next:disabled { cursor: not-allowed; opacity: 0.42; filter: saturate(0.35); box-shadow: none; }
+  .step-next:disabled:hover, .step-next:disabled:active { transform: none; box-shadow: none; }
+  .form-submit { grid-column: 1 / -1; }
+  .final-field-row { grid-column: 1 / -1; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; gap: var(--s5); }
+  .verification-field {
+    width: 300px;
+    max-width: 100%;
+  }
+  .verification-label { font-size: var(--text-sm); font-weight: 700; margin-bottom: var(--s2); }
+  .verification-label span { color: var(--pink); }
+  .verification-field .field-error { margin-top: var(--s1); }
+  .final-actions { justify-content: space-between; margin-top: var(--s3); }
+  .form-status { border: 2px solid #be123c; border-radius: var(--r-md); background: #fff1f2; color: #9f1239; font-size: var(--text-sm); font-weight: 600; padding: var(--s3); margin-block: var(--s3); }
+  .submit-button { justify-content: center; min-height: 52px; font-size: var(--text-base); }
+  .submit-button:disabled { cursor: wait; opacity: 0.7; }
+  .submission-note { color: var(--text-muted); font-size: var(--text-xs); text-align: center; margin-top: var(--s3); }
+  .trap-field { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+  .success-panel { padding: clamp(var(--s7), 8vw, var(--s9)); text-align: center; }
+  .success-mark { display: grid; place-items: center; width: 64px; height: 64px; margin: 0 auto var(--s5); border: 3px solid var(--black); border-radius: 50%; background: var(--yellow); font-size: var(--text-2xl); font-weight: 800; box-shadow: var(--shadow-solid); }
+  .success-panel h2 { font-size: clamp(var(--text-2xl), 5vw, var(--text-3xl)); }
+  .success-panel > p { color: var(--text-mid); max-width: 50ch; margin: var(--s3) auto var(--s6); }
+  .success-actions { display: flex; justify-content: center; flex-wrap: wrap; gap: var(--s3); }
+  .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+  @media (min-width: 1000px) and (min-height: 720px) {
+    main {
+      display: grid;
+      grid-template-columns: minmax(320px, 0.72fr) minmax(620px, 1.28fr);
+      min-height: calc(100svh - 70px);
+    }
+    .form-hero {
+      display: flex;
+      align-items: center;
+      border-right: 0;
+      border-bottom: 0;
+      padding-block: clamp(var(--s7), 5vw, var(--s9));
+    }
+    .form-hero h1 { font-size: clamp(3.5rem, 5vw, 5.25rem); }
+    .form-hero p { font-size: var(--text-base); }
+    .form-layout {
+      align-self: center;
+      width: 100%;
+      max-width: 900px;
+      padding: var(--s5);
+    }
+    .step-progress { padding: var(--s4) var(--s5); }
+    .form-section { gap: var(--s4); padding: var(--s5); }
+    .section-heading { margin-bottom: 0; }
+    .step-actions, .final-actions { padding-top: var(--s2); }
+  }
+  @media (max-width: 600px) {
+    .step-progress { padding-inline: var(--s4); }
+    .step-label { font-size: 0.6875rem; }
+    .form-section { grid-template-columns: 1fr; padding: var(--s5); }
+    .field-grid, .conditional-fields { grid-template-columns: 1fr; }
+    .final-field-row { grid-template-columns: 1fr; }
+    .segmented-control { grid-template-columns: 1fr; }
+    .segmented-control label + label { border-left: 0; border-top: 2px solid var(--black); }
+    .verification-field { width: 100%; }
+    .draft-notice { margin-left: 0; }
+    .leave-dialog-actions { align-items: stretch; flex-direction: column; }
+    .leave-dialog-actions .btn { justify-content: center; width: 100%; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .form-section, .step-dot, .step-back, .app-select-menu, .app-select-chevron, .character-count, .leave-dialog, .draft-notice, .draft-discard { transition: none; }
+    .form-section.is-leaving-forward, .form-section.is-leaving-back,
+    .form-section.is-entering-forward, .form-section.is-entering-back { transform: none; }
+  }
+</style>

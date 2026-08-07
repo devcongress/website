@@ -1,11 +1,16 @@
 ---
 import Base from '../../layouts/Base.astro';
 import { getEvents, sortEventsBySoonest, type WebsiteEvent } from '../../lib/events';
+import { upcomingCalendarEvents } from '../../lib/event-calendar';
 
 const events = sortEventsBySoonest(await getEvents()).map((event) => ({
   ...event,
   status: getEventStatus(event),
 }));
+
+const calendarFeedUrl = 'https://devcongress.org/events/calendar.ics';
+const googleCalendarUrl = `https://calendar.google.com/calendar/u/0/r?cid=${encodeURIComponent(calendarFeedUrl)}`;
+const hasSubscribableEvents = upcomingCalendarEvents(events).length > 0;
 
 function getEventStatus(event: WebsiteEvent): 'upcoming' | 'live' | 'past' {
   const now = new Date();
@@ -17,6 +22,12 @@ function getEventStatus(event: WebsiteEvent): 'upcoming' | 'live' | 'past' {
 function formatDate(iso: string, timezone: string): string {
   return new Date(iso).toLocaleDateString('en-GB', {
     day: 'numeric', month: 'long', year: 'numeric', timeZone: timezone,
+  });
+}
+
+function formatTime(iso: string, timezone: string): string {
+  return new Date(iso).toLocaleTimeString('en-GB', {
+    hour: '2-digit', minute: '2-digit', timeZone: timezone,
   });
 }
 
@@ -35,11 +46,38 @@ function getEventUrl(event: WebsiteEvent): string | null {
   return event.detailsUrl ?? event.registrationUrl ?? event.onlineUrl;
 }
 
+function getCalendarDateKey(iso: string, timezone: string): string {
+  const parts = new Intl.DateTimeFormat('en-GB', {
+    year: 'numeric', month: '2-digit', day: '2-digit', timeZone: timezone,
+  }).formatToParts(new Date(iso));
+  const value = (type: Intl.DateTimeFormatPartTypes) =>
+    parts.find((part) => part.type === type)?.value ?? '';
+  return `${value('year')}-${value('month')}-${value('day')}`;
+}
+
 const statusConfig = {
   upcoming: { label: 'Upcoming', cta: 'Register →' },
   live: { label: '● Live', cta: 'Follow live →' },
   past: { label: 'Past', cta: 'View event →' },
 };
+
+const calendarEvents = events.map((event) => {
+  const url = getEventUrl(event);
+  return {
+    id: event.id,
+    title: event.title,
+    startsAt: event.startsAt,
+    endsAt: event.endsAt,
+    dateKey: getCalendarDateKey(event.startsAt, event.timezone),
+    dateLabel: formatDate(event.startsAt, event.timezone),
+    timeLabel: formatTime(event.startsAt, event.timezone),
+    format: formatLabel(event.format),
+    location: getLocation(event),
+    status: statusConfig[event.status].label,
+    url,
+    external: url?.startsWith('http') ?? false,
+  };
+});
 ---
 
 <Base
@@ -60,13 +98,72 @@ const statusConfig = {
       <div class="container">
         <span class="eyebrow">Events</span>
         <h1 class="heading-serif page-title">Where we show up</h1>
-        <p class="page-sub">
-          {events.length} event{events.length !== 1 ? 's' : ''} and counting.
-        </p>
+        <div class="page-heading-row">
+          <p class="page-sub">
+            {events.length} event{events.length !== 1 ? 's' : ''} and counting.
+          </p>
+          <div class="calendar-subscribe">
+            {hasSubscribableEvents ? (
+              <a
+                class="btn btn-primary calendar-subscribe-button"
+                href={googleCalendarUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-describedby="calendar-subscribe-note"
+              >
+                <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                  <rect x="2.5" y="4" width="15" height="13" rx="1.5" />
+                  <path d="M6 2.5v3M14 2.5v3M2.5 8h15M6 11h2M12 11h2M6 14h2M12 14h2" />
+                </svg>
+                <span>Add to Google Calendar</span>
+                <span class="calendar-subscribe-arrow" aria-hidden="true">↗</span>
+              </a>
+            ) : (
+              <button
+                class="btn btn-primary calendar-subscribe-button"
+                type="button"
+                disabled
+                aria-describedby="calendar-subscribe-note"
+              >
+                <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                  <rect x="2.5" y="4" width="15" height="13" rx="1.5" />
+                  <path d="M6 2.5v3M14 2.5v3M2.5 8h15M6 11h2M12 11h2M6 14h2M12 14h2" />
+                </svg>
+                <span>Add to Google Calendar</span>
+              </button>
+            )}
+            <p id="calendar-subscribe-note">
+              {hasSubscribableEvents
+                ? 'Current and upcoming published events. Updates automatically.'
+                : 'No upcoming events yet. Subscriptions open when the next event is published.'}
+            </p>
+          </div>
+        </div>
       </div>
     </div>
 
     <div class="container events-body">
+      <div class="events-view-bar">
+        <div class="view-switcher" role="group" aria-label="Events view">
+          <span class="view-switcher-highlight" aria-hidden="true"></span>
+          <button class="view-switcher-button is-active" type="button" data-events-view="list" aria-pressed="true">
+            <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+              <path d="M7 5h9M7 10h9M7 15h9" />
+              <circle cx="3.5" cy="5" r="1" /><circle cx="3.5" cy="10" r="1" /><circle cx="3.5" cy="15" r="1" />
+            </svg>
+            <span>List</span>
+          </button>
+          <button class="view-switcher-button" type="button" data-events-view="calendar" aria-pressed="false">
+            <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+              <rect x="2.5" y="4" width="15" height="13" rx="1.5" />
+              <path d="M6 2.5v3M14 2.5v3M2.5 8h15M6 11h2M12 11h2M6 14h2M12 14h2" />
+            </svg>
+            <span>Calendar</span>
+          </button>
+        </div>
+      </div>
+
+      <section class="view-panel" id="events-list-view" aria-label="Events list">
       <ul class="events-grid">
         {events.map((event) => {
           const config = statusConfig[event.status];
@@ -128,9 +225,400 @@ const statusConfig = {
           );
         })}
       </ul>
+      </section>
+
+      <section class="view-panel" id="events-calendar-view" aria-label="Events calendar" hidden>
+        <div class="calendar-panel card">
+          <div class="calendar-toolbar">
+            <div>
+              <span class="calendar-kicker">Community calendar</span>
+              <h2 class="heading-serif calendar-month" id="calendar-month-label">Month</h2>
+              <p class="calendar-month-summary" id="calendar-month-summary"></p>
+            </div>
+            <div class="calendar-navigation" aria-label="Calendar navigation">
+              <button type="button" class="calendar-nav-button" data-calendar-action="previous" aria-label="Previous month">
+                <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="m12.5 4.5-5.5 5.5 5.5 5.5" /></svg>
+              </button>
+              <button type="button" class="calendar-today-button" data-calendar-action="today">Today</button>
+              <button type="button" class="calendar-nav-button" data-calendar-action="next" aria-label="Next month">
+                <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="m7.5 4.5 5.5 5.5-5.5 5.5" /></svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="calendar-weekdays" aria-hidden="true">
+            <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+          </div>
+          <div class="calendar-grid" id="calendar-grid" role="grid" aria-labelledby="calendar-month-label"></div>
+          <div class="calendar-agenda" id="calendar-agenda" aria-live="polite"></div>
+        </div>
+
+        <div
+          class="calendar-day-popover"
+          id="calendar-day-popover"
+          popover="auto"
+          role="dialog"
+          aria-labelledby="calendar-day-popover-title"
+        >
+          <div class="calendar-day-popover-header">
+            <div>
+              <span class="calendar-day-popover-count" id="calendar-day-popover-count"></span>
+              <h3 class="heading-serif calendar-day-popover-title" id="calendar-day-popover-title"></h3>
+            </div>
+            <button class="calendar-day-popover-close" type="button" aria-label="Close day events">
+              <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                <path d="m5 5 10 10M15 5 5 15" />
+              </svg>
+            </button>
+          </div>
+          <div class="calendar-day-popover-list" id="calendar-day-popover-list"></div>
+        </div>
+      </section>
     </div>
   </main>
 </Base>
+
+<script define:vars={{ calendarEvents }}>
+  const listPanel = document.querySelector('#events-list-view');
+  const calendarPanel = document.querySelector('#events-calendar-view');
+  const calendarGrid = document.querySelector('#calendar-grid');
+  const calendarAgenda = document.querySelector('#calendar-agenda');
+  const calendarMonthLabel = document.querySelector('#calendar-month-label');
+  const calendarMonthSummary = document.querySelector('#calendar-month-summary');
+  const dayPopover = document.querySelector('#calendar-day-popover');
+  const dayPopoverTitle = document.querySelector('#calendar-day-popover-title');
+  const dayPopoverCount = document.querySelector('#calendar-day-popover-count');
+  const dayPopoverList = document.querySelector('#calendar-day-popover-list');
+  const dayPopoverClose = document.querySelector('.calendar-day-popover-close');
+  const viewSwitcher = document.querySelector('.view-switcher');
+  const viewButtons = [...document.querySelectorAll('[data-events-view]')];
+  const calendarButtons = [...document.querySelectorAll('[data-calendar-action]')];
+  const subscribeButton = document.querySelector('.calendar-subscribe-button');
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+  const monthPattern = /^\d{4}-(0[1-9]|1[0-2])$/;
+  let activePopoverAnchor = null;
+
+  const today = new Date();
+  const todayKey = [
+    today.getFullYear(),
+    String(today.getMonth() + 1).padStart(2, '0'),
+    String(today.getDate()).padStart(2, '0'),
+  ].join('-');
+  const currentMonthKey = todayKey.slice(0, 7);
+  const firstUpcoming = calendarEvents.find((event) => new Date(event.endsAt).getTime() >= Date.now());
+  const latestEvent = calendarEvents[0];
+  const fallbackMonth = firstUpcoming?.dateKey.slice(0, 7) ?? latestEvent?.dateKey.slice(0, 7) ?? currentMonthKey;
+  const initialMonth = new URLSearchParams(window.location.search).get('month');
+  let selectedMonth = monthPattern.test(initialMonth ?? '') ? initialMonth : fallbackMonth;
+
+  if (subscribeButton instanceof HTMLAnchorElement) {
+    const feedUrl = new URL('/events/calendar.ics', window.location.origin).toString();
+    subscribeButton.href = `https://calendar.google.com/calendar/u/0/r?cid=${encodeURIComponent(feedUrl)}`;
+  }
+
+  function animatePanel(panel, direction = 0) {
+    if (!panel || reduceMotion.matches) return;
+    panel.getAnimations().forEach((animation) => animation.cancel());
+    panel.animate(
+      [
+        { opacity: 0, transform: `translateX(${direction * 10}px)` },
+        { opacity: 1, transform: 'translateX(0)' },
+      ],
+      { duration: 220, easing: 'cubic-bezier(0.16, 1, 0.3, 1)' },
+    );
+  }
+
+  function updateUrl(view) {
+    const url = new URL(window.location.href);
+    if (view === 'calendar') {
+      url.searchParams.set('view', 'calendar');
+      url.searchParams.set('month', selectedMonth);
+    } else {
+      url.searchParams.delete('view');
+      url.searchParams.delete('month');
+    }
+    window.history.replaceState({}, '', url);
+  }
+
+  function setView(view, shouldUpdateUrl = true) {
+    const showCalendar = view === 'calendar';
+    listPanel.hidden = showCalendar;
+    calendarPanel.hidden = !showCalendar;
+    viewButtons.forEach((button) => {
+      const active = button.dataset.eventsView === view;
+      button.classList.toggle('is-active', active);
+      button.setAttribute('aria-pressed', String(active));
+    });
+    viewSwitcher.classList.toggle('is-calendar', showCalendar);
+    if (showCalendar) {
+      renderMonth(0, false);
+      animatePanel(calendarPanel, 1);
+    } else {
+      animatePanel(listPanel, -1);
+    }
+    if (shouldUpdateUrl) updateUrl(view);
+  }
+
+  function monthDate(monthKey) {
+    const [year, month] = monthKey.split('-').map(Number);
+    return new Date(Date.UTC(year, month - 1, 1));
+  }
+
+  function shiftMonth(amount) {
+    const date = monthDate(selectedMonth);
+    date.setUTCMonth(date.getUTCMonth() + amount);
+    selectedMonth = `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, '0')}`;
+    renderMonth(amount, true);
+  }
+
+  function eventLink(event, className) {
+    const element = document.createElement(event.url ? 'a' : 'div');
+    element.className = className;
+    if (event.url) {
+      element.href = event.url;
+      if (event.external) {
+        element.target = '_blank';
+        element.rel = 'noopener noreferrer';
+      }
+    }
+    return element;
+  }
+
+  function appendEventContent(element, event, compact = false) {
+    const title = document.createElement('span');
+    title.className = compact ? 'calendar-event-title' : 'agenda-event-title';
+    title.textContent = event.title;
+    element.append(title);
+
+    const meta = document.createElement('span');
+    meta.className = compact ? 'calendar-event-meta' : 'agenda-event-meta';
+    meta.textContent = compact ? event.format : `${event.dateLabel} · ${event.format} · ${event.location}`;
+    element.append(meta);
+  }
+
+  function appendOutsideDay(day) {
+    const cell = document.createElement('div');
+    cell.className = 'calendar-day calendar-day-outside';
+    cell.setAttribute('aria-hidden', 'true');
+    const number = document.createElement('span');
+    number.className = 'calendar-day-number';
+    number.textContent = String(day);
+    cell.append(number);
+    calendarGrid.append(cell);
+  }
+
+  function appendAgendaEvent(event) {
+    const item = eventLink(event, 'agenda-event');
+    const date = new Date(`${event.dateKey}T12:00:00Z`);
+
+    const dateBlock = document.createElement('span');
+    dateBlock.className = 'agenda-date';
+    const weekday = document.createElement('span');
+    weekday.className = 'agenda-weekday';
+    weekday.textContent = new Intl.DateTimeFormat('en-GB', { weekday: 'short', timeZone: 'UTC' }).format(date);
+    const day = document.createElement('span');
+    day.className = 'agenda-day';
+    day.textContent = String(date.getUTCDate());
+    dateBlock.append(weekday, day);
+
+    const content = document.createElement('span');
+    content.className = 'agenda-content';
+    const title = document.createElement('span');
+    title.className = 'agenda-event-title';
+    title.textContent = event.title;
+    const meta = document.createElement('span');
+    meta.className = 'agenda-event-meta';
+    meta.textContent = `${event.format} · ${event.location}`;
+    content.append(title, meta);
+
+    item.append(dateBlock, content);
+    if (event.url) {
+      const arrow = document.createElement('span');
+      arrow.className = 'agenda-arrow';
+      arrow.setAttribute('aria-hidden', 'true');
+      arrow.textContent = '↗';
+      item.append(arrow);
+    }
+    calendarAgenda.append(item);
+  }
+
+  function closeDayPopover() {
+    if (dayPopover?.matches(':popover-open')) dayPopover.hidePopover();
+  }
+
+  function appendDayPopoverEvent(event) {
+    const item = eventLink(event, 'day-popover-event');
+    const content = document.createElement('span');
+    content.className = 'day-popover-event-content';
+
+    const title = document.createElement('span');
+    title.className = 'day-popover-event-title';
+    title.textContent = event.title;
+
+    const meta = document.createElement('span');
+    meta.className = 'day-popover-event-meta';
+    meta.textContent = `${event.timeLabel} · ${event.format} · ${event.location}`;
+    content.append(title, meta);
+    item.append(content);
+
+    if (event.url) {
+      const arrow = document.createElement('span');
+      arrow.className = 'day-popover-event-arrow';
+      arrow.setAttribute('aria-hidden', 'true');
+      arrow.textContent = '↗';
+      item.append(arrow);
+    }
+    dayPopoverList.append(item);
+  }
+
+  function openDayPopover(anchor, dayKey, dayEvents) {
+    if (!dayPopover || !dayPopoverTitle || !dayPopoverCount || !dayPopoverList) return;
+
+    dayPopoverTitle.textContent = new Intl.DateTimeFormat('en-GB', {
+      weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC',
+    }).format(new Date(`${dayKey}T12:00:00Z`));
+    dayPopoverCount.textContent = `${dayEvents.length} event${dayEvents.length === 1 ? '' : 's'}`;
+    dayPopoverList.replaceChildren();
+    dayEvents.forEach(appendDayPopoverEvent);
+    activePopoverAnchor = anchor;
+
+    dayPopover.style.visibility = 'hidden';
+    dayPopover.showPopover();
+
+    const anchorBox = anchor.closest('.calendar-day')?.getBoundingClientRect() ?? anchor.getBoundingClientRect();
+    const popoverBox = dayPopover.getBoundingClientRect();
+    const gutter = 12;
+    let left = anchorBox.right + gutter;
+    if (left + popoverBox.width > window.innerWidth - 16) left = anchorBox.left - popoverBox.width - gutter;
+    left = Math.max(16, Math.min(left, window.innerWidth - popoverBox.width - 16));
+    const top = Math.max(16, Math.min(anchorBox.top, window.innerHeight - popoverBox.height - 16));
+
+    dayPopover.style.left = `${Math.round(left)}px`;
+    dayPopover.style.top = `${Math.round(top)}px`;
+    dayPopover.style.visibility = '';
+    dayPopoverClose?.focus({ preventScroll: true });
+
+    if (!reduceMotion.matches) {
+      dayPopover.getAnimations().forEach((animation) => animation.cancel());
+      dayPopover.animate(
+        [
+          { opacity: 0, transform: 'translateY(-6px) scale(0.98)' },
+          { opacity: 1, transform: 'translateY(0) scale(1)' },
+        ],
+        { duration: 180, easing: 'cubic-bezier(0.16, 1, 0.3, 1)' },
+      );
+    }
+  }
+
+  function renderMonth(direction = 0, shouldUpdateUrl = true) {
+    closeDayPopover();
+    const date = monthDate(selectedMonth);
+    const year = date.getUTCFullYear();
+    const monthIndex = date.getUTCMonth();
+    const daysInMonth = new Date(Date.UTC(year, monthIndex + 1, 0)).getUTCDate();
+    const leadingDays = (new Date(Date.UTC(year, monthIndex, 1)).getUTCDay() + 6) % 7;
+    const previousMonthDays = new Date(Date.UTC(year, monthIndex, 0)).getUTCDate();
+    const trailingDays = (7 - ((leadingDays + daysInMonth) % 7)) % 7;
+    const monthEvents = calendarEvents
+      .filter((event) => event.dateKey.startsWith(`${selectedMonth}-`))
+      .sort((left, right) => new Date(left.startsAt).getTime() - new Date(right.startsAt).getTime());
+
+    calendarMonthLabel.textContent = new Intl.DateTimeFormat('en-GB', {
+      month: 'long', year: 'numeric', timeZone: 'UTC',
+    }).format(date);
+    calendarMonthSummary.textContent = monthEvents.length === 0
+      ? 'No events this month'
+      : `${monthEvents.length} event${monthEvents.length === 1 ? '' : 's'} this month`;
+    calendarGrid.replaceChildren();
+    calendarAgenda.replaceChildren();
+    calendarAgenda.classList.toggle('is-empty', monthEvents.length === 0);
+
+    for (let index = 0; index < leadingDays; index += 1) {
+      appendOutsideDay(previousMonthDays - leadingDays + index + 1);
+    }
+
+    for (let day = 1; day <= daysInMonth; day += 1) {
+      const dayKey = `${selectedMonth}-${String(day).padStart(2, '0')}`;
+      const dayEvents = monthEvents.filter((event) => event.dateKey === dayKey);
+      const cell = document.createElement('div');
+      cell.className = 'calendar-day';
+      cell.setAttribute('role', 'gridcell');
+      if (dayKey === todayKey) cell.classList.add('is-today');
+
+      const header = document.createElement('div');
+      header.className = 'calendar-day-header';
+      const number = document.createElement('span');
+      number.className = 'calendar-day-number';
+      number.textContent = String(day);
+      header.append(number);
+      cell.append(header);
+
+      dayEvents.slice(0, 2).forEach((event) => {
+        const item = eventLink(event, 'calendar-event');
+        appendEventContent(item, event, true);
+        cell.append(item);
+      });
+      if (dayEvents.length > 2) {
+        const more = document.createElement('button');
+        more.type = 'button';
+        more.className = 'calendar-more-button';
+        more.textContent = `+${dayEvents.length - 2} more`;
+        more.setAttribute('aria-label', `Show all ${dayEvents.length} events on ${dayKey}`);
+        more.addEventListener('click', () => openDayPopover(more, dayKey, dayEvents));
+        cell.append(more);
+      }
+      calendarGrid.append(cell);
+    }
+
+    for (let day = 1; day <= trailingDays; day += 1) appendOutsideDay(day);
+
+    if (monthEvents.length === 0) {
+      const empty = document.createElement('div');
+      empty.className = 'calendar-empty';
+      const mark = document.createElement('span');
+      mark.className = 'calendar-empty-mark';
+      mark.textContent = '—';
+      const title = document.createElement('strong');
+      title.textContent = 'A quiet month.';
+      const copy = document.createElement('span');
+      copy.textContent = 'Try the month before or after this one.';
+      empty.append(mark, title, copy);
+      calendarAgenda.append(empty);
+    } else {
+      monthEvents.forEach(appendAgendaEvent);
+    }
+
+    if (shouldUpdateUrl) updateUrl('calendar');
+    animatePanel(calendarGrid, direction);
+    animatePanel(calendarAgenda, direction);
+    animatePanel(calendarMonthLabel, direction);
+    animatePanel(calendarMonthSummary, direction);
+  }
+
+  viewButtons.forEach((button) => {
+    button.addEventListener('click', () => setView(button.dataset.eventsView));
+  });
+  calendarButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      const action = button.dataset.calendarAction;
+      if (action === 'previous') shiftMonth(-1);
+      if (action === 'next') shiftMonth(1);
+      if (action === 'today') {
+        selectedMonth = currentMonthKey;
+        renderMonth(0, true);
+      }
+    });
+  });
+  dayPopoverClose?.addEventListener('click', closeDayPopover);
+  dayPopover?.addEventListener('toggle', (event) => {
+    if (event.newState !== 'closed') return;
+    if (activePopoverAnchor?.isConnected) activePopoverAnchor.focus({ preventScroll: true });
+    activePopoverAnchor = null;
+  });
+
+  const requestedView = new URLSearchParams(window.location.search).get('view');
+  setView(requestedView === 'calendar' ? 'calendar' : 'list', false);
+</script>
 
 <style>
   .mnav {
@@ -149,8 +637,67 @@ const statusConfig = {
   }
   .page-title { font-size: clamp(var(--text-3xl), 6vw, var(--text-4xl)); margin-bottom: var(--s3); }
   .page-sub { font-size: var(--text-lg); color: var(--text-mid); }
+  .page-heading-row {
+    display: flex; align-items: flex-end; justify-content: space-between;
+    gap: var(--s5); flex-wrap: wrap;
+  }
+  .calendar-subscribe { display: flex; flex-direction: column; align-items: flex-end; gap: var(--s2); }
+  .calendar-subscribe p { color: var(--text-muted); font-size: var(--text-xs); }
+  .calendar-subscribe-button {
+    display: inline-flex; min-height: 44px; align-items: center; justify-content: center; gap: 8px;
+    border-radius: var(--r-sm); padding: 9px 14px;
+  }
+  .calendar-subscribe-button svg { width: 18px; height: 18px; flex: none; }
+  .calendar-subscribe-button svg path,
+  .calendar-subscribe-button svg rect {
+    stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round;
+  }
+  .calendar-subscribe-arrow { margin-left: 1px; }
+  .calendar-subscribe-button[disabled],
+  .calendar-subscribe-button[disabled]:hover,
+  .calendar-subscribe-button[disabled]:active {
+    border-color: #c8c4ba; background: #f1efe8; color: #7a7872;
+    cursor: not-allowed; opacity: 0.72; filter: grayscale(1);
+    box-shadow: none; transform: none; transition: none;
+  }
 
   .events-body { padding-block: var(--s9); }
+  .events-view-bar { display: flex; justify-content: flex-end; margin-bottom: var(--s5); }
+  .view-switcher {
+    display: inline-grid; grid-template-columns: 1fr 1fr;
+    position: relative;
+    border: 2px solid var(--black); border-radius: var(--r-sm); overflow: hidden;
+    background: var(--bg-white);
+  }
+  .view-switcher-highlight {
+    position: absolute; inset: 0 auto 0 0; width: 50%;
+    background: var(--yellow); border-right: 2px solid var(--black);
+    transform: translateX(0);
+    transition: transform 220ms cubic-bezier(0.16, 1, 0.3, 1);
+    pointer-events: none;
+  }
+  .view-switcher.is-calendar .view-switcher-highlight {
+    border-right: 0; border-left: 2px solid var(--black);
+    transform: translateX(100%);
+  }
+  .view-switcher-button {
+    min-width: 112px; padding: 10px var(--s4); border: 0;
+    position: relative; z-index: 1;
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    background: transparent; color: var(--text-mid);
+    font: inherit; font-size: var(--text-sm); font-weight: 700;
+    cursor: pointer; transition: color 150ms cubic-bezier(0.4, 0, 0.2, 1), transform 100ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .view-switcher-button svg { width: 18px; height: 18px; flex: none; }
+  .view-switcher-button path,
+  .view-switcher-button rect,
+  .view-switcher-button circle { stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+  .view-switcher-button.is-active { color: var(--black); }
+  .view-switcher-button:focus-visible,
+  .calendar-nav-button:focus-visible,
+  .calendar-today-button:focus-visible { outline: 3px solid var(--pink); outline-offset: 3px; }
+  :global(.calendar-event:focus-visible) { outline: 2px solid var(--pink); outline-offset: 2px; }
+  .view-panel[hidden] { display: none; }
   .events-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -210,6 +757,185 @@ const statusConfig = {
   }
   .event-cta { align-self: flex-start; margin-top: var(--s2); }
 
-  @media (max-width: 640px) { .events-grid { grid-template-columns: 1fr; } }
-  @media (prefers-reduced-motion: reduce) { .mnav-back, .event-cover { transition: none; } }
+  .calendar-panel { overflow: hidden; background: var(--bg-white); }
+  .calendar-panel:hover { transform: none; box-shadow: none; }
+  .calendar-toolbar {
+    display: flex; align-items: center; justify-content: space-between; gap: var(--s4);
+    min-height: 118px; padding: var(--s5) var(--s6);
+    border-bottom: 2px solid var(--black); background: var(--yellow);
+  }
+  .calendar-kicker {
+    display: block; margin-bottom: 3px; color: var(--text-mid);
+    font-size: var(--text-xs); font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+  }
+  .calendar-month { font-size: var(--text-2xl); line-height: 1; }
+  .calendar-month-summary { margin-top: 7px; color: var(--text-mid); font-size: var(--text-xs); font-weight: 600; }
+  .calendar-navigation { display: flex; align-items: center; gap: var(--s2); }
+  .calendar-nav-button,
+  .calendar-today-button {
+    min-height: 40px; border: 2px solid var(--black); border-radius: var(--r-sm);
+    background: var(--bg-white); color: var(--black); cursor: pointer;
+    font: inherit; font-weight: 700;
+    transition: background-color 150ms cubic-bezier(0.4, 0, 0.2, 1), color 150ms cubic-bezier(0.4, 0, 0.2, 1), transform 100ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .calendar-nav-button { display: grid; width: 40px; place-items: center; }
+  .calendar-nav-button svg { width: 20px; height: 20px; }
+  .calendar-nav-button path { stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+  .calendar-today-button { padding-inline: var(--s3); font-size: var(--text-sm); }
+  .calendar-weekdays,
+  .calendar-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); }
+  .calendar-weekdays {
+    border-bottom: 2px solid var(--black); background: var(--bg-white);
+  }
+  .calendar-weekdays span {
+    padding: 10px var(--s3); color: var(--text-muted);
+    font-size: 0.7rem; font-weight: 800; letter-spacing: 0.06em; text-align: center; text-transform: uppercase;
+  }
+  .calendar-grid { background: var(--black); gap: 1px; }
+  :global(.calendar-day) {
+    height: 152px; min-height: 0; padding: 8px; overflow: hidden; background: var(--bg-white);
+    display: flex; flex-direction: column; gap: 5px; min-width: 0;
+  }
+  :global(.calendar-day-outside) { background: var(--bg); }
+  :global(.calendar-day-outside) :global(.calendar-day-number) { align-self: flex-end; color: #bbb7ad; font-weight: 600; }
+  :global(.calendar-day-header) {
+    display: flex; min-height: 26px; align-items: center; justify-content: flex-end;
+  }
+  :global(.calendar-day-number) {
+    display: grid; flex: none; place-items: center;
+    width: 26px; height: 26px; border-radius: 6px;
+    color: var(--text-mid); font-size: var(--text-xs); font-weight: 750;
+  }
+  :global(.calendar-day.is-today) { background: #fffdf0; }
+  :global(.calendar-day.is-today) :global(.calendar-day-number) { background: var(--pink); color: #fff; }
+  :global(.calendar-event) {
+    display: flex; min-width: 0; flex-direction: column; gap: 2px;
+    padding: 6px 7px; border-left: 3px solid var(--pink); border-radius: 0 4px 4px 0;
+    background: var(--bg); color: var(--black);
+    transition: background-color 150ms cubic-bezier(0.4, 0, 0.2, 1), color 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  :global(.calendar-event-title) {
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    font-size: 0.7rem; font-weight: 800; line-height: 1.25;
+  }
+  :global(.calendar-event-meta) {
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    color: var(--text-muted); font-size: 0.56rem; font-weight: 750; letter-spacing: 0.05em; text-transform: uppercase;
+  }
+  :global(.calendar-more-button) {
+    align-self: flex-start; padding: 2px 7px; border: 0; border-radius: 4px;
+    background: transparent; color: var(--pink); cursor: pointer;
+    font: inherit; font-size: 0.64rem; font-weight: 800; line-height: 1.35;
+    transition: background-color 150ms cubic-bezier(0.4, 0, 0.2, 1), transform 100ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  :global(.calendar-more-button:focus-visible) {
+    outline: 2px solid var(--pink); outline-offset: 2px;
+  }
+  .calendar-day-popover {
+    position: fixed; inset: auto; width: min(340px, calc(100vw - 32px)); margin: 0; padding: 0;
+    overflow: hidden; border: 2px solid var(--black); border-radius: var(--r-md);
+    background: var(--bg-white); color: var(--black); box-shadow: var(--shadow-solid);
+  }
+  .calendar-day-popover-header {
+    display: flex; align-items: flex-start; justify-content: space-between; gap: var(--s3);
+    padding: 14px var(--s4); border-bottom: 2px solid var(--black); background: var(--yellow);
+  }
+  .calendar-day-popover-count {
+    display: block; margin-bottom: 3px; color: var(--text-mid);
+    font-size: 0.62rem; font-weight: 800; letter-spacing: 0.07em; text-transform: uppercase;
+  }
+  .calendar-day-popover-title { font-size: 1.25rem; line-height: 1.15; }
+  .calendar-day-popover-close {
+    display: grid; width: 32px; height: 32px; flex: none; place-items: center;
+    border: 2px solid var(--black); border-radius: var(--r-sm); background: var(--bg-white); color: var(--black); cursor: pointer;
+    transition: background-color 150ms cubic-bezier(0.4, 0, 0.2, 1), color 150ms cubic-bezier(0.4, 0, 0.2, 1), transform 100ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .calendar-day-popover-close svg { width: 17px; height: 17px; }
+  .calendar-day-popover-close path { stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; }
+  .calendar-day-popover-close:focus-visible { outline: 3px solid var(--pink); outline-offset: 3px; }
+  .calendar-day-popover-list { max-height: 292px; overflow-y: auto; }
+  :global(.day-popover-event) {
+    display: flex; min-width: 0; align-items: center; justify-content: space-between; gap: var(--s3);
+    padding: 12px var(--s4); border-bottom: 1px solid var(--black); background: var(--bg-white); color: var(--black);
+    transition: background-color 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  :global(.day-popover-event:last-child) { border-bottom: 0; }
+  :global(.day-popover-event-content) { display: flex; min-width: 0; flex-direction: column; gap: 3px; }
+  :global(.day-popover-event-title) {
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--text-sm); font-weight: 800;
+  }
+  :global(.day-popover-event-meta) {
+    overflow: hidden; color: var(--text-muted); font-size: 0.68rem; text-overflow: ellipsis; white-space: nowrap;
+  }
+  :global(.day-popover-event-arrow) { flex: none; color: var(--pink); font-weight: 800; }
+  .calendar-agenda { display: none; }
+  .calendar-agenda.is-empty { display: block; }
+  :global(.calendar-empty) {
+    display: flex; min-height: 170px; flex-direction: column; align-items: center; justify-content: center; gap: 5px;
+    padding: var(--s7) var(--s4); color: var(--text-muted); text-align: center;
+  }
+  :global(.calendar-empty-mark) {
+    display: grid; width: 42px; height: 42px; margin-bottom: 5px; place-items: center;
+    border: 2px solid var(--black); border-radius: 50%; background: var(--yellow); color: var(--black); font-weight: 800;
+  }
+  :global(.calendar-empty strong) { color: var(--black); font-size: var(--text-base); }
+  :global(.calendar-empty span:last-child) { font-size: var(--text-xs); }
+
+  @media (hover: hover) and (pointer: fine) {
+    .view-switcher-button:not(.is-active):hover { color: var(--pink); }
+    .calendar-nav-button:hover,
+    .calendar-today-button:hover { background: var(--bg-white); color: var(--pink); }
+    :global(.calendar-event:hover) { background: #fffdf0; color: var(--pink); }
+    :global(.calendar-event:hover) :global(.calendar-event-meta) { color: var(--text-mid); }
+    :global(.calendar-more-button:hover) { background: #fffdf0; }
+    .calendar-day-popover-close:hover { background: var(--black); color: #fff; }
+    :global(.day-popover-event:hover) { background: #fffdf0; }
+    :global(.agenda-event:hover) { background: #fffdf0; }
+  }
+  .view-switcher-button:active,
+  .calendar-nav-button:active,
+  .calendar-today-button:active,
+  .calendar-day-popover-close:active,
+  :global(.calendar-more-button:active) { transform: scale(0.97); }
+
+  @media (max-width: 640px) {
+    .events-grid { grid-template-columns: 1fr; }
+    .calendar-subscribe { align-items: center; width: 100%; }
+    .calendar-subscribe-button { width: auto; align-self: center; }
+    .calendar-subscribe p { max-width: 310px; line-height: 1.45; text-align: center; }
+    .events-view-bar { justify-content: stretch; }
+    .view-switcher { width: 100%; }
+    .view-switcher-button { min-width: 0; }
+    .calendar-panel { border-radius: var(--r-md); }
+    .calendar-toolbar { min-height: 0; align-items: center; padding: var(--s4); }
+    .calendar-kicker { display: none; }
+    .calendar-month { font-size: 1.75rem; }
+    .calendar-month-summary { margin-top: 5px; }
+    .calendar-navigation { gap: 6px; }
+    .calendar-weekdays, .calendar-grid { display: none; }
+    .calendar-day-popover { display: none; }
+    .calendar-agenda { display: flex; flex-direction: column; }
+    :global(.agenda-event) {
+      display: grid; grid-template-columns: 52px minmax(0, 1fr) auto; align-items: center; gap: var(--s3);
+      padding: 14px var(--s4); border-bottom: 1.5px solid var(--black);
+      background: var(--bg-white); color: var(--black);
+      transition: background-color 150ms cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    :global(.agenda-event:last-child) { border-bottom: 0; }
+    :global(.agenda-date) {
+      display: flex; width: 52px; min-height: 54px; flex-direction: column; align-items: center; justify-content: center;
+      border: 2px solid var(--black); border-radius: 8px; background: var(--yellow); line-height: 1;
+    }
+    :global(.agenda-weekday) { color: var(--text-mid); font-size: 0.62rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; }
+    :global(.agenda-day) { margin-top: 4px; font-family: var(--font-serif); font-size: 1.45rem; font-weight: 700; }
+    :global(.agenda-content) { display: flex; min-width: 0; flex-direction: column; gap: 5px; }
+    :global(.agenda-event-title) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--text-sm); font-weight: 800; }
+    :global(.agenda-event-meta) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-muted); font-size: 0.7rem; }
+    :global(.agenda-arrow) { color: var(--pink); font-size: var(--text-base); font-weight: 800; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .mnav-back, .event-cover, .view-switcher-highlight, .view-switcher-button, .calendar-nav-button, .calendar-today-button,
+    .calendar-day-popover-close, :global(.calendar-event), :global(.calendar-more-button),
+    :global(.day-popover-event), :global(.agenda-event) { transition: none; }
+  }
 </style>

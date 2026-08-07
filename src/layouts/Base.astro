@@ -189,11 +189,11 @@ const site        = siteEntries[0]!.data;
     cursor: pointer;
   }
 
-  .btn:hover {
+  .btn:not(:disabled):hover {
     transform: translate(-2px, -2px);
     box-shadow: var(--shadow-solid);
   }
-  .btn:active {
+  .btn:not(:disabled):active {
     transform: translate(0, 0);
     box-shadow: none;
   }

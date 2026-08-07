@@ -9,7 +9,8 @@ const events = sortEventsBySoonest(await getEvents()).map((event) => ({
 }));
 
 const calendarFeedUrl = 'https://devcongress.org/events/calendar.ics';
-const googleCalendarUrl = `https://calendar.google.com/calendar/u/0/r?cid=${encodeURIComponent(calendarFeedUrl)}`;
+const googleCalendarFeedUrl = `webcal://${new URL(calendarFeedUrl).host}${new URL(calendarFeedUrl).pathname}`;
+const googleCalendarUrl = `https://calendar.google.com/calendar/r?cid=${encodeURIComponent(googleCalendarFeedUrl)}`;
 const hasSubscribableEvents = upcomingCalendarEvents(events).length > 0;
 
 function getEventStatus(event: WebsiteEvent): 'upcoming' | 'live' | 'past' {
@@ -132,9 +133,18 @@ const calendarEvents = events.map((event) => {
                 <span>Add to Google Calendar</span>
               </button>
             )}
+            {hasSubscribableEvents && (
+              <a
+                class="calendar-feed-link"
+                href="/events/calendar.ics"
+                download="devcongress-events.ics"
+              >
+                Download .ics file
+              </a>
+            )}
             <p id="calendar-subscribe-note">
               {hasSubscribableEvents
-                ? 'Current and upcoming published events. Updates automatically.'
+                ? 'Current and upcoming published events. Updates automatically. Download the .ics file if needed.'
                 : 'No upcoming events yet. Subscriptions open when the next event is published.'}
             </p>
           </div>
@@ -196,9 +206,9 @@ const calendarEvents = events.map((event) => {
               <div class="event-body">
                 <div class="event-meta">
                   <time datetime={event.startsAt}>{formatDate(event.startsAt, event.timezone)}</time>
-                  <span class="event-location">{getLocation(event)}</span>
+                  <span class="event-location" title={getLocation(event)}>{getLocation(event)}</span>
                 </div>
-                <h2 class="heading-serif event-name">
+                <h2 class="heading-serif event-name" title={event.title}>
                   {eventUrl ? (
                     <a
                       href={eventUrl}
@@ -312,8 +322,9 @@ const calendarEvents = events.map((event) => {
   let selectedMonth = monthPattern.test(initialMonth ?? '') ? initialMonth : fallbackMonth;
 
   if (subscribeButton instanceof HTMLAnchorElement) {
-    const feedUrl = new URL('/events/calendar.ics', window.location.origin).toString();
-    subscribeButton.href = `https://calendar.google.com/calendar/u/0/r?cid=${encodeURIComponent(feedUrl)}`;
+    const feedUrl = new URL('/events/calendar.ics', window.location.origin);
+    const webcalUrl = `webcal://${feedUrl.host}${feedUrl.pathname}`;
+    subscribeButton.href = `https://calendar.google.com/calendar/r?cid=${encodeURIComponent(webcalUrl)}`;
   }
 
   function animatePanel(panel, direction = 0) {
@@ -643,6 +654,11 @@ const calendarEvents = events.map((event) => {
   }
   .calendar-subscribe { display: flex; flex-direction: column; align-items: flex-end; gap: var(--s2); }
   .calendar-subscribe p { color: var(--text-muted); font-size: var(--text-xs); }
+  .calendar-feed-link {
+    color: var(--text-mid); font-size: var(--text-xs); text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .calendar-feed-link:hover { color: var(--text); }
   .calendar-subscribe-button {
     display: inline-flex; min-height: 44px; align-items: center; justify-content: center; gap: 8px;
     border-radius: var(--r-sm); padding: 9px 14px;
@@ -746,8 +762,14 @@ const calendarEvents = events.map((event) => {
     letter-spacing: 0.04em; text-transform: uppercase;
     flex-wrap: wrap; gap: var(--s2);
   }
-  .event-location { color: var(--pink); }
-  .event-name { font-size: var(--text-xl); line-height: var(--leading-snug); }
+  .event-location {
+    min-width: 0; max-width: 100%; overflow: hidden; flex: 1 1 auto;
+    color: var(--pink); text-align: right; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .event-name {
+    min-width: 0; overflow: hidden; font-size: var(--text-xl);
+    line-height: var(--leading-snug); text-overflow: ellipsis; white-space: nowrap;
+  }
   .event-name a:hover { color: var(--pink); }
   .event-desc {
     font-size: var(--text-sm); color: var(--text-mid);

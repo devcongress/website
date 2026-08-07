@@ -351,7 +351,10 @@ function mapPublicMeetup(meetup: PublicMeetup, origin: URL): WebsiteMeetup {
 }
 
 function resolveRemoteWebsiteUrl(value: string, origin: URL): string {
-  return value.startsWith('/') ? new URL(value, origin).toString() : value;
+  const resolved = value.startsWith('/') ? new URL(value, origin) : new URL(value);
+  return isLoopbackHostname(resolved.hostname)
+    ? new URL(`${resolved.pathname}${resolved.search}${resolved.hash}`, origin).toString()
+    : resolved.toString();
 }
 
 function resolveOptionalRemoteWebsiteUrl(value: string | null, origin: URL): string | null {

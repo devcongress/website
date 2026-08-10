@@ -152,7 +152,7 @@ if (!EVENT_SUBMISSIONS_ENABLED) {
             <div class="section-heading">
               <div>
                 <h2 tabindex="-1">When and where</h2>
-                <p>Times are saved in your detected time zone.</p>
+                <p>Enter the local time shown on the event schedule.</p>
               </div>
             </div>
 
@@ -164,6 +164,7 @@ if (!EVENT_SUBMISSIONS_ENABLED) {
               id="timezone"
               name="timezone"
               label="Event time zone"
+              hint="The start and end times use this time zone, even when it differs from your device."
               required
             />
 
@@ -421,6 +422,17 @@ if (!EVENT_SUBMISSIONS_ENABLED) {
     return new Date(date.getTime() - offset * 60_000).toISOString().slice(0, 16);
   }
 
+  function toTimeZoneInputValue(date: Date, timeZone: string): string {
+    const parts = Object.fromEntries(
+      new Intl.DateTimeFormat('en-CA', {
+        timeZone,
+        year: 'numeric', month: '2-digit', day: '2-digit',
+        hour: '2-digit', minute: '2-digit', hourCycle: 'h23',
+      }).formatToParts(date).map((part) => [part.type, part.value]),
+    );
+    return `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}`;
+  }
+
   function localDateTimeToIso(value: string, timeZone: string): string {
     const match = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/.exec(value);
     if (!match) throw new Error('Invalid local datetime');
@@ -569,6 +581,7 @@ if (!EVENT_SUBMISSIONS_ENABLED) {
     startsInput?.dispatchEvent(new Event('app-date-picker:sync'));
     endsInput?.dispatchEvent(new Event('app-date-picker:sync'));
     timezoneInput?.dispatchEvent(new Event('app-timezone-picker:sync'));
+    syncStartMinimum();
     syncLocationFields();
     syncSummaryState();
     syncNotesCount();
@@ -582,7 +595,7 @@ if (!EVENT_SUBMISSIONS_ENABLED) {
     form?.reset();
     selectFormat('');
     timezoneInput?.dispatchEvent(new Event('app-timezone-picker:reset'));
-    initializeDateLimits();
+    initializeDateDefaults();
     syncLocationFields();
     syncSummaryState();
     syncNotesCount();
@@ -641,17 +654,29 @@ if (!EVENT_SUBMISSIONS_ENABLED) {
     leaveDialog.showModal();
   }
 
-  function initializeDateLimits(): void {
-    if (!startsInput || !endsInput) return;
+  function initializeDateDefaults(): void {
+    if (!startsInput || !endsInput || !timezoneInput) return;
     const now = new Date();
     const soon = new Date(now.getTime() + 60 * 60 * 1000);
     const defaultEnd = new Date(soon.getTime() + 2 * 60 * 60 * 1000);
-    startsInput.min = toLocalInputValue(now);
-    endsInput.min = toLocalInputValue(soon);
+    startsInput.min = toTimeZoneInputValue(now, timezoneInput.value || detectedTimezone);
     if (!startsInput.value) startsInput.value = toLocalInputValue(soon);
     if (!endsInput.value) endsInput.value = toLocalInputValue(defaultEnd);
+    endsInput.min = startsInput.value;
     startsInput.dispatchEvent(new Event('app-date-picker:sync'));
     endsInput.dispatchEvent(new Event('app-date-picker:sync'));
+  }
+
+  function syncStartMinimum(): void {
+    if (!startsInput || !timezoneInput) return;
+    try {
+      // datetime-local values have no timezone. Their native minimum must use
+      // the selected event timezone—not the organizer's device wall clock.
+      startsInput.min = toTimeZoneInputValue(new Date(), timezoneInput.value.trim());
+    } catch {
+      startsInput.removeAttribute('min');
+    }
+    startsInput.dispatchEvent(new Event('app-date-picker:sync'));
   }
 
   function syncEndDate(): void {
@@ -1153,7 +1178,7 @@ if (!EVENT_SUBMISSIONS_ENABLED) {
     try { return await response.json() as SubmissionErrorResponse; } catch { return {}; }
   }
 
-  initializeDateLimits();
+  initializeDateDefaults();
   syncLocationFields();
   form?.querySelectorAll<HTMLElement>('.field-error').forEach((error) => error.setAttribute('aria-live', 'polite'));
   form?.addEventListener('input', (event) => {
@@ -1190,6 +1215,7 @@ if (!EVENT_SUBMISSIONS_ENABLED) {
     validateDirtyControl(target);
   });
   startsInput?.addEventListener('change', syncEndDate);
+  timezoneInput?.addEventListener('change', syncStartMinimum);
   form?.querySelectorAll<HTMLInputElement>('input[name="location_type"]').forEach((input) => {
     input.addEventListener('change', syncLocationFields);
   });
@@ -1360,7 +1386,7 @@ if (!EVENT_SUBMISSIONS_ENABLED) {
     selectFormat('');
     timezoneInput?.dispatchEvent(new Event('app-timezone-picker:reset'));
     syncSummaryState();
-    initializeDateLimits();
+    initializeDateDefaults();
     syncLocationFields();
     clearErrors();
     resetTurnstile();

@@ -11,7 +11,7 @@ const MAX_RESPONSE_BYTES = 2 * 1024 * 1024;
 export async function fetchLivePublicEvents(): Promise<WebsiteEvent[]> {
   const response = await fetch(PUBLIC_EVENTS_API_URL, {
     headers: { accept: 'application/json' },
-    redirect: 'error',
+    redirect: 'manual',
     signal: AbortSignal.timeout(8_000),
   });
 
@@ -31,7 +31,7 @@ export async function fetchLivePublicEvent(slug: string): Promise<WebsiteEvent |
 
   const response = await fetch(`${PUBLIC_EVENTS_API_URL}/${encodeURIComponent(slug)}`, {
     headers: { accept: 'application/json' },
-    redirect: 'error',
+    redirect: 'manual',
     signal: AbortSignal.timeout(8_000),
   });
 

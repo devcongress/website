@@ -10,6 +10,7 @@ interface Env {
 const EVENT_ROUTE = /^\/events\/([a-zA-Z0-9][a-zA-Z0-9_-]{0,239})\/?$/;
 const CALENDAR_PATH = '/events/calendar.ics';
 const EVENT_SHELL_PATH = '/events/';
+const EVENT_READINESS_PARAM = 'readiness';
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
@@ -21,6 +22,9 @@ export default {
 
     const eventMatch = url.pathname.match(EVENT_ROUTE);
     if (eventMatch && eventMatch[1] !== 'index' && eventMatch[1] !== 'submit') {
+      if (url.searchParams.get(EVENT_READINESS_PARAM) === '1') {
+        return serveLiveEventReadiness(eventMatch[1]);
+      }
       return serveLiveEventShell(request, env, eventMatch[1]);
     }
 
@@ -30,9 +34,6 @@ export default {
 
 async function serveLiveEventShell(request: Request, env: Env, slug: string): Promise<Response> {
   try {
-    const event = await fetchLivePublicEvent(slug);
-    if (!event) return new Response('Event not found', { status: 404 });
-
     const shellUrl = new URL(EVENT_SHELL_PATH, request.url);
     const shellResponse = await env.ASSETS.fetch(new Request(shellUrl, request));
     if (!shellResponse.ok) return shellResponse;
@@ -47,6 +48,28 @@ async function serveLiveEventShell(request: Request, env: Env, slug: string): Pr
   } catch (error) {
     console.error(JSON.stringify({
       event: 'public_event_route_lookup_failed',
+      slug,
+      error_name: error instanceof Error ? error.name : 'Error',
+    }));
+    return new Response('Public event temporarily unavailable', { status: 503 });
+  }
+}
+
+async function serveLiveEventReadiness(slug: string): Promise<Response> {
+  try {
+    const event = await fetchLivePublicEvent(slug);
+    if (!event) return new Response('Event not found', { status: 404 });
+
+    return new Response(null, {
+      status: 204,
+      headers: {
+        'Cache-Control': 'no-store',
+        'X-Content-Type-Options': 'nosniff',
+      },
+    });
+  } catch (error) {
+    console.error(JSON.stringify({
+      event: 'public_event_readiness_lookup_failed',
       slug,
       error_name: error instanceof Error ? error.name : 'Error',
     }));

@@ -98,12 +98,12 @@ const calendarEvents = events.map((event) => {
     <div class="page-header">
       <div class="container">
         <span class="eyebrow">Events</span>
-        <h1 class="heading-serif page-title">Where we show up</h1>
+        <h1 class="heading-serif page-title" id="events-page-title">Where we show up</h1>
         <div class="page-heading-row">
-          <p class="page-sub">
+          <p class="page-sub" id="events-page-sub">
             {events.length} event{events.length !== 1 ? 's' : ''} and counting.
           </p>
-          <div class="calendar-subscribe">
+          <div class="calendar-subscribe" id="calendar-subscribe">
             {hasSubscribableEvents ? (
               <a
                 class="btn btn-primary calendar-subscribe-button"
@@ -172,6 +172,26 @@ const calendarEvents = events.map((event) => {
           </button>
         </div>
       </div>
+
+      <section class="event-detail-view" id="event-detail-view" aria-labelledby="event-detail-title" hidden>
+        <a href="/events/" class="event-detail-back">← All events</a>
+        <article class="event-detail-card card">
+          <div class="event-detail-cover" id="event-detail-cover-wrap" hidden>
+            <img id="event-detail-cover" class="event-detail-cover-image" alt="" fetchpriority="high" />
+          </div>
+          <div class="event-detail-content">
+            <div class="event-detail-badges">
+              <span class="event-status-badge" id="event-detail-status"></span>
+              <span class="event-type-badge" id="event-detail-format"></span>
+            </div>
+            <p class="event-detail-meta" id="event-detail-meta"></p>
+            <h2 class="heading-serif event-detail-title" id="event-detail-title">Loading event…</h2>
+            <p class="event-detail-summary" id="event-detail-summary"></p>
+            <a class="btn btn-primary event-detail-cta" id="event-detail-cta" hidden></a>
+            <p class="event-detail-state" id="event-detail-state" role="status"></p>
+          </div>
+        </article>
+      </section>
 
       <section class="view-panel" id="events-list-view" aria-label="Events list">
       <ul class="events-grid">
@@ -289,8 +309,25 @@ const calendarEvents = events.map((event) => {
 </Base>
 
 <script define:vars={{ calendarEvents }}>
+  import { fetchLivePublicEvent, fetchLivePublicEvents } from '../../lib/live-public-events';
+
   const listPanel = document.querySelector('#events-list-view');
   const calendarPanel = document.querySelector('#events-calendar-view');
+  const eventsViewBar = document.querySelector('.events-view-bar');
+  const eventsGrid = document.querySelector('.events-grid');
+  const eventsPageTitle = document.querySelector('#events-page-title');
+  const eventsPageSub = document.querySelector('#events-page-sub');
+  const calendarSubscribe = document.querySelector('#calendar-subscribe');
+  const detailPanel = document.querySelector('#event-detail-view');
+  const detailCoverWrap = document.querySelector('#event-detail-cover-wrap');
+  const detailCover = document.querySelector('#event-detail-cover');
+  const detailStatus = document.querySelector('#event-detail-status');
+  const detailFormat = document.querySelector('#event-detail-format');
+  const detailMeta = document.querySelector('#event-detail-meta');
+  const detailTitle = document.querySelector('#event-detail-title');
+  const detailSummary = document.querySelector('#event-detail-summary');
+  const detailCta = document.querySelector('#event-detail-cta');
+  const detailState = document.querySelector('#event-detail-state');
   const calendarGrid = document.querySelector('#calendar-grid');
   const calendarAgenda = document.querySelector('#calendar-agenda');
   const calendarMonthLabel = document.querySelector('#calendar-month-label');
@@ -303,7 +340,7 @@ const calendarEvents = events.map((event) => {
   const viewSwitcher = document.querySelector('.view-switcher');
   const viewButtons = [...document.querySelectorAll('[data-events-view]')];
   const calendarButtons = [...document.querySelectorAll('[data-calendar-action]')];
-  const subscribeButton = document.querySelector('.calendar-subscribe-button');
+  let subscribeButton = document.querySelector('.calendar-subscribe-button');
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
   const monthPattern = /^\d{4}-(0[1-9]|1[0-2])$/;
   let activePopoverAnchor = null;
@@ -315,8 +352,9 @@ const calendarEvents = events.map((event) => {
     String(today.getDate()).padStart(2, '0'),
   ].join('-');
   const currentMonthKey = todayKey.slice(0, 7);
-  const firstUpcoming = calendarEvents.find((event) => new Date(event.endsAt).getTime() >= Date.now());
-  const latestEvent = calendarEvents[0];
+  let liveCalendarEvents = calendarEvents;
+  let firstUpcoming = liveCalendarEvents.find((event) => new Date(event.endsAt).getTime() >= Date.now());
+  let latestEvent = liveCalendarEvents[0];
   const fallbackMonth = firstUpcoming?.dateKey.slice(0, 7) ?? latestEvent?.dateKey.slice(0, 7) ?? currentMonthKey;
   const initialMonth = new URLSearchParams(window.location.search).get('month');
   let selectedMonth = monthPattern.test(initialMonth ?? '') ? initialMonth : fallbackMonth;
@@ -368,6 +406,269 @@ const calendarEvents = events.map((event) => {
       animatePanel(listPanel, -1);
     }
     if (shouldUpdateUrl) updateUrl(view);
+  }
+
+  function getLiveStatus(event) {
+    const now = Date.now();
+    const start = new Date(event.startsAt).getTime();
+    const end = new Date(event.endsAt).getTime();
+    return now < start ? 'upcoming' : now <= end ? 'live' : 'past';
+  }
+
+  function formatLiveDate(iso, timezone) {
+    return new Date(iso).toLocaleDateString('en-GB', {
+      day: 'numeric', month: 'long', year: 'numeric', timeZone: timezone,
+    });
+  }
+
+  function formatLiveTime(iso, timezone) {
+    return new Date(iso).toLocaleTimeString('en-GB', {
+      hour: '2-digit', minute: '2-digit', timeZone: timezone,
+    });
+  }
+
+  function formatLiveLabel(value) {
+    if (value === 'conference') return 'Conference / congress';
+    return value.replaceAll('_', ' ').replace(/\b\w/g, (letter) => letter.toUpperCase());
+  }
+
+  function liveLocation(event) {
+    if (event.locationType === 'online') return 'Online';
+    if (event.locationType === 'hybrid') return event.venueName ? `${event.venueName} + online` : 'Hybrid';
+    return event.venueName ?? 'In person';
+  }
+
+  function liveEventUrl(event) {
+    return event.detailsUrl ?? event.registrationUrl ?? event.onlineUrl;
+  }
+
+  function applyExternalLinkAttributes(element, url) {
+    if (url?.startsWith('http')) {
+      element.target = '_blank';
+      element.rel = 'noopener noreferrer';
+    }
+  }
+
+  function createLiveEventCard(event) {
+    const status = getLiveStatus(event);
+    const config = statusConfig[status];
+    const eventUrl = liveEventUrl(event);
+    const item = document.createElement('li');
+    item.className = 'event-card card';
+
+    const cover = document.createElement(eventUrl ? 'a' : 'div');
+    cover.className = eventUrl ? 'event-cover-link' : 'event-cover';
+    if (eventUrl) {
+      cover.href = eventUrl;
+      cover.setAttribute('aria-hidden', 'true');
+      cover.tabIndex = -1;
+      applyExternalLinkAttributes(cover, eventUrl);
+    }
+    const coverContent = eventUrl ? document.createElement('div') : cover;
+    if (eventUrl) coverContent.className = 'event-cover';
+    if (event.coverUrl) {
+      const image = document.createElement('img');
+      image.className = 'event-cover-image';
+      image.src = event.coverUrl;
+      image.alt = '';
+      image.loading = 'lazy';
+      image.decoding = 'async';
+      coverContent.append(image);
+    }
+    const statusBadge = document.createElement('span');
+    statusBadge.className = `event-status-badge status-${status}`;
+    statusBadge.textContent = config.label;
+    const formatBadge = document.createElement('span');
+    formatBadge.className = 'event-type-badge';
+    formatBadge.textContent = formatLiveLabel(event.format);
+    coverContent.append(statusBadge, formatBadge);
+    if (eventUrl) {
+      cover.append(coverContent);
+      applyExternalLinkAttributes(cover, eventUrl);
+    }
+
+    const body = document.createElement('div');
+    body.className = 'event-body';
+    const meta = document.createElement('div');
+    meta.className = 'event-meta';
+    const date = document.createElement('time');
+    date.dateTime = event.startsAt;
+    date.textContent = formatLiveDate(event.startsAt, event.timezone);
+    const location = document.createElement('span');
+    location.className = 'event-location';
+    location.title = liveLocation(event);
+    location.textContent = liveLocation(event);
+    meta.append(date, location);
+
+    const title = document.createElement('h2');
+    title.className = 'heading-serif event-name';
+    title.title = event.title;
+    if (eventUrl) {
+      const link = document.createElement('a');
+      link.href = eventUrl;
+      link.textContent = event.title;
+      applyExternalLinkAttributes(link, eventUrl);
+      title.append(link);
+    } else {
+      title.textContent = event.title;
+    }
+    const summary = document.createElement('p');
+    summary.className = 'event-desc';
+    summary.textContent = event.summary;
+    body.append(meta, title, summary);
+    if (eventUrl) {
+      const cta = document.createElement('a');
+      cta.href = eventUrl;
+      cta.className = 'btn btn-outline event-cta';
+      cta.textContent = config.cta;
+      applyExternalLinkAttributes(cta, eventUrl);
+      body.append(cta);
+    }
+    item.append(cover, body);
+    return item;
+  }
+
+  function renderLiveEventList(events) {
+    if (!(eventsGrid instanceof HTMLUListElement)) return;
+    eventsGrid.replaceChildren(...events.map(createLiveEventCard));
+    if (eventsPageSub) {
+      eventsPageSub.textContent = `${events.length} event${events.length === 1 ? '' : 's'} and counting.`;
+    }
+  }
+
+  function updateCalendarSubscription(events) {
+    const hasUpcomingEvents = events.some((event) => new Date(event.endsAt).getTime() >= Date.now());
+    if (!calendarSubscribe || !hasUpcomingEvents) return;
+
+    if (subscribeButton instanceof HTMLButtonElement) {
+      const anchor = document.createElement('a');
+      anchor.className = subscribeButton.className;
+      anchor.setAttribute('aria-describedby', 'calendar-subscribe-note');
+      anchor.replaceChildren(...[...subscribeButton.childNodes].map((node) => node.cloneNode(true)));
+      subscribeButton.replaceWith(anchor);
+      subscribeButton = anchor;
+    }
+
+    if (subscribeButton instanceof HTMLAnchorElement) {
+      const feedUrl = new URL('/events/calendar.ics', window.location.origin);
+      subscribeButton.href = `https://calendar.google.com/calendar/r?cid=${encodeURIComponent(`webcal://${feedUrl.host}${feedUrl.pathname}`)}`;
+      subscribeButton.removeAttribute('aria-disabled');
+    }
+
+    if (!calendarSubscribe.querySelector('.calendar-feed-link')) {
+      const link = document.createElement('a');
+      link.className = 'calendar-feed-link';
+      link.href = '/events/calendar.ics';
+      link.download = 'devcongress-events.ics';
+      link.textContent = 'Download .ics file';
+      calendarSubscribe.append(link);
+    }
+    const note = calendarSubscribe.querySelector('#calendar-subscribe-note');
+    if (note) note.textContent = 'Current and upcoming published events. Updates automatically. Download the .ics file if needed.';
+  }
+
+  function setDetailMode(active) {
+    if (eventsViewBar) eventsViewBar.hidden = active;
+    if (listPanel) listPanel.hidden = active;
+    if (calendarPanel) calendarPanel.hidden = active;
+    if (calendarSubscribe) calendarSubscribe.hidden = active;
+    if (detailPanel) detailPanel.hidden = !active;
+  }
+
+  function renderLiveEventDetail(event) {
+    if (!detailPanel || !detailTitle || !detailSummary || !detailMeta || !detailStatus || !detailFormat || !detailState) return;
+    const status = getLiveStatus(event);
+    const config = statusConfig[status];
+    const eventUrl = event.registrationUrl ?? event.onlineUrl;
+    setDetailMode(true);
+    if (eventsPageTitle) eventsPageTitle.textContent = event.title;
+    if (eventsPageSub) eventsPageSub.textContent = `${formatLiveDate(event.startsAt, event.timezone)} · ${liveLocation(event)}`;
+    detailStatus.className = `event-status-badge status-${status}`;
+    detailStatus.textContent = config.label;
+    detailFormat.textContent = formatLiveLabel(event.format);
+    detailMeta.textContent = `${formatLiveDate(event.startsAt, event.timezone)} · ${formatLiveTime(event.startsAt, event.timezone)} · ${liveLocation(event)}`;
+    detailTitle.textContent = event.title;
+    detailSummary.textContent = event.summary;
+    detailState.textContent = '';
+    if (detailCoverWrap instanceof HTMLElement && detailCover instanceof HTMLImageElement) {
+      detailCoverWrap.hidden = !event.coverUrl;
+      if (event.coverUrl) detailCover.src = event.coverUrl;
+    }
+    if (detailCta instanceof HTMLAnchorElement) {
+      detailCta.hidden = !eventUrl;
+      if (eventUrl) {
+        detailCta.href = eventUrl;
+        detailCta.textContent = event.registrationUrl ? 'Register for this event →' : 'Join online →';
+        applyExternalLinkAttributes(detailCta, eventUrl);
+      }
+    }
+    document.title = `${event.title} — DevCongress`;
+  }
+
+  function renderLiveEventError(message) {
+    setDetailMode(true);
+    if (eventsPageTitle) eventsPageTitle.textContent = 'Event unavailable';
+    if (eventsPageSub) eventsPageSub.textContent = 'This event is not currently available on the public website.';
+    if (detailTitle) detailTitle.textContent = 'Event unavailable';
+    if (detailSummary) detailSummary.textContent = '';
+    if (detailState) detailState.textContent = message;
+    if (detailCoverWrap instanceof HTMLElement) detailCoverWrap.hidden = true;
+    if (detailCta instanceof HTMLAnchorElement) detailCta.hidden = true;
+  }
+
+  async function refreshLiveEvents() {
+    try {
+      const events = await fetchLivePublicEvents();
+      liveCalendarEvents = events.map((event) => {
+        const status = getLiveStatus(event);
+        const url = liveEventUrl(event);
+        return {
+          id: event.id,
+          title: event.title,
+          startsAt: event.startsAt,
+          endsAt: event.endsAt,
+          dateKey: getCalendarDateKey(event.startsAt, event.timezone),
+          dateLabel: formatLiveDate(event.startsAt, event.timezone),
+          timeLabel: formatLiveTime(event.startsAt, event.timezone),
+          format: formatLiveLabel(event.format),
+          location: liveLocation(event),
+          status: statusConfig[status].label,
+          url,
+          external: url?.startsWith('http') ?? false,
+        };
+      });
+      firstUpcoming = liveCalendarEvents.find((event) => new Date(event.endsAt).getTime() >= Date.now());
+      latestEvent = liveCalendarEvents[0];
+      if (!new URLSearchParams(window.location.search).has('month')) {
+        selectedMonth = firstUpcoming?.dateKey.slice(0, 7) ?? latestEvent?.dateKey.slice(0, 7) ?? currentMonthKey;
+      }
+      renderLiveEventList(events);
+      updateCalendarSubscription(events);
+      renderMonth(0, false);
+    } catch {
+      // The build-rendered snapshot remains usable when the live feed is unavailable.
+    }
+  }
+
+  async function loadLiveEventRoute() {
+    const match = window.location.pathname.match(/^\/events\/([a-zA-Z0-9][a-zA-Z0-9_-]{0,239})\/?$/);
+    if (!match || match[1] === 'index' || match[1] === 'submit') {
+      setView(new URLSearchParams(window.location.search).get('view') === 'calendar' ? 'calendar' : 'list', false);
+      await refreshLiveEvents();
+      return;
+    }
+
+    setDetailMode(true);
+    try {
+      const event = await fetchLivePublicEvent(match[1]);
+      if (!event) {
+        renderLiveEventError('This event may have been removed, unpublished, or is not available yet.');
+        return;
+      }
+      renderLiveEventDetail(event);
+    } catch {
+      renderLiveEventError('The public event service is temporarily unavailable. Please try again shortly.');
+    }
   }
 
   function monthDate(monthKey) {
@@ -530,7 +831,7 @@ const calendarEvents = events.map((event) => {
     const leadingDays = (new Date(Date.UTC(year, monthIndex, 1)).getUTCDay() + 6) % 7;
     const previousMonthDays = new Date(Date.UTC(year, monthIndex, 0)).getUTCDate();
     const trailingDays = (7 - ((leadingDays + daysInMonth) % 7)) % 7;
-    const monthEvents = calendarEvents
+    const monthEvents = liveCalendarEvents
       .filter((event) => event.dateKey.startsWith(`${selectedMonth}-`))
       .sort((left, right) => new Date(left.startsAt).getTime() - new Date(right.startsAt).getTime());
 
@@ -627,8 +928,7 @@ const calendarEvents = events.map((event) => {
     activePopoverAnchor = null;
   });
 
-  const requestedView = new URLSearchParams(window.location.search).get('view');
-  setView(requestedView === 'calendar' ? 'calendar' : 'list', false);
+  void loadLiveEventRoute();
 </script>
 
 <style>
@@ -779,6 +1079,23 @@ const calendarEvents = events.map((event) => {
   }
   .event-cta { align-self: flex-start; margin-top: var(--s2); }
 
+  .event-detail-view { display: grid; gap: var(--s4); }
+  .event-detail-back {
+    justify-self: start; color: var(--text-mid); font-size: var(--text-sm); font-weight: 700;
+    text-decoration: underline; text-underline-offset: 4px;
+  }
+  .event-detail-back:hover { color: var(--pink); }
+  .event-detail-card { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr); overflow: hidden; }
+  .event-detail-cover { min-height: 320px; background: var(--border-light); }
+  .event-detail-cover-image { display: block; width: 100%; height: 100%; min-height: 320px; object-fit: cover; }
+  .event-detail-content { display: flex; flex-direction: column; gap: var(--s4); padding: clamp(var(--s5), 5vw, var(--s8)); }
+  .event-detail-badges { display: flex; flex-wrap: wrap; gap: var(--s2); }
+  .event-detail-meta { color: var(--text-muted); font-size: var(--text-sm); font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
+  .event-detail-title { font-size: clamp(var(--text-2xl), 5vw, var(--text-4xl)); line-height: var(--leading-tight); }
+  .event-detail-summary { color: var(--text-mid); font-size: var(--text-lg); line-height: var(--leading-body); }
+  .event-detail-cta { align-self: flex-start; margin-top: auto; }
+  .event-detail-state { color: var(--text-muted); font-size: var(--text-sm); }
+
   .calendar-panel { overflow: hidden; background: var(--bg-white); }
   .calendar-panel:hover { transform: none; box-shadow: none; }
   .calendar-toolbar {
@@ -922,6 +1239,8 @@ const calendarEvents = events.map((event) => {
 
   @media (max-width: 640px) {
     .events-grid { grid-template-columns: 1fr; }
+    .event-detail-card { grid-template-columns: 1fr; }
+    .event-detail-cover, .event-detail-cover-image { min-height: 220px; }
     .calendar-subscribe { align-items: center; width: 100%; }
     .calendar-subscribe-button { width: auto; align-self: center; }
     .calendar-subscribe p { max-width: 310px; line-height: 1.45; text-align: center; }
@@ -956,7 +1275,7 @@ const calendarEvents = events.map((event) => {
     :global(.agenda-arrow) { color: var(--pink); font-size: var(--text-base); font-weight: 800; }
   }
   @media (prefers-reduced-motion: reduce) {
-    .mnav-back, .event-cover, .view-switcher-highlight, .view-switcher-button, .calendar-nav-button, .calendar-today-button,
+    .mnav-back, .event-detail-back, .event-cover, .view-switcher-highlight, .view-switcher-button, .calendar-nav-button, .calendar-today-button,
     .calendar-day-popover-close, :global(.calendar-event), :global(.calendar-more-button),
     :global(.day-popover-event), :global(.agenda-event) { transition: none; }
   }

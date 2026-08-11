@@ -76,6 +76,8 @@ function normalizePublicEvent(value: unknown): WebsiteEvent | null {
   const venueName = nullableString(value.venue_name, 500);
   const venueAddress = nullableString(value.venue_address, 1_000);
   const onlineUrl = safePublicUrl(value.online_url);
+  const streamUrl = safePublicUrl(value.stream_url);
+  const embedStream = value.embed_stream === true;
   const registrationUrl = safePublicUrl(value.registration_url);
   const organizerWebsite = safePublicUrl(value.organizer_website);
   const coverUrl = safePublicUrl(value.cover_url);
@@ -95,6 +97,8 @@ function normalizePublicEvent(value: unknown): WebsiteEvent | null {
     venueName,
     venueAddress,
     onlineUrl,
+    streamUrl,
+    embedStream,
     registrationUrl,
     organizerName,
     organizerWebsite,

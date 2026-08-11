@@ -84,6 +84,8 @@ const publicEventSchema = z
     venue_name: z.string().trim().min(1).max(500).nullable(),
     venue_address: z.string().trim().min(1).max(1_000).nullable(),
     online_url: publicHttpUrlSchema.nullable(),
+    stream_url: publicHttpUrlSchema.nullable().optional(),
+    embed_stream: z.boolean().optional().default(false),
     registration_url: publicWebsiteUrlSchema.nullable(),
     organizer_name: z.string().trim().min(1).max(300),
     organizer_website: publicHttpUrlSchema.nullable(),
@@ -140,6 +142,8 @@ export interface WebsiteEvent {
   venueName: string | null;
   venueAddress: string | null;
   onlineUrl: string | null;
+  streamUrl: string | null;
+  embedStream: boolean;
   registrationUrl: string | null;
   organizerName: string;
   organizerWebsite: string | null;
@@ -243,6 +247,8 @@ async function fetchMeetupFallback(): Promise<WebsiteEvent[]> {
     venueName: meetup.data.location.name,
     venueAddress: meetup.data.location.label ?? null,
     onlineUrl: meetup.data.stream_url ?? null,
+    streamUrl: meetup.data.stream_url ?? null,
+    embedStream: meetup.data.embed_stream,
     registrationUrl: meetup.data.registration_url ?? null,
     organizerName: "DevCongress",
     organizerWebsite: "https://devcongress.org",
@@ -268,6 +274,8 @@ function mapPublicEvent(event: PublicEvent): WebsiteEvent {
     venueName: event.venue_name,
     venueAddress: event.venue_address,
     onlineUrl: event.online_url,
+    streamUrl: event.stream_url ?? null,
+    embedStream: event.embed_stream,
     registrationUrl: resolveOptionalWebsiteUrl(event.registration_url),
     organizerName: event.organizer_name,
     organizerWebsite: event.organizer_website,

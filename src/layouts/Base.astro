@@ -231,6 +231,144 @@ const site        = siteEntries[0]!.data;
     box-shadow: var(--shadow-solid);
   }
 
+  /* Runtime event cards are created after Astro's scoped styles run. Keep this
+     compatibility layer narrow so only the live homepage/list card surfaces
+     opt into the same geometry as their server-rendered counterparts. */
+  [data-home-events-grid] > .meetup-card {
+    width: calc((min(var(--max-w), 100vw) - 2 * var(--pad) - 2 * var(--s5)) / 3);
+    flex-shrink: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  [data-home-events-grid] > .meetup-card .meetup-cover-link,
+  #events-list-view .event-card .event-cover-link { display: block; }
+  [data-home-events-grid] > .meetup-card .meetup-cover,
+  #events-list-view .event-card .event-cover {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    position: relative;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    padding: var(--s3);
+    background-color: var(--border-light);
+  }
+  [data-home-events-grid] > .meetup-card .meetup-cover-image,
+  #events-list-view .event-card .event-cover-image {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: opacity 160ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  [data-home-events-grid] > .meetup-card .meetup-status-badge,
+  #events-list-view .event-card .event-status-badge { position: relative; }
+  [data-home-events-grid] > .meetup-card .meetup-status-badge,
+  #events-list-view .event-card .event-status-badge {
+    padding: 2px var(--s2);
+    border: 2px solid var(--black);
+    border-radius: var(--r-sm);
+    font-size: var(--text-xs);
+    font-weight: 700;
+  }
+  [data-home-events-grid] > .meetup-card .status-upcoming,
+  #events-list-view .event-card .status-upcoming { background: var(--yellow); color: var(--black); }
+  [data-home-events-grid] > .meetup-card .status-live,
+  #events-list-view .event-card .status-live { background: var(--pink); color: #fff; }
+  [data-home-events-grid] > .meetup-card .status-past,
+  #events-list-view .event-card .status-past { background: var(--bg-white); color: var(--text-muted); }
+  [data-home-events-grid] > .meetup-card .meetup-body,
+  #events-list-view .event-card .event-body {
+    min-width: 0;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: var(--s3);
+    padding: var(--s5);
+    border-top: 2px solid var(--black);
+  }
+  [data-home-events-grid] > .meetup-card .meetup-meta,
+  #events-list-view .event-card .event-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: nowrap;
+    gap: var(--s2);
+    font-size: var(--text-xs);
+    font-weight: 600;
+    color: var(--text-muted);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  [data-home-events-grid] > .meetup-card .meetup-location,
+  #events-list-view .event-card .event-location {
+    min-width: 0;
+    max-width: 100%;
+    flex: 1 1 0;
+    overflow: hidden;
+    color: var(--pink);
+    text-align: right;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  [data-home-events-grid] > .meetup-card .meetup-meta time,
+  #events-list-view .event-card .event-meta time {
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+  [data-home-events-grid] > .meetup-card .meetup-name,
+  #events-list-view .event-card .event-name {
+    min-width: 0;
+    overflow: hidden;
+    font-size: var(--text-xl);
+    line-height: var(--leading-snug);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  [data-home-events-grid] > .meetup-card .meetup-desc,
+  #events-list-view .event-card .event-desc {
+    display: -webkit-box;
+    flex: 1;
+    overflow: hidden;
+    color: var(--text-mid);
+    font-size: var(--text-sm);
+    line-height: var(--leading-body);
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+  }
+  [data-home-events-grid] > .meetup-card .meetup-cta,
+  #events-list-view .event-card .event-cta {
+    align-self: flex-end;
+    margin-top: auto;
+  }
+  #events-list-view .events-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--s5);
+  }
+  #events-list-view[hidden],
+  #events-calendar-view[hidden],
+  #event-detail-view[hidden] { display: none !important; }
+
+  @media (hover: hover) and (pointer: fine) {
+    [data-home-events-grid] > .meetup-card.card:hover,
+    #events-list-view .event-card.card:hover { transform: none; }
+    [data-home-events-grid] > .meetup-card:hover .meetup-cover-image,
+    #events-list-view .event-card:hover .event-cover-image { opacity: 0.92; }
+  }
+
+  @media (max-width: 900px) {
+    [data-home-events-grid] > .meetup-card {
+      width: calc((100vw - 2 * var(--pad) - var(--s5)) / 2);
+    }
+  }
+  @media (max-width: 640px) {
+    [data-home-events-grid] > .meetup-card { width: 85vw; }
+    #events-list-view .events-grid { grid-template-columns: 1fr; }
+  }
+
   /* ─── Divider ────────────────────────────────────────────── */
   .divider { border: none; border-top: 2px solid var(--black); }
 

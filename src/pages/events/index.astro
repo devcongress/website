@@ -94,8 +94,34 @@ const calendarEvents = events.map((event) => {
     </div>
   </header>
 
-  <main>
-    <div class="page-header">
+  <main data-calendar-events={JSON.stringify(calendarEvents)}>
+    <section class="event-detail-view" id="event-detail-view" aria-labelledby="event-detail-title" hidden>
+      <div class="event-detail-hero">
+        <img id="event-detail-cover" class="event-detail-hero-image" alt="" fetchpriority="high" hidden />
+        <div class="event-detail-hero-overlay" aria-hidden="true"></div>
+        <div class="container event-detail-hero-content">
+          <span class="event-status-badge" id="event-detail-status"></span>
+          <h1 class="heading-serif event-detail-title" id="event-detail-title">Loading event…</h1>
+          <p class="event-detail-meta" id="event-detail-meta"></p>
+        </div>
+      </div>
+      <div class="container event-detail-body">
+        <a href="/events/" class="event-detail-back">← All events</a>
+        <section class="event-detail-layout" aria-labelledby="event-detail-about-heading">
+          <div>
+            <p class="eyebrow">About</p>
+            <h2 class="heading-serif event-detail-about-heading" id="event-detail-about-heading">About this event</h2>
+            <p class="event-detail-summary" id="event-detail-summary"></p>
+          </div>
+          <aside class="event-detail-action" aria-label="Event action">
+            <a class="btn btn-primary event-detail-cta" id="event-detail-cta" hidden></a>
+            <p class="event-detail-state" id="event-detail-state" role="status"></p>
+          </aside>
+        </section>
+      </div>
+    </section>
+
+    <div class="page-header" id="events-page-header">
       <div class="container">
         <span class="eyebrow">Events</span>
         <h1 class="heading-serif page-title" id="events-page-title">Where we show up</h1>
@@ -173,26 +199,6 @@ const calendarEvents = events.map((event) => {
         </div>
       </div>
 
-      <section class="event-detail-view" id="event-detail-view" aria-labelledby="event-detail-title" hidden>
-        <a href="/events/" class="event-detail-back">← All events</a>
-        <article class="event-detail-card card">
-          <div class="event-detail-cover" id="event-detail-cover-wrap" hidden>
-            <img id="event-detail-cover" class="event-detail-cover-image" alt="" fetchpriority="high" />
-          </div>
-          <div class="event-detail-content">
-            <div class="event-detail-badges">
-              <span class="event-status-badge" id="event-detail-status"></span>
-              <span class="event-type-badge" id="event-detail-format"></span>
-            </div>
-            <p class="event-detail-meta" id="event-detail-meta"></p>
-            <h2 class="heading-serif event-detail-title" id="event-detail-title">Loading event…</h2>
-            <p class="event-detail-summary" id="event-detail-summary"></p>
-            <a class="btn btn-primary event-detail-cta" id="event-detail-cta" hidden></a>
-            <p class="event-detail-state" id="event-detail-state" role="status"></p>
-          </div>
-        </article>
-      </section>
-
       <section class="view-panel" id="events-list-view" aria-label="Events list">
       <ul class="events-grid">
         {events.map((event) => {
@@ -213,15 +219,13 @@ const calendarEvents = events.map((event) => {
                   <div class="event-cover">
                     {event.coverUrl && <img class="event-cover-image" src={event.coverUrl} alt="" loading="lazy" decoding="async" />}
                     <span class={`event-status-badge status-${event.status}`}>{config.label}</span>
-                    <span class="event-type-badge">{formatLabel(event.format)}</span>
                   </div>
                 </a>
               ) : (
                 <div class="event-cover">
-                  {event.coverUrl && <img class="event-cover-image" src={event.coverUrl} alt="" loading="lazy" decoding="async" />}
-                  <span class={`event-status-badge status-${event.status}`}>{config.label}</span>
-                  <span class="event-type-badge">{formatLabel(event.format)}</span>
-                </div>
+                    {event.coverUrl && <img class="event-cover-image" src={event.coverUrl} alt="" loading="lazy" decoding="async" />}
+                    <span class={`event-status-badge status-${event.status}`}>{config.label}</span>
+                  </div>
               )}
               <div class="event-body">
                 <div class="event-meta">
@@ -308,21 +312,32 @@ const calendarEvents = events.map((event) => {
   </main>
 </Base>
 
-<script define:vars={{ calendarEvents }}>
+<script>
   import { fetchLivePublicEvent, fetchLivePublicEvents } from '../../lib/live-public-events';
+
+  const calendarEvents = (() => {
+    const raw = document.querySelector('[data-calendar-events]')?.getAttribute('data-calendar-events');
+    if (!raw) return [];
+    try {
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  })();
 
   const listPanel = document.querySelector('#events-list-view');
   const calendarPanel = document.querySelector('#events-calendar-view');
   const eventsViewBar = document.querySelector('.events-view-bar');
   const eventsGrid = document.querySelector('.events-grid');
+  const eventsBody = document.querySelector('.events-body');
+  const eventsPageHeader = document.querySelector('#events-page-header');
   const eventsPageTitle = document.querySelector('#events-page-title');
   const eventsPageSub = document.querySelector('#events-page-sub');
   const calendarSubscribe = document.querySelector('#calendar-subscribe');
   const detailPanel = document.querySelector('#event-detail-view');
-  const detailCoverWrap = document.querySelector('#event-detail-cover-wrap');
   const detailCover = document.querySelector('#event-detail-cover');
   const detailStatus = document.querySelector('#event-detail-status');
-  const detailFormat = document.querySelector('#event-detail-format');
   const detailMeta = document.querySelector('#event-detail-meta');
   const detailTitle = document.querySelector('#event-detail-title');
   const detailSummary = document.querySelector('#event-detail-summary');
@@ -442,6 +457,18 @@ const calendarEvents = events.map((event) => {
     return event.detailsUrl ?? event.registrationUrl ?? event.onlineUrl;
   }
 
+  function liveDetailAction(event, status) {
+    if (status === 'past') {
+      return event.streamUrl && !event.embedStream ? { href: event.streamUrl, label: 'Watch recording' } : null;
+    }
+    if (status === 'live') {
+      if (event.streamUrl) return { href: event.streamUrl, label: 'Watch live' };
+      if (event.onlineUrl) return { href: event.onlineUrl, label: 'Join online' };
+      return null;
+    }
+    return event.registrationUrl ? { href: event.registrationUrl, label: 'Register' } : null;
+  }
+
   function applyExternalLinkAttributes(element, url) {
     if (url?.startsWith('http')) {
       element.target = '_blank';
@@ -478,10 +505,7 @@ const calendarEvents = events.map((event) => {
     const statusBadge = document.createElement('span');
     statusBadge.className = `event-status-badge status-${status}`;
     statusBadge.textContent = config.label;
-    const formatBadge = document.createElement('span');
-    formatBadge.className = 'event-type-badge';
-    formatBadge.textContent = formatLiveLabel(event.format);
-    coverContent.append(statusBadge, formatBadge);
+    coverContent.append(statusBadge);
     if (eventUrl) {
       cover.append(coverContent);
       applyExternalLinkAttributes(cover, eventUrl);
@@ -568,38 +592,61 @@ const calendarEvents = events.map((event) => {
   }
 
   function setDetailMode(active) {
+    if (eventsPageHeader) eventsPageHeader.hidden = active;
+    if (eventsBody) eventsBody.hidden = active;
     if (eventsViewBar) eventsViewBar.hidden = active;
     if (listPanel) listPanel.hidden = active;
     if (calendarPanel) calendarPanel.hidden = active;
     if (calendarSubscribe) calendarSubscribe.hidden = active;
-    if (detailPanel) detailPanel.hidden = !active;
+    if (detailPanel) {
+      detailPanel.hidden = !active;
+      detailPanel.setAttribute('aria-hidden', String(!active));
+    }
+  }
+
+  function renderLiveEventLoading() {
+    setDetailMode(true);
+    if (eventsPageTitle) eventsPageTitle.textContent = 'Loading event…';
+    if (eventsPageSub) eventsPageSub.textContent = 'Loading event details…';
+    if (detailStatus) {
+      detailStatus.className = 'event-status-badge';
+      detailStatus.textContent = '';
+    }
+    if (detailMeta) detailMeta.textContent = '';
+    if (detailTitle) detailTitle.textContent = 'Loading event…';
+    if (detailSummary) detailSummary.textContent = '';
+    if (detailState) detailState.textContent = 'Loading event details…';
+    if (detailCover instanceof HTMLImageElement) {
+      detailCover.hidden = true;
+      detailCover.removeAttribute('src');
+    }
+    if (detailCta instanceof HTMLAnchorElement) detailCta.hidden = true;
   }
 
   function renderLiveEventDetail(event) {
-    if (!detailPanel || !detailTitle || !detailSummary || !detailMeta || !detailStatus || !detailFormat || !detailState) return;
+    if (!detailPanel || !detailTitle || !detailSummary || !detailMeta || !detailStatus || !detailState) return;
     const status = getLiveStatus(event);
     const config = statusConfig[status];
-    const eventUrl = event.registrationUrl ?? event.onlineUrl;
+    const action = liveDetailAction(event, status);
     setDetailMode(true);
     if (eventsPageTitle) eventsPageTitle.textContent = event.title;
     if (eventsPageSub) eventsPageSub.textContent = `${formatLiveDate(event.startsAt, event.timezone)} · ${liveLocation(event)}`;
     detailStatus.className = `event-status-badge status-${status}`;
-    detailStatus.textContent = config.label;
-    detailFormat.textContent = formatLiveLabel(event.format);
+    detailStatus.textContent = status === 'live' ? 'Live' : config.label;
     detailMeta.textContent = `${formatLiveDate(event.startsAt, event.timezone)} · ${formatLiveTime(event.startsAt, event.timezone)} · ${liveLocation(event)}`;
     detailTitle.textContent = event.title;
     detailSummary.textContent = event.summary;
-    detailState.textContent = '';
-    if (detailCoverWrap instanceof HTMLElement && detailCover instanceof HTMLImageElement) {
-      detailCoverWrap.hidden = !event.coverUrl;
+    detailState.textContent = status === 'past' && !(event.streamUrl && !event.embedStream) ? 'This event has ended.' : '';
+    if (detailCover instanceof HTMLImageElement) {
+      detailCover.hidden = !event.coverUrl;
       if (event.coverUrl) detailCover.src = event.coverUrl;
     }
     if (detailCta instanceof HTMLAnchorElement) {
-      detailCta.hidden = !eventUrl;
-      if (eventUrl) {
-        detailCta.href = eventUrl;
-        detailCta.textContent = event.registrationUrl ? 'Register for this event →' : 'Join online →';
-        applyExternalLinkAttributes(detailCta, eventUrl);
+      detailCta.hidden = !action;
+      if (action) {
+        detailCta.href = action.href;
+        detailCta.textContent = `${action.label} →`;
+        applyExternalLinkAttributes(detailCta, action.href);
       }
     }
     document.title = `${event.title} — DevCongress`;
@@ -609,10 +656,18 @@ const calendarEvents = events.map((event) => {
     setDetailMode(true);
     if (eventsPageTitle) eventsPageTitle.textContent = 'Event unavailable';
     if (eventsPageSub) eventsPageSub.textContent = 'This event is not currently available on the public website.';
+    if (detailStatus) {
+      detailStatus.className = 'event-status-badge';
+      detailStatus.textContent = '';
+    }
+    if (detailMeta) detailMeta.textContent = '';
     if (detailTitle) detailTitle.textContent = 'Event unavailable';
     if (detailSummary) detailSummary.textContent = '';
     if (detailState) detailState.textContent = message;
-    if (detailCoverWrap instanceof HTMLElement) detailCoverWrap.hidden = true;
+    if (detailCover instanceof HTMLImageElement) {
+      detailCover.hidden = true;
+      detailCover.removeAttribute('src');
+    }
     if (detailCta instanceof HTMLAnchorElement) detailCta.hidden = true;
   }
 
@@ -653,12 +708,13 @@ const calendarEvents = events.map((event) => {
   async function loadLiveEventRoute() {
     const match = window.location.pathname.match(/^\/events\/([a-zA-Z0-9][a-zA-Z0-9_-]{0,239})\/?$/);
     if (!match || match[1] === 'index' || match[1] === 'submit') {
+      setDetailMode(false);
       setView(new URLSearchParams(window.location.search).get('view') === 'calendar' ? 'calendar' : 'list', false);
       await refreshLiveEvents();
       return;
     }
 
-    setDetailMode(true);
+    renderLiveEventLoading();
     try {
       const event = await fetchLivePublicEvent(match[1]);
       if (!event) {
@@ -1027,15 +1083,18 @@ const calendarEvents = events.map((event) => {
     background-color: var(--border-light);
     position: relative; display: flex;
     align-items: flex-end; justify-content: space-between;
-    padding: var(--s3); transition: opacity 200ms ease;
+    padding: var(--s3);
   }
   .event-cover-image {
     position: absolute; inset: 0;
     width: 100%; height: 100%; object-fit: cover;
+    transition: opacity 160ms cubic-bezier(0.4, 0, 0.2, 1);
   }
-  .event-status-badge,
-  .event-type-badge { position: relative; }
-  .event-card:hover .event-cover { opacity: 0.9; }
+  .event-status-badge { position: relative; }
+  @media (hover: hover) and (pointer: fine) {
+    .event-card:hover { transform: none; }
+    .event-card:hover .event-cover-image { opacity: 0.92; }
+  }
 
   .event-status-badge {
     font-size: var(--text-xs); font-weight: 700;
@@ -1046,12 +1105,6 @@ const calendarEvents = events.map((event) => {
   .status-live { background: var(--pink); color: #fff; }
   .status-past { background: var(--bg-white); color: var(--text-muted); }
 
-  .event-type-badge {
-    font-size: var(--text-xs); font-weight: 700;
-    background: rgba(0, 0, 0, 0.68); color: #fff;
-    border-radius: var(--r-sm); padding: 2px var(--s2);
-  }
-
   .event-body {
     padding: var(--s5); display: flex; flex-direction: column;
     gap: var(--s3); flex: 1; border-top: 2px solid var(--black);
@@ -1060,12 +1113,13 @@ const calendarEvents = events.map((event) => {
     display: flex; align-items: center; justify-content: space-between;
     font-size: var(--text-xs); font-weight: 600; color: var(--text-muted);
     letter-spacing: 0.04em; text-transform: uppercase;
-    flex-wrap: wrap; gap: var(--s2);
+    flex-wrap: nowrap; gap: var(--s2);
   }
   .event-location {
-    min-width: 0; max-width: 100%; overflow: hidden; flex: 1 1 auto;
+    min-width: 0; max-width: 100%; overflow: hidden; flex: 1 1 0;
     color: var(--pink); text-align: right; text-overflow: ellipsis; white-space: nowrap;
   }
+  .event-meta time { flex: 0 0 auto; white-space: nowrap; }
   .event-name {
     min-width: 0; overflow: hidden; font-size: var(--text-xl);
     line-height: var(--leading-snug); text-overflow: ellipsis; white-space: nowrap;
@@ -1077,24 +1131,93 @@ const calendarEvents = events.map((event) => {
     display: -webkit-box; -webkit-line-clamp: 3;
     -webkit-box-orient: vertical; overflow: hidden; flex: 1;
   }
-  .event-cta { align-self: flex-start; margin-top: var(--s2); }
+  .event-cta { align-self: flex-end; margin-top: auto; }
 
-  .event-detail-view { display: grid; gap: var(--s4); }
+  #events-page-header[hidden],
+  .events-body[hidden],
+  .event-detail-view[hidden] { display: none !important; }
+
+  .event-detail-view { background: var(--bg); }
+  .event-detail-hero {
+    position: relative;
+    display: flex;
+    min-height: clamp(30rem, 66vw, 48rem);
+    align-items: flex-end;
+    overflow: hidden;
+    border-bottom: 2px solid var(--black);
+    background: var(--black);
+    color: #fff;
+    isolation: isolate;
+  }
+  .event-detail-hero-image,
+  .event-detail-hero-overlay {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+  .event-detail-hero-image { z-index: -2; object-fit: cover; }
+  .event-detail-hero-overlay {
+    z-index: -1;
+    background: linear-gradient(180deg, rgba(17, 17, 17, 0.36) 0%, rgba(17, 17, 17, 0.28) 38%, rgba(17, 17, 17, 0.84) 100%);
+  }
+  .event-detail-hero-content {
+    padding-top: clamp(var(--s8), 14vw, var(--s10));
+    padding-bottom: clamp(var(--s7), 8vw, var(--s10));
+  }
+  .event-detail-hero .event-status-badge {
+    position: static;
+    display: inline-flex;
+    align-items: center;
+    min-height: 2rem;
+    padding: 0.45rem 0.7rem;
+    border: 2px solid rgba(255, 255, 255, 0.78);
+    border-radius: var(--r-sm);
+    background: rgba(17, 17, 17, 0.46);
+    color: #fff;
+    font-family: var(--font-body);
+    font-size: var(--text-xs);
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    line-height: 1;
+    text-transform: uppercase;
+    backdrop-filter: blur(8px);
+    box-shadow: 0 1px 10px rgba(0, 0, 0, 0.2);
+  }
+  .event-detail-hero .status-upcoming { border-color: var(--yellow); background: var(--yellow); color: var(--black); }
+  .event-detail-hero .status-live { border-color: var(--pink); background: var(--pink); color: #fff; }
+  .event-detail-hero .status-past { border-color: var(--black); background: var(--bg-white); color: var(--text-muted); }
+  .event-detail-title {
+    max-width: 55rem;
+    margin-top: var(--s5);
+    color: #fff;
+    font-size: clamp(var(--text-3xl), 7vw, 5.5rem);
+    line-height: 0.96;
+    text-shadow: 0 2px 18px rgba(0, 0, 0, 0.34);
+  }
+  .event-detail-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s3);
+    margin-top: var(--s5);
+    color: rgba(255, 255, 255, 0.9);
+    font-size: clamp(var(--text-sm), 2vw, var(--text-lg));
+    font-weight: 700;
+    line-height: var(--leading-body);
+    text-shadow: 0 1px 10px rgba(0, 0, 0, 0.36);
+  }
+  .event-detail-body { padding-block: var(--s8); }
   .event-detail-back {
-    justify-self: start; color: var(--text-mid); font-size: var(--text-sm); font-weight: 700;
+    color: var(--text-mid); font-size: var(--text-sm); font-weight: 700;
     text-decoration: underline; text-underline-offset: 4px;
   }
   .event-detail-back:hover { color: var(--pink); }
-  .event-detail-card { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr); overflow: hidden; }
-  .event-detail-cover { min-height: 320px; background: var(--border-light); }
-  .event-detail-cover-image { display: block; width: 100%; height: 100%; min-height: 320px; object-fit: cover; }
-  .event-detail-content { display: flex; flex-direction: column; gap: var(--s4); padding: clamp(var(--s5), 5vw, var(--s8)); }
-  .event-detail-badges { display: flex; flex-wrap: wrap; gap: var(--s2); }
-  .event-detail-meta { color: var(--text-muted); font-size: var(--text-sm); font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
-  .event-detail-title { font-size: clamp(var(--text-2xl), 5vw, var(--text-4xl)); line-height: var(--leading-tight); }
-  .event-detail-summary { color: var(--text-mid); font-size: var(--text-lg); line-height: var(--leading-body); }
-  .event-detail-cta { align-self: flex-start; margin-top: auto; }
-  .event-detail-state { color: var(--text-muted); font-size: var(--text-sm); }
+  .event-detail-layout { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--s7); margin-top: var(--s7); }
+  .event-detail-about-heading { margin-top: var(--s2); font-size: clamp(var(--text-2xl), 4vw, var(--text-3xl)); }
+  .event-detail-summary { max-width: 46rem; margin-top: var(--s4); color: var(--text-mid); font-size: var(--text-lg); line-height: var(--leading-body); }
+  .event-detail-action { padding-top: var(--s6); }
+  .event-detail-action .btn { white-space: nowrap; }
+  .event-detail-state { max-width: 16rem; color: var(--text-muted); font-size: var(--text-sm); line-height: var(--leading-body); }
 
   .calendar-panel { overflow: hidden; background: var(--bg-white); }
   .calendar-panel:hover { transform: none; box-shadow: none; }
@@ -1239,8 +1362,10 @@ const calendarEvents = events.map((event) => {
 
   @media (max-width: 640px) {
     .events-grid { grid-template-columns: 1fr; }
-    .event-detail-card { grid-template-columns: 1fr; }
-    .event-detail-cover, .event-detail-cover-image { min-height: 220px; }
+    .event-detail-hero { min-height: 30rem; }
+    .event-detail-body { padding-block: var(--s7); }
+    .event-detail-layout { grid-template-columns: 1fr; gap: var(--s5); margin-top: var(--s6); }
+    .event-detail-action { padding-top: 0; }
     .calendar-subscribe { align-items: center; width: 100%; }
     .calendar-subscribe-button { width: auto; align-self: center; }
     .calendar-subscribe p { max-width: 310px; line-height: 1.45; text-align: center; }
@@ -1275,7 +1400,7 @@ const calendarEvents = events.map((event) => {
     :global(.agenda-arrow) { color: var(--pink); font-size: var(--text-base); font-weight: 800; }
   }
   @media (prefers-reduced-motion: reduce) {
-    .mnav-back, .event-detail-back, .event-cover, .view-switcher-highlight, .view-switcher-button, .calendar-nav-button, .calendar-today-button,
+    .mnav-back, .event-detail-back, .event-cover-image, .view-switcher-highlight, .view-switcher-button, .calendar-nav-button, .calendar-today-button,
     .calendar-day-popover-close, :global(.calendar-event), :global(.calendar-more-button),
     :global(.day-popover-event), :global(.agenda-event) { transition: none; }
   }

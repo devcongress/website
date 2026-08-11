@@ -4,6 +4,7 @@ import AppDateTimePicker from '../../components/AppDateTimePicker.astro';
 import AppTimezonePicker from '../../components/AppTimezonePicker.astro';
 import {
   EVENT_SUBMISSIONS_API_URL,
+  EVENT_SUBMISSIONS_WITH_COVER_API_URL,
   EVENT_SUBMISSION_TURNSTILE_ACTION,
   EVENT_SUBMISSION_TURNSTILE_SITE_KEY,
 } from '../../lib/events';
@@ -48,6 +49,7 @@ if (!EVENT_SUBMISSIONS_ENABLED) {
         <form
           id="event-submission-form"
           data-endpoint={EVENT_SUBMISSIONS_API_URL}
+          data-cover-endpoint={EVENT_SUBMISSIONS_WITH_COVER_API_URL}
           data-turnstile-action={EVENT_SUBMISSION_TURNSTILE_ACTION}
           novalidate
         >
@@ -101,6 +103,29 @@ if (!EVENT_SUBMISSIONS_ENABLED) {
                 <span class="character-count" aria-live="polite"><output id="summary-count">0</output>/1200</span>
               </div>
               <p class="field-error" id="summary-error"></p>
+            </div>
+
+            <div class="field full-field cover-field">
+              <label for="cover">Cover image <span class="optional">Optional</span></label>
+              <div class="cover-picker">
+                <input id="cover" name="cover" type="file" accept="image/avif,image/jpeg,image/png,image/webp" />
+                <div class="cover-picker-copy">
+                  <strong>Add an event image</strong>
+                  <span>AVIF, JPEG, PNG, or WebP · up to 5MB</span>
+                </div>
+                <button type="button" class="cover-remove" id="cover-remove" hidden>Remove</button>
+              </div>
+              <img id="cover-preview" class="cover-preview" alt="Selected event cover preview" hidden />
+              <div id="cover-upload-progress" class="cover-upload-progress" role="status" aria-live="polite" hidden>
+                <div class="cover-upload-progress-copy">
+                  <span>Uploading cover</span>
+                  <strong id="cover-upload-progress-value">0%</strong>
+                </div>
+                <div id="cover-upload-progress-track" class="cover-upload-progress-track" role="progressbar" aria-label="Cover image upload progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                  <span id="cover-upload-progress-bar"></span>
+                </div>
+              </div>
+              <p class="field-error" id="cover-error"></p>
             </div>
 
             <div class="field full-field">
@@ -275,7 +300,7 @@ if (!EVENT_SUBMISSIONS_ENABLED) {
               <div class="final-actions">
                 <button type="button" class="step-back" data-previous-step="1">← Back</button>
                 <button type="submit" class="btn btn-primary submit-button">
-                  <span class="submit-label">Submit for review</span>
+                  <span class="submit-label">Preview event</span>
                   <span class="submit-loading" hidden>Submitting…</span>
                   <span aria-hidden="true">→</span>
                 </button>
@@ -325,6 +350,33 @@ if (!EVENT_SUBMISSIONS_ENABLED) {
       <div class="leave-dialog-actions">
         <button type="button" class="btn btn-primary" id="keep-editing" autofocus>Keep editing</button>
         <button type="button" class="btn btn-outline" id="leave-form">Leave form</button>
+      </div>
+    </div>
+  </dialog>
+  <dialog id="event-preview-dialog" class="event-preview-dialog" aria-labelledby="event-preview-title">
+    <div class="event-preview-dialog-content">
+      <div class="event-preview-heading">
+        <div>
+          <span class="leave-dialog-kicker">Before you submit</span>
+          <h2 id="event-preview-title">Your event preview</h2>
+        </div>
+        <button type="button" class="preview-close" id="close-event-preview" aria-label="Close preview">×</button>
+      </div>
+      <article class="event-preview-card">
+        <img id="event-preview-image" src="/images/quarterly-april-meetup-2.jpeg" alt="" />
+        <div class="event-preview-card-body">
+          <span id="event-preview-format" class="event-preview-meta"></span>
+          <h3 id="event-preview-name"></h3>
+          <p id="event-preview-summary"></p>
+          <dl>
+            <div><dt>When</dt><dd id="event-preview-when"></dd></div>
+            <div><dt>Where</dt><dd id="event-preview-where"></dd></div>
+          </dl>
+        </div>
+      </article>
+      <div class="event-preview-actions">
+        <button type="button" class="btn btn-outline" id="edit-event">Back to edit</button>
+        <button type="button" class="btn btn-primary" id="confirm-event-submission">Submit for review <span aria-hidden="true">→</span></button>
       </div>
     </div>
   </dialog>
@@ -394,6 +446,23 @@ if (!EVENT_SUBMISSIONS_ENABLED) {
   const leaveDialog = document.querySelector<HTMLDialogElement>('#leave-form-dialog');
   const keepEditingButton = document.querySelector<HTMLButtonElement>('#keep-editing');
   const leaveFormButton = document.querySelector<HTMLButtonElement>('#leave-form');
+  const eventPreviewDialog = document.querySelector<HTMLDialogElement>('#event-preview-dialog');
+  const closeEventPreview = document.querySelector<HTMLButtonElement>('#close-event-preview');
+  const editEventButton = document.querySelector<HTMLButtonElement>('#edit-event');
+  const confirmEventSubmission = document.querySelector<HTMLButtonElement>('#confirm-event-submission');
+  const coverInput = document.querySelector<HTMLInputElement>('#cover');
+  const coverPreview = document.querySelector<HTMLImageElement>('#cover-preview');
+  const coverRemove = document.querySelector<HTMLButtonElement>('#cover-remove');
+  const coverUploadProgress = document.querySelector<HTMLElement>('#cover-upload-progress');
+  const coverUploadProgressValue = document.querySelector<HTMLElement>('#cover-upload-progress-value');
+  const coverUploadProgressTrack = document.querySelector<HTMLElement>('#cover-upload-progress-track');
+  const coverUploadProgressBar = document.querySelector<HTMLElement>('#cover-upload-progress-bar');
+  const previewImage = document.querySelector<HTMLImageElement>('#event-preview-image');
+  const previewFormat = document.querySelector<HTMLElement>('#event-preview-format');
+  const previewName = document.querySelector<HTMLElement>('#event-preview-name');
+  const previewSummary = document.querySelector<HTMLElement>('#event-preview-summary');
+  const previewWhen = document.querySelector<HTMLElement>('#event-preview-when');
+  const previewWhere = document.querySelector<HTMLElement>('#event-preview-where');
   const draftStatus = document.querySelector<HTMLElement>('#draft-status');
   const draftNotice = document.querySelector<HTMLElement>('#draft-restored-notice');
   const discardDraftButton = document.querySelector<HTMLButtonElement>('#discard-draft');
@@ -414,6 +483,8 @@ if (!EVENT_SUBMISSIONS_ENABLED) {
   let navigationTrigger: HTMLAnchorElement | null = null;
   let hasUnsavedChanges = false;
   let submissionComplete = false;
+  let previewConfirmed = false;
+  let coverObjectUrl = '';
 
   if (timezoneInput) timezoneInput.value = detectedTimezone;
 
@@ -1164,12 +1235,94 @@ if (!EVENT_SUBMISSIONS_ENABLED) {
     return value || undefined;
   }
 
+  function clearCoverPreview(): void {
+    if (coverObjectUrl) URL.revokeObjectURL(coverObjectUrl);
+    coverObjectUrl = '';
+    if (coverInput) coverInput.value = '';
+    if (coverPreview) { coverPreview.hidden = true; coverPreview.removeAttribute('src'); }
+    if (coverRemove) coverRemove.hidden = true;
+    clearFieldError('cover');
+  }
+
+  function validateCover(file: File | null): string | null {
+    if (!file || !file.name) return null;
+    if (file.size > 5 * 1024 * 1024) return 'Image must be 5MB or smaller.';
+    if (!['image/avif', 'image/jpeg', 'image/png', 'image/webp'].includes(file.type)) return 'Use an AVIF, JPEG, PNG, or WebP image.';
+    return null;
+  }
+
+  function openEventPreview(data: FormData): void {
+    if (!eventPreviewDialog || !previewImage || !previewFormat || !previewName || !previewSummary || !previewWhen || !previewWhere) return;
+    const timeZone = sanitizePlainText(data.get('timezone'));
+    const start = new Date(localDateTimeToIso(sanitizePlainText(data.get('starts_at')), timeZone));
+    const format = sanitizePlainText(data.get('format'));
+    previewFormat.textContent = format ? format.replace(/^./, (letter) => letter.toUpperCase()) : 'Community event';
+    previewName.textContent = sanitizePlainText(data.get('title'));
+    previewSummary.textContent = sanitizePlainText(data.get('summary'));
+    previewWhen.textContent = new Intl.DateTimeFormat('en-GH', { dateStyle: 'medium', timeStyle: 'short', timeZone }).format(start);
+    const locationType = sanitizePlainText(data.get('location_type'));
+    previewWhere.textContent = locationType === 'online'
+      ? 'Online'
+      : sanitizePlainText(data.get('venue_name')) || 'Venue to be announced';
+    previewImage.src = coverObjectUrl || '/images/quarterly-april-meetup-2.jpeg';
+    eventPreviewDialog.showModal();
+  }
+
   function setSubmitting(submitting: boolean): void {
     if (!submitButton || !submitLabel || !submitLoading) return;
     submitButton.disabled = submitting;
     submitButton.setAttribute('aria-busy', String(submitting));
     submitLabel.hidden = submitting;
     submitLoading.hidden = !submitting;
+    if (coverInput) coverInput.disabled = submitting;
+    if (coverRemove) coverRemove.disabled = submitting;
+    if (editEventButton) editEventButton.disabled = submitting;
+    if (confirmEventSubmission) confirmEventSubmission.disabled = submitting;
+    form?.querySelectorAll<HTMLButtonElement>('[data-previous-step], #discard-draft').forEach((button) => {
+      button.disabled = submitting;
+    });
+  }
+
+  function setCoverUploadProgress(percent: number | null, visible = true): void {
+    if (!coverUploadProgress || !coverUploadProgressValue || !coverUploadProgressTrack || !coverUploadProgressBar) return;
+    coverUploadProgress.hidden = !visible;
+    if (!visible) return;
+    const safePercent = percent === null ? 8 : Math.min(100, Math.max(0, Math.round(percent)));
+    coverUploadProgressValue.textContent = percent === null ? 'Working…' : `${safePercent}%`;
+    coverUploadProgressTrack.setAttribute('aria-valuenow', String(safePercent));
+    coverUploadProgressBar.style.transform = `scaleX(${Math.max(0.04, safePercent / 100)})`;
+  }
+
+  function submitCoverRequest(endpoint: string, body: FormData): Promise<Response> {
+    setCoverUploadProgress(0);
+    return new Promise((resolve, reject) => {
+      const request = new XMLHttpRequest();
+      request.open('POST', endpoint);
+      request.setRequestHeader('accept', 'application/json');
+      request.upload.addEventListener('progress', (progressEvent) => {
+        if (progressEvent.lengthComputable) {
+          setCoverUploadProgress((progressEvent.loaded / progressEvent.total) * 100);
+        } else {
+          setCoverUploadProgress(null);
+        }
+      });
+      request.addEventListener('load', () => {
+        setCoverUploadProgress(100);
+        const headers = new Headers();
+        request.getAllResponseHeaders().trim().split(/[\r\n]+/).forEach((line) => {
+          const separator = line.indexOf(':');
+          if (separator > 0) headers.append(line.slice(0, separator), line.slice(separator + 1).trim());
+        });
+        resolve(new Response(request.responseText, {
+          status: request.status,
+          statusText: request.statusText,
+          headers,
+        }));
+      });
+      request.addEventListener('error', () => reject(new Error('Cover upload failed')));
+      request.addEventListener('abort', () => reject(new Error('Cover upload was interrupted')));
+      request.send(body);
+    });
   }
 
   async function parseError(response: Response): Promise<SubmissionErrorResponse> {
@@ -1293,6 +1446,21 @@ if (!EVENT_SUBMISSIONS_ENABLED) {
     }
     const data = new FormData(form);
 
+    const cover = data.get('cover');
+    const coverFile = cover instanceof File && cover.name ? cover : null;
+    const coverError = validateCover(coverFile);
+    if (coverError) {
+      const element = showFieldError('cover', coverError);
+      if (element) revealAndFocus(element);
+      return;
+    }
+
+    if (!previewConfirmed) {
+      openEventPreview(data);
+      return;
+    }
+    previewConfirmed = false;
+
     // A filled honeypot is treated as accepted without sending anything.
     if (String(data.get('contact_website') ?? '').trim()) {
       submissionComplete = true;
@@ -1303,7 +1471,7 @@ if (!EVENT_SUBMISSIONS_ENABLED) {
       return;
     }
 
-    const endpoint = form.dataset.endpoint;
+    const endpoint = coverFile ? form.dataset.coverEndpoint : form.dataset.endpoint;
     const turnstileAction = form.dataset.turnstileAction;
     if (!endpoint || !turnstileAction) return;
 
@@ -1329,11 +1497,23 @@ if (!EVENT_SUBMISSIONS_ENABLED) {
 
     setSubmitting(true);
     try {
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: { accept: 'application/json', 'content-type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
+      const requestBody = coverFile
+        ? (() => {
+            const body = new FormData();
+            Object.entries(payload).forEach(([key, value]) => {
+              if (value !== undefined) body.set(key, value);
+            });
+            body.set('cover', coverFile);
+            return body;
+          })()
+        : JSON.stringify(payload);
+      const response = coverFile
+        ? await submitCoverRequest(endpoint, requestBody as FormData)
+        : await fetch(endpoint, {
+            method: 'POST',
+            headers: { accept: 'application/json', 'content-type': 'application/json' },
+            body: requestBody,
+          });
       if (response.status !== 202) {
         const body = await parseError(response);
         const fieldErrors = body.error?.field_errors ?? {};
@@ -1377,12 +1557,14 @@ if (!EVENT_SUBMISSIONS_ENABLED) {
       resetTurnstile();
     } finally {
       setSubmitting(false);
+      setCoverUploadProgress(null, false);
     }
   });
 
   submitAnother?.addEventListener('click', () => {
     clearDraft();
     form?.reset();
+    clearCoverPreview();
     selectFormat('');
     timezoneInput?.dispatchEvent(new Event('app-timezone-picker:reset'));
     syncSummaryState();
@@ -1424,6 +1606,31 @@ if (!EVENT_SUBMISSIONS_ENABLED) {
     event.preventDefault();
     closeLeaveDialog();
   });
+  coverInput?.addEventListener('change', () => {
+    const file = coverInput.files?.[0] ?? null;
+    const error = validateCover(file);
+    if (error) {
+      clearCoverPreview();
+      showFieldError('cover', error);
+      return;
+    }
+    if (!file) return;
+    if (coverObjectUrl) URL.revokeObjectURL(coverObjectUrl);
+    coverObjectUrl = URL.createObjectURL(file);
+    if (coverPreview) { coverPreview.src = coverObjectUrl; coverPreview.hidden = false; }
+    if (coverRemove) coverRemove.hidden = false;
+    clearFieldError('cover');
+    hasUnsavedChanges = true;
+  });
+  coverRemove?.addEventListener('click', clearCoverPreview);
+  closeEventPreview?.addEventListener('click', () => eventPreviewDialog?.close());
+  editEventButton?.addEventListener('click', () => eventPreviewDialog?.close());
+  confirmEventSubmission?.addEventListener('click', () => {
+    previewConfirmed = true;
+    eventPreviewDialog?.close();
+    form?.requestSubmit();
+  });
+  eventPreviewDialog?.addEventListener('cancel', (event) => { event.preventDefault(); eventPreviewDialog.close(); });
 
   restoreDraft();
 
@@ -1474,6 +1681,25 @@ if (!EVENT_SUBMISSIONS_ENABLED) {
   @starting-style {
     .leave-dialog[open] { opacity: 0; transform: translateY(10px) scale(0.985); }
   }
+  .event-preview-dialog { width: min(680px, calc(100vw - 2rem)); max-height: calc(100svh - 2rem); margin: auto; overflow: auto; border: 2px solid var(--black); border-radius: var(--r-md); padding: 0; background: var(--bg-white); color: var(--text); box-shadow: 8px 8px 0 var(--black); opacity: 0; transform: translateY(10px) scale(0.985); transition: opacity 160ms cubic-bezier(0.4, 0, 0.2, 1), transform 220ms cubic-bezier(0.16, 1, 0.3, 1); }
+  .event-preview-dialog[open] { opacity: 1; transform: translateY(0) scale(1); }
+  .event-preview-dialog::backdrop { background: rgba(17, 17, 17, 0.58); }
+  .event-preview-dialog-content { padding: var(--s6); }
+  .event-preview-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--s4); margin-bottom: var(--s5); }
+  .event-preview-heading h2 { margin-top: var(--s1); font-size: var(--text-2xl); }
+  .preview-close { display: grid; flex: 0 0 auto; place-items: center; width: 42px; height: 42px; border: 2px solid var(--black); border-radius: var(--r-sm); font-size: 1.75rem; line-height: 1; transition: transform 100ms cubic-bezier(0.4, 0, 0.2, 1), background 120ms cubic-bezier(0.4, 0, 0.2, 1); }
+  .preview-close:hover { background: var(--yellow); }
+  .preview-close:active { transform: scale(0.97); }
+  .event-preview-card { overflow: hidden; border: 2px solid var(--black); border-radius: var(--r-md); background: var(--bg-white); }
+  .event-preview-card > img { display: block; width: 100%; aspect-ratio: 16 / 7; object-fit: cover; background: var(--yellow-bg); }
+  .event-preview-card-body { padding: var(--s5); }
+  .event-preview-meta { color: var(--pink); font-size: var(--text-xs); font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; }
+  .event-preview-card h3 { margin-top: var(--s2); font-size: clamp(1.5rem, 4vw, 2.3rem); line-height: 1.02; }
+  .event-preview-card p { margin-top: var(--s3); color: var(--text-mid); font-size: var(--text-sm); }
+  .event-preview-card dl { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s3); margin-top: var(--s5); padding-top: var(--s4); border-top: 1px solid var(--border-light); }
+  .event-preview-card dt { color: var(--text-muted); font-size: var(--text-xs); font-weight: 700; text-transform: uppercase; }
+  .event-preview-card dd { margin-top: var(--s1); font-size: var(--text-sm); font-weight: 700; }
+  .event-preview-actions { display: flex; justify-content: flex-end; gap: var(--s3); margin-top: var(--s5); }
   .form-hero { position: relative; overflow: hidden; isolation: isolate; padding-block: clamp(3rem, 7vw, 6rem); background: var(--yellow); border-bottom: 2px solid var(--black); }
   .form-hero::before {
     content: '';
@@ -1557,6 +1783,19 @@ if (!EVENT_SUBMISSIONS_ENABLED) {
   .field-grid, .conditional-fields { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr; gap: var(--s5); }
   .full-field, .location-choice, .timezone-note, .extra-details { grid-column: 1 / -1; }
   .field { display: flex; flex-direction: column; min-width: 0; }
+  .cover-picker { display: flex; align-items: center; gap: var(--s3); min-height: 72px; border: 2px dashed var(--border-light); border-radius: var(--r-md); padding: var(--s3); background: var(--yellow-bg); }
+  .cover-picker:focus-within { border-color: var(--pink); box-shadow: 0 0 0 3px rgba(232, 17, 127, 0.13); }
+  .cover-picker input[type='file'] { width: min(100%, 180px); min-height: 42px; border: 0; padding: 0; font-size: var(--text-xs); }
+  .cover-picker-copy { display: grid; gap: 2px; min-width: 0; }
+  .cover-picker-copy strong { font-size: var(--text-sm); }
+  .cover-picker-copy span { color: var(--text-muted); font-size: var(--text-xs); }
+  .cover-remove { margin-left: auto; min-height: 36px; color: #b42318; font-size: var(--text-xs); font-weight: 750; text-decoration: underline; text-underline-offset: 3px; }
+  .cover-preview { width: 100%; max-height: 220px; margin-top: var(--s3); border: 2px solid var(--black); border-radius: var(--r-md); object-fit: cover; }
+  .cover-upload-progress { margin-top: var(--s3); padding: var(--s3); border: 1px solid var(--border-light); border-radius: var(--r-sm); background: var(--yellow-bg); }
+  .cover-upload-progress-copy { display: flex; align-items: baseline; justify-content: space-between; gap: var(--s3); color: var(--text-muted); font-family: var(--font-mono); font-size: var(--text-xs); letter-spacing: 0.08em; text-transform: uppercase; }
+  .cover-upload-progress-copy strong { color: var(--pink); font: inherit; }
+  .cover-upload-progress-track { height: 6px; margin-top: var(--s2); overflow: hidden; border-radius: 999px; background: rgba(0, 0, 0, 0.12); }
+  .cover-upload-progress-track span { display: block; width: 100%; height: 100%; transform: scaleX(0.04); transform-origin: left; border-radius: inherit; background: var(--pink); transition: transform 160ms cubic-bezier(0.16, 1, 0.3, 1); }
   label, legend { font-size: var(--text-sm); font-weight: 700; margin-bottom: var(--s2); }
   label > span[aria-hidden='true'], legend > span[aria-hidden='true'] { color: var(--pink); }
   .optional { color: var(--text-muted); font-size: var(--text-xs); font-weight: 500; margin-left: var(--s1); }
@@ -1669,9 +1908,16 @@ if (!EVENT_SUBMISSIONS_ENABLED) {
     .draft-notice { margin-left: 0; }
     .leave-dialog-actions { align-items: stretch; flex-direction: column; }
     .leave-dialog-actions .btn { justify-content: center; width: 100%; }
+    .cover-picker { align-items: flex-start; flex-wrap: wrap; }
+    .cover-picker input[type='file'] { width: 100%; }
+    .cover-remove { margin-left: 0; }
+    .event-preview-dialog-content { padding: var(--s4); }
+    .event-preview-card dl { grid-template-columns: 1fr; }
+    .event-preview-actions { flex-direction: column-reverse; }
+    .event-preview-actions .btn { justify-content: center; width: 100%; }
   }
   @media (prefers-reduced-motion: reduce) {
-    .form-section, .step-dot, .step-back, .app-select-menu, .app-select-chevron, .character-count, .leave-dialog, .draft-notice, .draft-discard { transition: none; }
+    .form-section, .step-dot, .step-back, .app-select-menu, .app-select-chevron, .character-count, .leave-dialog, .event-preview-dialog, .preview-close, .draft-notice, .draft-discard { transition: none; }
     .form-section.is-leaving-forward, .form-section.is-leaving-back,
     .form-section.is-entering-forward, .form-section.is-entering-back { transform: none; }
   }

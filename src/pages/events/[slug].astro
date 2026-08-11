@@ -13,6 +13,8 @@ export async function getStaticPaths() {
 interface Props { event: WebsiteEvent; }
 const { event } = Astro.props;
 
+type EventStatus = 'upcoming' | 'live' | 'past';
+
 function formatDate(iso: string, timezone: string): string {
   return new Date(iso).toLocaleDateString('en-GB', {
     day: 'numeric', month: 'long', year: 'numeric', timeZone: timezone,
@@ -25,106 +27,193 @@ function formatTime(iso: string, timezone: string): string {
   });
 }
 
-function formatLabel(value: string): string {
-  if (value === 'conference') return 'Conference / congress';
-  return value.replaceAll('_', ' ').replace(/\b\w/g, (letter) => letter.toUpperCase());
-}
-
 function getLocation(value: WebsiteEvent): string {
   if (value.locationType === 'online') return 'Online';
   if (value.locationType === 'hybrid') return value.venueName ? `${value.venueName} + online` : 'Hybrid';
   return value.venueName ?? 'In person';
 }
 
-function getStatus(value: WebsiteEvent): 'upcoming' | 'live' | 'past' {
+function getStatus(value: WebsiteEvent): EventStatus {
   const now = new Date();
   const start = new Date(value.startsAt);
   const end = new Date(value.endsAt);
   return now < start ? 'upcoming' : now <= end ? 'live' : 'past';
 }
 
+function getPrimaryAction(value: WebsiteEvent, valueStatus: EventStatus): { href: string; label: string } | null {
+  if (valueStatus === 'past') {
+    return value.streamUrl && !value.embedStream ? { href: value.streamUrl, label: 'Watch recording' } : null;
+  }
+
+  if (valueStatus === 'live') {
+    if (value.streamUrl) return { href: value.streamUrl, label: 'Watch live' };
+    if (value.onlineUrl) return { href: value.onlineUrl, label: 'Join online' };
+    return null;
+  }
+
+  return value.registrationUrl ? { href: value.registrationUrl, label: 'Register' } : null;
+}
+
 const status = getStatus(event);
-const statusLabel = status === 'live' ? '● Live' : status === 'upcoming' ? 'Upcoming' : 'Past';
-const actionUrl = event.registrationUrl ?? event.onlineUrl;
-const actionLabel = event.registrationUrl ? 'Register for this event →' : 'Join online →';
-const externalAction = actionUrl?.startsWith('http') ?? false;
+const action = getPrimaryAction(event, status);
+const statusLabel = status === 'live' ? 'Live' : status === 'upcoming' ? 'Upcoming' : 'Past';
+const externalAction = action?.href.startsWith('http') ?? false;
 ---
 
 <Base title={`${event.title} — DevCongress`} description={event.summary}>
   <header class="mnav">
     <div class="container mnav-inner">
       <a href="/" class="mnav-logo"><img src="/images/logo.png" alt="DevCongress" height="36" /></a>
-      <a href="/events/" class="mnav-back">← All events</a>
     </div>
   </header>
 
-  <main>
-    <header class="page-header">
-      <div class="container">
-        <span class="eyebrow">Events</span>
-        <h1 class="heading-serif page-title">{event.title}</h1>
-        <p class="page-sub">{formatDate(event.startsAt, event.timezone)} · {getLocation(event)}</p>
+  <main data-event-detail data-event-slug={event.slug}>
+    <section class="event-hero" aria-labelledby="event-title">
+      {event.coverUrl && <img class="event-hero-image" src={event.coverUrl} alt="" fetchpriority="high" />}
+      <div class="event-hero-overlay" aria-hidden="true"></div>
+      <div class="container event-hero-content">
+        <span class={`event-status-badge status-${status}`}>{statusLabel}</span>
+        <h1 class="heading-serif event-hero-title" id="event-title">{event.title}</h1>
+        <p class="event-hero-meta">
+          <time datetime={event.startsAt}>{formatDate(event.startsAt, event.timezone)} · {formatTime(event.startsAt, event.timezone)}</time>
+          <span aria-hidden="true">•</span>
+          <span>{getLocation(event)}</span>
+        </p>
       </div>
-    </header>
+    </section>
 
-    <div class="container events-body">
-      <section class="event-detail-view">
-        <a href="/events/" class="event-detail-back">← All events</a>
-        <article class="event-detail-card card">
-          {event.coverUrl && (
-            <div class="event-detail-cover">
-              <img class="event-detail-cover-image" src={event.coverUrl} alt="" fetchpriority="high" />
-            </div>
-          )}
-          <div class="event-detail-content">
-            <div class="event-detail-badges">
-              <span class={`event-status-badge status-${status}`}>{statusLabel}</span>
-              <span class="event-type-badge">{formatLabel(event.format)}</span>
-            </div>
-            <p class="event-detail-meta">
-              {formatDate(event.startsAt, event.timezone)} · {formatTime(event.startsAt, event.timezone)} · {getLocation(event)}
-            </p>
-            <h2 class="heading-serif event-detail-title">{event.title}</h2>
-            <p class="event-detail-summary">{event.summary}</p>
-            {actionUrl && (
-              <a
-                class="btn btn-primary event-detail-cta"
-                href={actionUrl}
-                target={externalAction ? '_blank' : undefined}
-                rel={externalAction ? 'noopener noreferrer' : undefined}
-              >
-                {actionLabel}
-              </a>
-            )}
-          </div>
-        </article>
+    <div class="container event-detail-body">
+      <a href="/events/" class="event-detail-back">← All events</a>
+      <section class="event-detail-layout" aria-labelledby="event-about-heading">
+        <div>
+          <p class="eyebrow">About</p>
+          <h2 class="heading-serif event-about-heading" id="event-about-heading">About this event</h2>
+          <p class="event-detail-summary">{event.summary}</p>
+        </div>
+        <aside class="event-detail-action" aria-label="Event action">
+          <a
+            class="btn btn-primary"
+            data-event-action
+            href={action?.href}
+            target={externalAction ? '_blank' : undefined}
+            rel={externalAction ? 'noopener noreferrer' : undefined}
+            hidden={!action}
+          >
+            {action?.label} →
+          </a>
+          <p class="event-detail-state" data-event-state role="status">
+            {status === 'past' && !action ? 'This event has ended.' : ''}
+          </p>
+        </aside>
       </section>
     </div>
   </main>
 </Base>
 
+<script>
+  import { fetchLivePublicEvent } from '../../lib/live-public-events';
+
+  const page = document.querySelector('[data-event-detail]');
+  const actionLink = page?.querySelector('[data-event-action]');
+  const state = page?.querySelector('[data-event-state]');
+  const slug = page?.getAttribute('data-event-slug');
+
+  function currentStatus(event) {
+    const now = Date.now();
+    const start = new Date(event.startsAt).getTime();
+    const end = new Date(event.endsAt).getTime();
+    return now < start ? 'upcoming' : now <= end ? 'live' : 'past';
+  }
+
+  function liveAction(event, status) {
+    if (status === 'past') {
+      return event.streamUrl && !event.embedStream ? { href: event.streamUrl, label: 'Watch recording' } : null;
+    }
+    if (status === 'live') {
+      if (event.streamUrl) return { href: event.streamUrl, label: 'Watch live' };
+      if (event.onlineUrl) return { href: event.onlineUrl, label: 'Join online' };
+      return null;
+    }
+    return event.registrationUrl ? { href: event.registrationUrl, label: 'Register' } : null;
+  }
+
+  function updateAction(event) {
+    if (!(actionLink instanceof HTMLAnchorElement) || !(state instanceof HTMLElement)) return;
+    const status = currentStatus(event);
+    const action = liveAction(event, status);
+    actionLink.hidden = !action;
+    state.textContent = status === 'past' && !action ? 'This event has ended.' : '';
+    if (!action) {
+      actionLink.removeAttribute('href');
+      actionLink.removeAttribute('target');
+      actionLink.removeAttribute('rel');
+      return;
+    }
+
+    actionLink.href = action.href;
+    actionLink.textContent = `${action.label} →`;
+    if (action.href.startsWith('http')) {
+      actionLink.target = '_blank';
+      actionLink.rel = 'noopener noreferrer';
+    } else {
+      actionLink.removeAttribute('target');
+      actionLink.removeAttribute('rel');
+    }
+  }
+
+  if (slug) void fetchLivePublicEvent(slug).then((event) => {
+    if (event) updateAction(event);
+  }).catch(() => undefined);
+</script>
+
 <style>
   .mnav { position: sticky; top: 0; z-index: 100; padding-block: var(--s4); background: var(--bg); border-bottom: 2px solid var(--black); }
   .mnav-inner { display: flex; align-items: center; justify-content: space-between; }
-  .mnav-back { color: var(--text-mid); font-size: var(--text-sm); font-weight: 500; }
-  .mnav-back:hover, .event-detail-back:hover { color: var(--pink); }
-  .page-header { padding-block: var(--s9); border-bottom: 2px solid var(--black); background: var(--bg-white); }
-  .page-title { margin-bottom: var(--s3); font-size: clamp(var(--text-3xl), 6vw, var(--text-4xl)); }
-  .page-sub { color: var(--text-mid); font-size: var(--text-lg); }
-  .events-body { padding-block: var(--s9); }
-  .event-detail-view { display: grid; gap: var(--s4); }
-  .event-detail-back { justify-self: start; color: var(--text-mid); font-size: var(--text-sm); font-weight: 700; text-decoration: underline; text-underline-offset: 4px; }
-  .event-detail-card { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr); overflow: hidden; }
-  .event-detail-cover { min-height: 320px; background: var(--border-light); }
-  .event-detail-cover-image { display: block; width: 100%; height: 100%; min-height: 320px; object-fit: cover; }
-  .event-detail-content { display: flex; flex-direction: column; gap: var(--s4); padding: clamp(var(--s5), 5vw, var(--s8)); }
-  .event-detail-badges { display: flex; flex-wrap: wrap; gap: var(--s2); }
-  .event-detail-meta { color: var(--text-muted); font-size: var(--text-sm); font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
-  .event-detail-title { font-size: clamp(var(--text-2xl), 5vw, var(--text-4xl)); line-height: var(--leading-tight); }
-  .event-detail-summary { color: var(--text-mid); font-size: var(--text-lg); line-height: var(--leading-body); }
-  .event-detail-cta { align-self: flex-start; margin-top: auto; }
+  .event-detail-back { color: var(--text-mid); font-size: var(--text-sm); font-weight: 700; text-decoration: underline; text-underline-offset: 4px; }
+  .event-detail-back:hover { color: var(--pink); }
+  .event-hero { position: relative; display: flex; min-height: clamp(30rem, 66vw, 48rem); align-items: flex-end; overflow: hidden; border-bottom: 2px solid var(--black); background: var(--black); color: #fff; isolation: isolate; }
+  .event-hero-image, .event-hero-overlay { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .event-hero-image { z-index: -2; object-fit: cover; }
+  .event-hero-overlay { z-index: -1; background: linear-gradient(180deg, rgba(17, 17, 17, 0.36) 0%, rgba(17, 17, 17, 0.28) 38%, rgba(17, 17, 17, 0.84) 100%); }
+  .event-hero-content { padding-top: clamp(var(--s8), 14vw, var(--s10)); padding-bottom: clamp(var(--s7), 8vw, var(--s10)); }
+  .event-hero .event-status-badge {
+    position: static;
+    display: inline-flex;
+    align-items: center;
+    min-height: 2rem;
+    padding: 0.45rem 0.7rem;
+    border: 2px solid rgba(255, 255, 255, 0.78);
+    border-radius: var(--r-sm);
+    background: rgba(17, 17, 17, 0.46);
+    color: #fff;
+    font-family: var(--font-body);
+    font-size: var(--text-xs);
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    line-height: 1;
+    text-transform: uppercase;
+    backdrop-filter: blur(8px);
+    box-shadow: 0 1px 10px rgba(0, 0, 0, 0.2);
+  }
+  .event-hero .status-upcoming { border-color: var(--yellow); background: var(--yellow); color: var(--black); }
+  .event-hero .status-live { border-color: var(--pink); background: var(--pink); color: #fff; }
+  .event-hero .status-past { border-color: var(--black); background: var(--bg-white); color: var(--text-muted); }
+  .event-hero-title { max-width: 55rem; margin-top: var(--s5); color: #fff; font-size: clamp(var(--text-3xl), 7vw, 5.5rem); line-height: 0.96; text-shadow: 0 2px 18px rgba(0, 0, 0, 0.34); }
+  .event-hero-meta { display: flex; flex-wrap: wrap; gap: var(--s3); margin-top: var(--s5); color: rgba(255, 255, 255, 0.9); font-size: clamp(var(--text-sm), 2vw, var(--text-lg)); font-weight: 700; line-height: var(--leading-body); text-shadow: 0 1px 10px rgba(0, 0, 0, 0.36); }
+  .event-detail-body { padding-block: var(--s8); }
+  .event-detail-layout { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--s7); margin-top: var(--s7); }
+  .event-about-heading { margin-top: var(--s2); font-size: clamp(var(--text-2xl), 4vw, var(--text-3xl)); }
+  .event-detail-summary { max-width: 46rem; margin-top: var(--s4); color: var(--text-mid); font-size: var(--text-lg); line-height: var(--leading-body); }
+  .event-detail-action { padding-top: var(--s6); }
+  .event-detail-action .btn { white-space: nowrap; }
+  .event-detail-state { max-width: 16rem; color: var(--text-muted); font-size: var(--text-sm); line-height: var(--leading-body); }
   @media (max-width: 640px) {
-    .event-detail-card { grid-template-columns: 1fr; }
-    .event-detail-cover, .event-detail-cover-image { min-height: 220px; }
+    .event-hero { min-height: 30rem; }
+    .event-detail-body { padding-block: var(--s7); }
+    .event-detail-layout { grid-template-columns: 1fr; gap: var(--s5); margin-top: var(--s6); }
+    .event-detail-action { padding-top: 0; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .event-detail-back { transition: none; }
   }
 </style>

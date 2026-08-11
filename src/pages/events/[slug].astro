@@ -1,0 +1,130 @@
+---
+import Base from '../../layouts/Base.astro';
+import { getEvents, type WebsiteEvent } from '../../lib/events';
+
+export async function getStaticPaths() {
+  const events = await getEvents();
+  return events.map((event) => ({
+    params: { slug: event.slug },
+    props: { event },
+  }));
+}
+
+interface Props { event: WebsiteEvent; }
+const { event } = Astro.props;
+
+function formatDate(iso: string, timezone: string): string {
+  return new Date(iso).toLocaleDateString('en-GB', {
+    day: 'numeric', month: 'long', year: 'numeric', timeZone: timezone,
+  });
+}
+
+function formatTime(iso: string, timezone: string): string {
+  return new Date(iso).toLocaleTimeString('en-GB', {
+    hour: '2-digit', minute: '2-digit', timeZone: timezone,
+  });
+}
+
+function formatLabel(value: string): string {
+  if (value === 'conference') return 'Conference / congress';
+  return value.replaceAll('_', ' ').replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
+function getLocation(value: WebsiteEvent): string {
+  if (value.locationType === 'online') return 'Online';
+  if (value.locationType === 'hybrid') return value.venueName ? `${value.venueName} + online` : 'Hybrid';
+  return value.venueName ?? 'In person';
+}
+
+function getStatus(value: WebsiteEvent): 'upcoming' | 'live' | 'past' {
+  const now = new Date();
+  const start = new Date(value.startsAt);
+  const end = new Date(value.endsAt);
+  return now < start ? 'upcoming' : now <= end ? 'live' : 'past';
+}
+
+const status = getStatus(event);
+const statusLabel = status === 'live' ? '● Live' : status === 'upcoming' ? 'Upcoming' : 'Past';
+const actionUrl = event.registrationUrl ?? event.onlineUrl;
+const actionLabel = event.registrationUrl ? 'Register for this event →' : 'Join online →';
+const externalAction = actionUrl?.startsWith('http') ?? false;
+---
+
+<Base title={`${event.title} — DevCongress`} description={event.summary}>
+  <header class="mnav">
+    <div class="container mnav-inner">
+      <a href="/" class="mnav-logo"><img src="/images/logo.png" alt="DevCongress" height="36" /></a>
+      <a href="/events/" class="mnav-back">← All events</a>
+    </div>
+  </header>
+
+  <main>
+    <header class="page-header">
+      <div class="container">
+        <span class="eyebrow">Events</span>
+        <h1 class="heading-serif page-title">{event.title}</h1>
+        <p class="page-sub">{formatDate(event.startsAt, event.timezone)} · {getLocation(event)}</p>
+      </div>
+    </header>
+
+    <div class="container events-body">
+      <section class="event-detail-view">
+        <a href="/events/" class="event-detail-back">← All events</a>
+        <article class="event-detail-card card">
+          {event.coverUrl && (
+            <div class="event-detail-cover">
+              <img class="event-detail-cover-image" src={event.coverUrl} alt="" fetchpriority="high" />
+            </div>
+          )}
+          <div class="event-detail-content">
+            <div class="event-detail-badges">
+              <span class={`event-status-badge status-${status}`}>{statusLabel}</span>
+              <span class="event-type-badge">{formatLabel(event.format)}</span>
+            </div>
+            <p class="event-detail-meta">
+              {formatDate(event.startsAt, event.timezone)} · {formatTime(event.startsAt, event.timezone)} · {getLocation(event)}
+            </p>
+            <h2 class="heading-serif event-detail-title">{event.title}</h2>
+            <p class="event-detail-summary">{event.summary}</p>
+            {actionUrl && (
+              <a
+                class="btn btn-primary event-detail-cta"
+                href={actionUrl}
+                target={externalAction ? '_blank' : undefined}
+                rel={externalAction ? 'noopener noreferrer' : undefined}
+              >
+                {actionLabel}
+              </a>
+            )}
+          </div>
+        </article>
+      </section>
+    </div>
+  </main>
+</Base>
+
+<style>
+  .mnav { position: sticky; top: 0; z-index: 100; padding-block: var(--s4); background: var(--bg); border-bottom: 2px solid var(--black); }
+  .mnav-inner { display: flex; align-items: center; justify-content: space-between; }
+  .mnav-back { color: var(--text-mid); font-size: var(--text-sm); font-weight: 500; }
+  .mnav-back:hover, .event-detail-back:hover { color: var(--pink); }
+  .page-header { padding-block: var(--s9); border-bottom: 2px solid var(--black); background: var(--bg-white); }
+  .page-title { margin-bottom: var(--s3); font-size: clamp(var(--text-3xl), 6vw, var(--text-4xl)); }
+  .page-sub { color: var(--text-mid); font-size: var(--text-lg); }
+  .events-body { padding-block: var(--s9); }
+  .event-detail-view { display: grid; gap: var(--s4); }
+  .event-detail-back { justify-self: start; color: var(--text-mid); font-size: var(--text-sm); font-weight: 700; text-decoration: underline; text-underline-offset: 4px; }
+  .event-detail-card { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr); overflow: hidden; }
+  .event-detail-cover { min-height: 320px; background: var(--border-light); }
+  .event-detail-cover-image { display: block; width: 100%; height: 100%; min-height: 320px; object-fit: cover; }
+  .event-detail-content { display: flex; flex-direction: column; gap: var(--s4); padding: clamp(var(--s5), 5vw, var(--s8)); }
+  .event-detail-badges { display: flex; flex-wrap: wrap; gap: var(--s2); }
+  .event-detail-meta { color: var(--text-muted); font-size: var(--text-sm); font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
+  .event-detail-title { font-size: clamp(var(--text-2xl), 5vw, var(--text-4xl)); line-height: var(--leading-tight); }
+  .event-detail-summary { color: var(--text-mid); font-size: var(--text-lg); line-height: var(--leading-body); }
+  .event-detail-cta { align-self: flex-start; margin-top: auto; }
+  @media (max-width: 640px) {
+    .event-detail-card { grid-template-columns: 1fr; }
+    .event-detail-cover, .event-detail-cover-image { min-height: 220px; }
+  }
+</style>

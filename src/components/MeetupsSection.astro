@@ -1,8 +1,8 @@
 ---
-import type { WebsiteMeetup } from '../lib/meetups';
+import type { WebsiteEvent } from '../lib/events';
 
-interface Props { meetups: WebsiteMeetup[]; }
-const { meetups } = Astro.props;
+interface Props { events: WebsiteEvent[]; }
+const { events } = Astro.props;
 
 function getMeetupStatus(start: string, end: string) {
   const now = new Date();
@@ -17,12 +17,11 @@ function formatDate(iso: string): string {
   });
 }
 
-const sorted = [...meetups]
-  .sort((a, b) => new Date(b.data.start).getTime() - new Date(a.data.start).getTime())
+const sorted = [...events]
+  .sort((a, b) => new Date(b.startsAt).getTime() - new Date(a.startsAt).getTime())
   .map((m) => ({
     ...m,
-    slug:   m.id,
-    status: getMeetupStatus(m.data.start, m.data.end),
+    status: getMeetupStatus(m.startsAt, m.endsAt),
   }));
 
 const recent  = sorted.slice(0, 3);
@@ -49,31 +48,29 @@ const statusConfig = {
 
     <!-- Recent: horizontal scroll row, always visible -->
     <div class="scroll-outer">
-      <ul class="meetups-scroll">
-        {recent.map((meetup) => {
-          const cfg        = statusConfig[meetup.status];
-          const photoCount = meetup.data.photos?.length ?? 0;
+      <ul class="meetups-scroll" data-home-events-grid>
+        {recent.map((event) => {
+          const cfg = statusConfig[event.status];
+          const eventUrl = event.detailsUrl ?? event.registrationUrl ?? event.onlineUrl;
           return (
             <li class="meetup-card card">
-              <a href={`/meetups/${meetup.slug}/`} class="meetup-cover-link" aria-hidden="true" tabindex="-1">
+              <a href={eventUrl ?? '/events/'} class="meetup-cover-link" aria-hidden="true" tabindex="-1">
                 <div class="meetup-cover">
-                  <img class="meetup-cover-image" src={meetup.data.cover} alt="" loading="lazy" decoding="async" />
-                  <span class={`meetup-status-badge status-${meetup.status}`}>{cfg.label}</span>
-                  {photoCount > 0 && (
-                    <span class="meetup-photo-badge">{photoCount} photos</span>
-                  )}
+                  {event.coverUrl && <img class="meetup-cover-image" src={event.coverUrl} alt="" loading="lazy" decoding="async" />}
+                  <span class={`meetup-status-badge status-${event.status}`}>{cfg.label}</span>
+                  <span class="meetup-photo-badge">{event.format.replaceAll('_', ' ')}</span>
                 </div>
               </a>
               <div class="meetup-body">
                 <div class="meetup-meta">
-                  <time datetime={meetup.data.start}>{formatDate(meetup.data.start)}</time>
-                  <span class="meetup-location" title={meetup.data.location.label ?? meetup.data.location.name}>{meetup.data.location.label ?? meetup.data.location.name}</span>
+                  <time datetime={event.startsAt}>{formatDate(event.startsAt)}</time>
+                  <span class="meetup-location" title={event.venueName ?? event.locationType}>{event.venueName ?? event.locationType.replaceAll('_', ' ')}</span>
                 </div>
-                <h3 class="heading-serif meetup-name" title={meetup.data.name}>
-                  <a href={`/meetups/${meetup.slug}/`}>{meetup.data.name}</a>
+                <h3 class="heading-serif meetup-name" title={event.title}>
+                  <a href={eventUrl ?? '/events/'}>{event.title}</a>
                 </h3>
-                <p class="meetup-desc">{meetup.data.description}</p>
-                <a href={`/meetups/${meetup.slug}/`} class="btn btn-outline meetup-cta">
+                <p class="meetup-desc">{event.summary}</p>
+                <a href={eventUrl ?? '/events/'} class="btn btn-outline meetup-cta">
                   {cfg.cta}
                 </a>
               </div>
@@ -87,6 +84,102 @@ const statusConfig = {
 
   </div>
 </section>
+
+<script>
+  import { fetchLivePublicEvents } from '../lib/live-public-events';
+
+  const grid = document.querySelector('[data-home-events-grid]');
+  const statusConfig = {
+    upcoming: { label: 'Upcoming', cta: 'Register →' },
+    live: { label: '● Live', cta: 'Follow live →' },
+    past: { label: 'Past', cta: 'View recap →' },
+  };
+
+  function getStatus(start, end) {
+    const now = Date.now();
+    const startTime = new Date(start).getTime();
+    const endTime = new Date(end).getTime();
+    return now < startTime ? 'upcoming' : now <= endTime ? 'live' : 'past';
+  }
+
+  function formatDate(iso) {
+    return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+  }
+
+  function render(events) {
+    if (!(grid instanceof HTMLUListElement)) return;
+    grid.replaceChildren();
+    [...events]
+      .sort((left, right) => new Date(right.startsAt).getTime() - new Date(left.startsAt).getTime())
+      .slice(0, 3)
+      .forEach((event) => {
+        const status = getStatus(event.startsAt, event.endsAt);
+        const config = statusConfig[status];
+        const eventUrl = event.detailsUrl ?? event.registrationUrl ?? event.onlineUrl ?? '/events/';
+        const card = document.createElement('li');
+        card.className = 'meetup-card card';
+
+        const coverLink = document.createElement('a');
+        coverLink.href = eventUrl;
+        coverLink.className = 'meetup-cover-link';
+        coverLink.setAttribute('aria-hidden', 'true');
+        coverLink.tabIndex = -1;
+        const cover = document.createElement('div');
+        cover.className = 'meetup-cover';
+        if (event.coverUrl) {
+          const image = document.createElement('img');
+          image.className = 'meetup-cover-image';
+          image.src = event.coverUrl;
+          image.alt = '';
+          image.loading = 'lazy';
+          image.decoding = 'async';
+          cover.append(image);
+        }
+        const statusBadge = document.createElement('span');
+        statusBadge.className = `meetup-status-badge status-${status}`;
+        statusBadge.textContent = config.label;
+        const typeBadge = document.createElement('span');
+        typeBadge.className = 'meetup-photo-badge';
+        typeBadge.textContent = event.format.replaceAll('_', ' ');
+        cover.append(statusBadge, typeBadge);
+        coverLink.append(cover);
+
+        const body = document.createElement('div');
+        body.className = 'meetup-body';
+        const meta = document.createElement('div');
+        meta.className = 'meetup-meta';
+        const date = document.createElement('time');
+        date.dateTime = event.startsAt;
+        date.textContent = formatDate(event.startsAt);
+        const location = document.createElement('span');
+        location.className = 'meetup-location';
+        location.title = event.venueName ?? event.locationType;
+        location.textContent = event.venueName ?? event.locationType.replaceAll('_', ' ');
+        meta.append(date, location);
+
+        const title = document.createElement('h3');
+        title.className = 'heading-serif meetup-name';
+        title.title = event.title;
+        const titleLink = document.createElement('a');
+        titleLink.href = eventUrl;
+        titleLink.textContent = event.title;
+        title.append(titleLink);
+
+        const description = document.createElement('p');
+        description.className = 'meetup-desc';
+        description.textContent = event.summary;
+        const cta = document.createElement('a');
+        cta.href = eventUrl;
+        cta.className = 'btn btn-outline meetup-cta';
+        cta.textContent = config.cta;
+        body.append(meta, title, description, cta);
+        card.append(coverLink, body);
+        grid.append(card);
+      });
+  }
+
+  void fetchLivePublicEvents().then(render).catch(() => undefined);
+</script>
 
 
 <style>

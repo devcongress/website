@@ -55,7 +55,7 @@ jobs:
     if: >-
       github.repository == 'devcongress/website' &&
       github.ref == 'refs/heads/main' &&
-      (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
+      (github.event_name == 'push' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
     needs: validate-and-build
     runs-on: ubuntu-latest
     environment:

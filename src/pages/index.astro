@@ -11,14 +11,14 @@ import MeetupsSection from '../components/MeetupsSection.astro';
 import AdminsSection from '../components/AdminsSection.astro';
 import PartnersSection from '../components/PartnersSection.astro';
 import DonateSection from '../components/DonateSection.astro';
-import { getMeetups } from '../lib/meetups';
+import { getEvents } from '../lib/events';
 
 const siteEntries = await getCollection('site');
 const site        = siteEntries[0]!.data;
 const admins      = await getCollection('admins');
 const activities  = await getCollection('activities');
 const partners    = await getCollection('partners');
-const meetups     = await getMeetups();
+const events      = await getEvents();
 ---
 
 <Base>
@@ -37,7 +37,7 @@ const meetups     = await getMeetups();
     <MissionSection mission={site.mission_section} slackUrl={site.community_slack_url} />
     <RolesMarquee roles={site.roles} />
     <ProgramsSection activities={activities} />
-    <MeetupsSection meetups={meetups} />
+    <MeetupsSection events={events} />
     <AdminsSection admins={admins} />
     <PartnersSection partners={partners} />
     <DonateSection paystackUrl={site.paystack_url} donate={site.donate_section} />

@@ -272,8 +272,7 @@ function mapPublicEvent(event: PublicEvent): WebsiteEvent {
     organizerName: event.organizer_name,
     organizerWebsite: event.organizer_website,
     coverUrl: resolveOptionalWebsiteUrl(event.cover_url),
-    detailsUrl:
-      event.ownership === "devcongress" ? `/meetups/${event.slug}/` : null,
+    detailsUrl: `/events/${event.slug}/`,
     updatedAt: event.updated_at,
   };
 }

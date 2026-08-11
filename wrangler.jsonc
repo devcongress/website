@@ -1,6 +1,7 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "devcongress-website",
+  "main": "src/worker.ts",
   "compatibility_date": "2026-07-10",
   "preview_urls": true,
   "observability": {
@@ -8,6 +9,8 @@
   },
   "assets": {
     "directory": "./dist",
+    "binding": "ASSETS",
+    "run_worker_first": ["/events/*"],
     "html_handling": "auto-trailing-slash"
   }
 }

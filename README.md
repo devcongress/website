@@ -38,33 +38,40 @@ All commands are run from the root of the project, from a terminal:
 | `pnpm astro ...`       | Run CLI commands like `astro add`, `astro check` |
 | `pnpm astro -- --help` | Get help using the Astro CLI                     |
 
-## Meetup data
+## Public event data
 
-The homepage and meetup pages are generated from the Events Management public
-meetup feed during each static build:
+The homepage, event list, and static fallback pages are generated from the
+Events Management public event feed during each static build:
 
 ```txt
-https://em.devcongress.org/api/public/meetups
+https://em.devcongress.org/api/public/events
 ```
 
-The adapter validates the versioned public response before generating routes.
-If the feed is unreachable, times out, returns an error, or fails validation,
-the build uses `content/meetups/*.yaml` instead. This keeps the public site
-deployable during a temporary upstream incident without exposing organizer
-credentials or connecting the browser directly to the operational system.
+The adapter validates the versioned public response before generating the
+event surface. If the generic feed is unreachable, times out, returns an error,
+or fails validation, the build uses the existing `content/meetups/*.yaml`
+official-meetup fallback instead. This keeps the public site deployable during
+a temporary upstream incident without exposing organizer credentials or
+connecting the browser directly to the operational system.
 
-Pushes to `main`, manual workflow runs, and the daily `06:17 UTC` scheduled
-build refresh the static event snapshot.
+The deployed Cloudflare surface also refreshes the homepage and `/events/`
+list from the public feed in the browser. Canonical `/events/<slug>/` pages
+are resolved at the edge and use the same public feed before serving the
+static Events page shell. An approved event can therefore become visible
+without waiting for the next Astro build. If the public feed is temporarily
+unavailable, the static snapshot remains usable where the route exists.
 
 ## Event calendar subscription
 
 `/events/calendar.ics` is a public iCalendar subscription generated from the
-same validated Events Management feed as `/events/`. It includes only published
-events that are still in progress or have not started at build time; past events
-remain available on the website but are not carried into subscribers' calendars.
+same validated Events Management feed as `/events/`. On Cloudflare it is
+generated dynamically, so newly published events do not wait for the next
+Astro build. The static build still produces a fallback feed for GitHub Pages.
+It includes only published events that are still in progress or have not
+started at request/build time; past events remain available on the website but
+are not carried into subscribers' calendars.
 
-The Events page links the feed to Google Calendar. The feed is refreshed by the
-same push, manual, and daily builds described above. No organizer credentials or
+The Events page links the feed to Google Calendar. No organizer credentials or
 unmoderated submissions are included.
 
 ## Public event submission launch controls
@@ -90,19 +97,28 @@ switch for a system-wide shutdown.
 
 ## Cloudflare Workers deployment
 
-This site remains fully static. `wrangler.jsonc` publishes Astro's `dist/` output through Cloudflare Workers Static Assets; it does not add a server entrypoint, API routes, authentication, or database bindings.
+Astro still builds a static site-first fallback, while `src/worker.ts` adds a
+small read-only edge layer for dynamic public events. `wrangler.jsonc` publishes
+Astro's `dist/` output through Cloudflare Workers Static Assets and runs the
+Worker first only for `/events/*`; it does not add authentication, organizer
+workflows, or database bindings.
 
 - `pnpm deploy:dry-run` builds the site and validates the Worker asset deployment locally.
-- `pnpm deploy` builds and deploys the static site with Wrangler.
+- `pnpm deploy` builds and deploys the site plus edge route with Wrangler.
 - Pull requests run the static build and Wrangler dry-run validation.
-- During this migration, GitHub Pages and Cloudflare Workers run as independent workflows. Each builds the site and deploys its own output on pushes, scheduled refreshes, and manual runs on `main`.
+- The Cloudflare workflow deploys after merges to `main`, on the daily schedule,
+  and on manual runs. GitHub Pages remains an independent static fallback.
 
 Before the first production deployment, repository administrators must create the `cloudflare-workers-production` environment and add these GitHub Actions secrets:
 
 - `CLOUDFLARE_API_TOKEN` — a least-privilege token permitted to deploy this Worker.
 - `CLOUDFLARE_ACCOUNT_ID` — the Cloudflare account that owns the Worker and `devcongress.org` zone.
 
-The first deployment should be validated at its Workers preview URL. Attach `devcongress.org` only after URL/content parity checks pass. GitHub Pages continues to deploy independently during the agreed soak window and remains the rollback path.
+The first dynamic deployment should be validated at its Workers preview URL,
+including `/events/<slug>/` and `/events/calendar.ics`. Attach
+`devcongress.org` only after URL/content parity checks pass. GitHub Pages
+continues to deploy independently during the agreed soak window and remains the
+static rollback path.
 
 Forks and fork-origin pull requests run the build jobs only. GitHub Pages artifacts, Workers dry-run validation, protected environments, and production deployments run only from `devcongress/website` itself.
 ## 👀 Want to learn more?

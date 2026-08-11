@@ -9,7 +9,7 @@ interface Env {
 
 const EVENT_ROUTE = /^\/events\/([a-zA-Z0-9][a-zA-Z0-9_-]{0,239})\/?$/;
 const CALENDAR_PATH = '/events/calendar.ics';
-const EVENT_SHELL_PATH = '/events/index.html';
+const EVENT_SHELL_PATH = '/events/';
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {

@@ -11,6 +11,7 @@ const MAX_RESPONSE_BYTES = 2 * 1024 * 1024;
 export async function fetchLivePublicEvents(): Promise<WebsiteEvent[]> {
   const response = await fetch(PUBLIC_EVENTS_API_URL, {
     headers: { accept: 'application/json' },
+    cache: 'no-store',
     redirect: 'manual',
     signal: AbortSignal.timeout(8_000),
   });
@@ -31,6 +32,7 @@ export async function fetchLivePublicEvent(slug: string): Promise<WebsiteEvent |
 
   const response = await fetch(`${PUBLIC_EVENTS_API_URL}/${encodeURIComponent(slug)}`, {
     headers: { accept: 'application/json' },
+    cache: 'no-store',
     redirect: 'manual',
     signal: AbortSignal.timeout(8_000),
   });
@@ -150,10 +152,19 @@ function safePublicUrl(value: unknown): string | null {
 
   try {
     const url = new URL(candidate);
-    return url.protocol === 'https:' || url.protocol === 'http:' ? url.toString() : null;
+    if (url.protocol !== 'https:' && url.protocol !== 'http:') return null;
+    if (isLoopbackHost(url.hostname)) return null;
+    return url.toString();
   } catch {
     return null;
   }
+}
+
+function isLoopbackHost(hostname: string): boolean {
+  const normalized = hostname.toLowerCase();
+  return normalized === 'localhost'
+    || normalized === '127.0.0.1'
+    || normalized === '::1';
 }
 
 function stringValue(value: unknown, maxLength: number): string {

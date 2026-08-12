@@ -454,6 +454,14 @@ const calendarEvents = events.map((event) => {
     });
   }
 
+  function getLiveCalendarDateKey(iso, timezone) {
+    const parts = new Intl.DateTimeFormat('en-GB', {
+      year: 'numeric', month: '2-digit', day: '2-digit', timeZone: timezone,
+    }).formatToParts(new Date(iso));
+    const value = (type) => parts.find((part) => part.type === type)?.value ?? '';
+    return `${value('year')}-${value('month')}-${value('day')}`;
+  }
+
   function formatLiveLabel(value) {
     if (value === 'conference') return 'Conference / congress';
     return value.replaceAll('_', ' ').replace(/\b\w/g, (letter) => letter.toUpperCase());
@@ -706,7 +714,7 @@ const calendarEvents = events.map((event) => {
           title: event.title,
           startsAt: event.startsAt,
           endsAt: event.endsAt,
-          dateKey: getCalendarDateKey(event.startsAt, event.timezone),
+          dateKey: getLiveCalendarDateKey(event.startsAt, event.timezone),
           dateLabel: formatLiveDate(event.startsAt, event.timezone),
           timeLabel: formatLiveTime(event.startsAt, event.timezone),
           format: formatLiveLabel(event.format),
@@ -724,7 +732,8 @@ const calendarEvents = events.map((event) => {
       renderLiveEventList(events);
       updateCalendarSubscription(events);
       renderMonth(0, false);
-    } catch {
+    } catch (error) {
+      console.warn('Unable to refresh the live events listing.', error);
       // The build-rendered snapshot remains usable when the live feed is unavailable.
     }
   }

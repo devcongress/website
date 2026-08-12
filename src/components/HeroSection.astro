@@ -141,4 +141,17 @@ const colorClass: Record<string, string> = {
     border: none;
     display: block;
   }
+
+  @media (max-width: 640px) {
+    .hero-top { margin-bottom: var(--s7); }
+    .hero-headline { margin-bottom: var(--s6); }
+    .hero-ctas { gap: var(--s3); width: 100%; }
+    .btn-hero {
+      width: min(100%, 19rem);
+      min-height: 46px;
+      justify-content: center;
+      padding: var(--s3) var(--s6);
+      font-size: var(--text-base);
+    }
+  }
 </style>

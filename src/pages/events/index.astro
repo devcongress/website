@@ -107,10 +107,9 @@ const calendarEvents = events.map((event) => {
       </div>
       <div class="container event-detail-body">
         <a href="/events/" class="event-detail-back">← All events</a>
-        <section class="event-detail-layout" aria-labelledby="event-detail-about-heading">
+        <section class="event-detail-layout" aria-label="About">
           <div>
             <p class="eyebrow">About</p>
-            <h2 class="heading-serif event-detail-about-heading" id="event-detail-about-heading">About this event</h2>
             <p class="event-detail-summary" id="event-detail-summary"></p>
           </div>
           <aside class="event-detail-action" aria-label="Event action">
@@ -314,6 +313,13 @@ const calendarEvents = events.map((event) => {
 
 <script>
   import { fetchLivePublicEvent, fetchLivePublicEvents } from '../../lib/live-public-events';
+  import type { WebsiteEvent } from '../../lib/events';
+
+  const statusConfig = {
+    upcoming: { label: 'Upcoming', cta: 'Register →' },
+    live: { label: '● Live', cta: 'Follow live →' },
+    past: { label: 'Past', cta: 'View event →' },
+  };
 
   const calendarEvents = (() => {
     const raw = document.querySelector('[data-calendar-events]')?.getAttribute('data-calendar-events');
@@ -334,8 +340,11 @@ const calendarEvents = events.map((event) => {
   const eventsPageHeader = document.querySelector('#events-page-header');
   const eventsPageTitle = document.querySelector('#events-page-title');
   const eventsPageSub = document.querySelector('#events-page-sub');
+  const eventsListTitle = eventsPageTitle?.textContent?.trim() || 'Where we show up';
+  const eventsListDocumentTitle = document.title;
   const calendarSubscribe = document.querySelector('#calendar-subscribe');
   const detailPanel = document.querySelector('#event-detail-view');
+  const detailBack = document.querySelector('.event-detail-back');
   const detailCover = document.querySelector('#event-detail-cover');
   const detailStatus = document.querySelector('#event-detail-status');
   const detailMeta = document.querySelector('#event-detail-meta');
@@ -359,6 +368,9 @@ const calendarEvents = events.map((event) => {
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
   const monthPattern = /^\d{4}-(0[1-9]|1[0-2])$/;
   let activePopoverAnchor = null;
+  let routeRequestVersion = 0;
+  const liveEventDetails = new Map<string, WebsiteEvent>();
+  const eventDetailRequests = new Map();
 
   const today = new Date();
   const todayKey = [
@@ -604,7 +616,16 @@ const calendarEvents = events.map((event) => {
     }
   }
 
+  function restoreEventsListHeader() {
+    if (eventsPageTitle) eventsPageTitle.textContent = eventsListTitle;
+    if (eventsPageSub) {
+      eventsPageSub.textContent = `${liveCalendarEvents.length} event${liveCalendarEvents.length === 1 ? '' : 's'} and counting.`;
+    }
+    document.title = eventsListDocumentTitle;
+  }
+
   function renderLiveEventLoading() {
+    syncDetailBackLink();
     setDetailMode(true);
     if (eventsPageTitle) eventsPageTitle.textContent = 'Loading event…';
     if (eventsPageSub) eventsPageSub.textContent = 'Loading event details…';
@@ -671,9 +692,12 @@ const calendarEvents = events.map((event) => {
     if (detailCta instanceof HTMLAnchorElement) detailCta.hidden = true;
   }
 
-  async function refreshLiveEvents() {
+  async function refreshLiveEvents(routeVersion = routeRequestVersion) {
     try {
       const events = await fetchLivePublicEvents();
+      if (routeVersion !== routeRequestVersion) return;
+      liveEventDetails.clear();
+      events.forEach((event) => liveEventDetails.set(event.slug, event));
       liveCalendarEvents = events.map((event) => {
         const status = getLiveStatus(event);
         const url = liveEventUrl(event);
@@ -705,27 +729,95 @@ const calendarEvents = events.map((event) => {
     }
   }
 
+  function fetchEventForRoute(slug) {
+    const liveEvent = liveEventDetails.get(slug);
+    if (liveEvent) return Promise.resolve(liveEvent);
+
+    const cached = eventDetailRequests.get(slug);
+    if (cached) return cached;
+
+    const request = fetchLivePublicEvent(slug)
+      .then((event) => {
+        if (event) liveEventDetails.set(event.slug, event);
+        return event;
+      })
+      .catch((error) => {
+        eventDetailRequests.delete(slug);
+        throw error;
+      });
+    eventDetailRequests.set(slug, request);
+    return request;
+  }
+
   async function loadLiveEventRoute() {
+    const routeVersion = ++routeRequestVersion;
     const match = window.location.pathname.match(/^\/events\/([a-zA-Z0-9][a-zA-Z0-9_-]{0,239})\/?$/);
     if (!match || match[1] === 'index' || match[1] === 'submit') {
+      restoreEventsListHeader();
       setDetailMode(false);
       setView(new URLSearchParams(window.location.search).get('view') === 'calendar' ? 'calendar' : 'list', false);
-      await refreshLiveEvents();
+      void refreshLiveEvents(routeVersion);
       return;
     }
 
     renderLiveEventLoading();
     try {
-      const event = await fetchLivePublicEvent(match[1]);
+      const event = await fetchEventForRoute(match[1]);
+      if (routeVersion !== routeRequestVersion) return;
       if (!event) {
         renderLiveEventError('This event may have been removed, unpublished, or is not available yet.');
         return;
       }
       renderLiveEventDetail(event);
     } catch {
+      if (routeVersion !== routeRequestVersion) return;
       renderLiveEventError('The public event service is temporarily unavailable. Please try again shortly.');
     }
   }
+
+  function sameOriginEventUrl(anchor) {
+    if (!(anchor instanceof HTMLAnchorElement) || anchor.target || anchor.hasAttribute('download')) return null;
+    const url = new URL(anchor.href, window.location.href);
+    if (url.origin !== window.location.origin || !/^\/events(?:\/|$)/.test(url.pathname)) return null;
+    if (url.pathname === '/events/calendar.ics' || url.pathname === '/events/submit/' || url.pathname === '/events/submit') return null;
+    return url;
+  }
+
+  function eventSlugFromUrl(url) {
+    const match = url.pathname.match(/^\/events\/([a-zA-Z0-9][a-zA-Z0-9_-]{0,239})\/?$/);
+    return match && match[1] !== 'index' && match[1] !== 'submit' ? match[1] : null;
+  }
+
+  document.addEventListener('pointerover', (event) => {
+    if (event.pointerType === 'touch') return;
+    const target = event.target instanceof Element ? event.target.closest('a[href]') : null;
+    const url = sameOriginEventUrl(target);
+    const slug = url && eventSlugFromUrl(url);
+    if (slug) void fetchEventForRoute(slug).catch(() => undefined);
+  });
+
+  document.addEventListener('pointerdown', (event) => {
+    const target = event.target instanceof Element ? event.target.closest('a[href]') : null;
+    const url = sameOriginEventUrl(target);
+    const slug = url && eventSlugFromUrl(url);
+    if (slug) void fetchEventForRoute(slug).catch(() => undefined);
+  });
+
+  document.addEventListener('click', (event) => {
+    if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    const target = event.target instanceof Element ? event.target.closest('a[href]') : null;
+    const url = sameOriginEventUrl(target);
+    if (!url) return;
+
+    event.preventDefault();
+    window.history.pushState({}, '', `${url.pathname}${url.search}${url.hash}`);
+    window.scrollTo(0, 0);
+    void loadLiveEventRoute();
+  });
+
+  window.addEventListener('popstate', () => {
+    void loadLiveEventRoute();
+  });
 
   function monthDate(monthKey) {
     const [year, month] = monthKey.split('-').map(Number);
@@ -743,13 +835,34 @@ const calendarEvents = events.map((event) => {
     const element = document.createElement(event.url ? 'a' : 'div');
     element.className = className;
     if (event.url) {
-      element.href = event.url;
+      element.href = calendarEventUrl(event);
       if (event.external) {
         element.target = '_blank';
         element.rel = 'noopener noreferrer';
       }
     }
     return element;
+  }
+
+  function calendarEventUrl(event) {
+    if (!event.url || event.external) return event.url;
+    const url = new URL(event.url, window.location.origin);
+    if (!eventSlugFromUrl(url)) return event.url;
+    url.searchParams.set('view', 'calendar');
+    url.searchParams.set('month', selectedMonth);
+    return `${url.pathname}${url.search}${url.hash}`;
+  }
+
+  function syncDetailBackLink() {
+    if (!(detailBack instanceof HTMLAnchorElement)) return;
+    const url = new URL('/events/', window.location.origin);
+    const search = new URLSearchParams(window.location.search);
+    if (search.get('view') === 'calendar') {
+      url.searchParams.set('view', 'calendar');
+      const month = search.get('month');
+      url.searchParams.set('month', monthPattern.test(month ?? '') ? month : selectedMonth);
+    }
+    detailBack.href = `${url.pathname}${url.search}`;
   }
 
   function appendEventContent(element, event, compact = false) {
@@ -1213,10 +1326,10 @@ const calendarEvents = events.map((event) => {
   }
   .event-detail-back:hover { color: var(--pink); }
   .event-detail-layout { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--s7); margin-top: var(--s7); }
-  .event-detail-about-heading { margin-top: var(--s2); font-size: clamp(var(--text-2xl), 4vw, var(--text-3xl)); }
-  .event-detail-summary { max-width: 46rem; margin-top: var(--s4); color: var(--text-mid); font-size: var(--text-lg); line-height: var(--leading-body); }
+  .event-detail-summary { max-width: 46rem; color: var(--text-mid); font-size: var(--text-lg); line-height: var(--leading-body); }
   .event-detail-action { padding-top: var(--s6); }
   .event-detail-action .btn { white-space: nowrap; }
+  .event-detail-cta[hidden] { display: none !important; }
   .event-detail-state { max-width: 16rem; color: var(--text-muted); font-size: var(--text-sm); line-height: var(--leading-body); }
 
   .calendar-panel { overflow: hidden; background: var(--bg-white); }
@@ -1361,6 +1474,8 @@ const calendarEvents = events.map((event) => {
   :global(.calendar-more-button:active) { transform: scale(0.97); }
 
   @media (max-width: 640px) {
+    .page-header { padding-block: var(--s7); }
+    .page-heading-row { gap: var(--s4); }
     .events-grid { grid-template-columns: 1fr; }
     .event-detail-hero { min-height: 30rem; }
     .event-detail-body { padding-block: var(--s7); }

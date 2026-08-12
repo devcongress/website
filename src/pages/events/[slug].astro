@@ -84,10 +84,9 @@ const externalAction = action?.href.startsWith('http') ?? false;
 
     <div class="container event-detail-body">
       <a href="/events/" class="event-detail-back">← All events</a>
-      <section class="event-detail-layout" aria-labelledby="event-about-heading">
+      <section class="event-detail-layout" aria-label="About">
         <div>
           <p class="eyebrow">About</p>
-          <h2 class="heading-serif event-about-heading" id="event-about-heading">About this event</h2>
           <p class="event-detail-summary">{event.summary}</p>
         </div>
         <aside class="event-detail-action" aria-label="Event action">
@@ -202,8 +201,7 @@ const externalAction = action?.href.startsWith('http') ?? false;
   .event-hero-meta { display: flex; flex-wrap: wrap; gap: var(--s3); margin-top: var(--s5); color: rgba(255, 255, 255, 0.9); font-size: clamp(var(--text-sm), 2vw, var(--text-lg)); font-weight: 700; line-height: var(--leading-body); text-shadow: 0 1px 10px rgba(0, 0, 0, 0.36); }
   .event-detail-body { padding-block: var(--s8); }
   .event-detail-layout { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--s7); margin-top: var(--s7); }
-  .event-about-heading { margin-top: var(--s2); font-size: clamp(var(--text-2xl), 4vw, var(--text-3xl)); }
-  .event-detail-summary { max-width: 46rem; margin-top: var(--s4); color: var(--text-mid); font-size: var(--text-lg); line-height: var(--leading-body); }
+  .event-detail-summary { max-width: 46rem; color: var(--text-mid); font-size: var(--text-lg); line-height: var(--leading-body); }
   .event-detail-action { padding-top: var(--s6); }
   .event-detail-action .btn { white-space: nowrap; }
   .event-detail-state { max-width: 16rem; color: var(--text-muted); font-size: var(--text-sm); line-height: var(--leading-body); }

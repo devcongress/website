@@ -363,7 +363,7 @@ if (!EVENT_SUBMISSIONS_ENABLED) {
         <button type="button" class="preview-close" id="close-event-preview" aria-label="Close preview">×</button>
       </div>
       <article class="event-preview-card">
-        <img id="event-preview-image" src="/images/quarterly-april-meetup-2.jpeg" alt="" />
+        <img id="event-preview-image" src="https://em.devcongress.org/images/event-announcement-fallback.png" alt="" />
         <div class="event-preview-card-body">
           <span id="event-preview-format" class="event-preview-meta"></span>
           <h3 id="event-preview-name"></h3>
@@ -1286,7 +1286,7 @@ if (!EVENT_SUBMISSIONS_ENABLED) {
     previewWhere.textContent = locationType === 'online'
       ? 'Online'
       : sanitizePlainText(data.get('venue_name')) || 'Venue to be announced';
-    previewImage.src = coverObjectUrl || '/images/quarterly-april-meetup-2.jpeg';
+    previewImage.src = coverObjectUrl || 'https://em.devcongress.org/images/event-announcement-fallback.png';
     eventPreviewDialog.showModal();
   }
 

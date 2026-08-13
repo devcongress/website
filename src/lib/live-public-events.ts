@@ -1,6 +1,9 @@
 import type { WebsiteEvent } from './events';
+import { sortEventsBySoonest } from './event-order';
+import { normalizePublicHttpUrl, normalizePublicWebsiteUrl } from './public-url';
 
 export const PUBLIC_EVENTS_API_URL = 'https://em.devcongress.org/api/public/events';
+const PUBLIC_EVENTS_ORIGIN = new URL(PUBLIC_EVENTS_API_URL);
 
 const PUBLIC_EVENT_SLUG = /^[a-zA-Z0-9][a-zA-Z0-9_-]{0,239}$/;
 const PUBLIC_EVENT_FORMATS = new Set(['meetup', 'conference', 'workshop', 'hackathon', 'webinar', 'other']);
@@ -22,9 +25,9 @@ export async function fetchLivePublicEvents(): Promise<WebsiteEvent[]> {
     throw new Error('Public events API returned an invalid response');
   }
 
-  return payload.data
+  return sortEventsBySoonest(payload.data
     .map(normalizePublicEvent)
-    .filter((event): event is WebsiteEvent => event !== null);
+    .filter((event): event is WebsiteEvent => event !== null));
 }
 
 export async function fetchLivePublicEvent(slug: string): Promise<WebsiteEvent | null> {
@@ -77,12 +80,12 @@ function normalizePublicEvent(value: unknown): WebsiteEvent | null {
 
   const venueName = nullableString(value.venue_name, 500);
   const venueAddress = nullableString(value.venue_address, 1_000);
-  const onlineUrl = safePublicUrl(value.online_url);
-  const streamUrl = safePublicUrl(value.stream_url);
+  const onlineUrl = normalizePublicHttpUrl(value.online_url);
+  const streamUrl = normalizePublicHttpUrl(value.stream_url);
   const embedStream = value.embed_stream === true;
-  const registrationUrl = safePublicUrl(value.registration_url);
-  const organizerWebsite = safePublicUrl(value.organizer_website);
-  const coverUrl = safePublicUrl(value.cover_url);
+  const registrationUrl = normalizePublicWebsiteUrl(value.registration_url, PUBLIC_EVENTS_ORIGIN);
+  const organizerWebsite = normalizePublicHttpUrl(value.organizer_website);
+  const coverUrl = normalizePublicWebsiteUrl(value.cover_url, PUBLIC_EVENTS_ORIGIN);
 
   return {
     id,
@@ -143,28 +146,6 @@ async function parseJsonResponse(response: Response): Promise<unknown> {
   } catch {
     throw new Error('Public events API returned invalid JSON');
   }
-}
-
-function safePublicUrl(value: unknown): string | null {
-  if (typeof value !== 'string' || !value.trim()) return null;
-  const candidate = value.trim();
-  if (candidate.startsWith('/') && !candidate.startsWith('//')) return candidate;
-
-  try {
-    const url = new URL(candidate);
-    if (url.protocol !== 'https:' && url.protocol !== 'http:') return null;
-    if (isLoopbackHost(url.hostname)) return null;
-    return url.toString();
-  } catch {
-    return null;
-  }
-}
-
-function isLoopbackHost(hostname: string): boolean {
-  const normalized = hostname.toLowerCase();
-  return normalized === 'localhost'
-    || normalized === '127.0.0.1'
-    || normalized === '::1';
 }
 
 function stringValue(value: unknown, maxLength: number): string {

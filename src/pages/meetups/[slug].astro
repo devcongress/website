@@ -703,6 +703,17 @@ function sharedLinkLabel(value: string): string {
   .video-title { padding: var(--s4) var(--s5); font-size: var(--text-sm); font-weight: 600; color: var(--text); }
 </style>
 
+<script>
+  import { getEventReturnLink } from '../../lib/event-navigation';
+
+  const backLink = document.querySelector('.mnav-back');
+  if (backLink instanceof HTMLAnchorElement) {
+    const returnLink = getEventReturnLink(window.location.search);
+    backLink.href = returnLink.href;
+    backLink.textContent = returnLink.label;
+  }
+</script>
+
 <script is:inline>
   (() => {
     /* ── Lightbox ─────────────────────────────────────── */

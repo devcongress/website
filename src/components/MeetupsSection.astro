@@ -1,5 +1,7 @@
 ---
 import type { WebsiteEvent } from '../lib/events';
+import { getEventCardAction } from '../lib/event-card-actions';
+import { withHomepageEventContext } from '../lib/event-navigation';
 
 interface Props { events: WebsiteEvent[]; }
 const { events } = Astro.props;
@@ -27,9 +29,9 @@ const sorted = [...events]
 const recent  = sorted.slice(0, 3);
 
 const statusConfig = {
-  upcoming: { label: 'Upcoming', cta: 'Register →' },
-  live:     { label: '● Live',   cta: 'Follow live →' },
-  past:     { label: 'Past',     cta: 'View recap →' },
+  upcoming: { label: 'Upcoming' },
+  live:     { label: '● Live' },
+  past:     { label: 'Past' },
 };
 ---
 
@@ -51,27 +53,42 @@ const statusConfig = {
       <ul class="meetups-scroll" data-home-events-grid>
         {recent.map((event) => {
           const cfg = statusConfig[event.status];
-          const eventUrl = event.detailsUrl ?? event.registrationUrl ?? event.onlineUrl;
+          const detailsUrl = event.detailsUrl ? withHomepageEventContext(event.detailsUrl) : '/events/';
+          const detailsExternal = detailsUrl.startsWith('http');
+          const directAction = getEventCardAction(event, event.status);
+          const actionExternal = directAction?.href.startsWith('http');
           return (
-            <li class="meetup-card card">
-              <a href={eventUrl ?? '/events/'} class="meetup-cover-link" aria-hidden="true" tabindex="-1">
-                <div class="meetup-cover">
-                  {event.coverUrl && <img class="meetup-cover-image" src={event.coverUrl} alt="" loading="lazy" decoding="async" />}
-                  <span class={`meetup-status-badge status-${event.status}`}>{cfg.label}</span>
-                </div>
-              </a>
+            <li class="meetup-card card has-detail-link">
+              <a
+                href={detailsUrl}
+                class="meetup-card-detail-link"
+                aria-label={`View details for ${event.title}`}
+                target={detailsExternal ? '_blank' : undefined}
+                rel={detailsExternal ? 'noopener noreferrer' : undefined}
+              ></a>
+              <div class="meetup-cover">
+                {event.coverUrl && <img class="meetup-cover-image" src={event.coverUrl} alt="" loading="lazy" decoding="async" />}
+                <span class={`meetup-status-badge status-${event.status}`}>{cfg.label}</span>
+              </div>
               <div class="meetup-body">
                 <div class="meetup-meta">
                   <time datetime={event.startsAt}>{formatDate(event.startsAt)}</time>
                   <span class="meetup-location" title={event.venueName ?? event.locationType}>{event.venueName ?? event.locationType.replaceAll('_', ' ')}</span>
                 </div>
-                <h3 class="heading-serif meetup-name" title={event.title}>
-                  <a href={eventUrl ?? '/events/'}>{event.title}</a>
-                </h3>
+                <h3 class="heading-serif meetup-name" title={event.title}>{event.title}</h3>
                 <p class="meetup-desc">{event.summary}</p>
-                <a href={eventUrl ?? '/events/'} class="btn btn-outline meetup-cta">
-                  {cfg.cta}
-                </a>
+                {directAction && (
+                  <div class="meetup-card-actions">
+                    <a
+                      href={directAction.href}
+                      class="btn btn-primary meetup-cta"
+                      target={actionExternal ? '_blank' : undefined}
+                      rel={actionExternal ? 'noopener noreferrer' : undefined}
+                    >
+                      {directAction.label}
+                    </a>
+                  </div>
+                )}
               </div>
             </li>
           );
@@ -86,12 +103,14 @@ const statusConfig = {
 
 <script>
   import { fetchLivePublicEvents } from '../lib/live-public-events';
+  import { getEventCardAction } from '../lib/event-card-actions';
+  import { withHomepageEventContext } from '../lib/event-navigation';
 
   const grid = document.querySelector('[data-home-events-grid]');
   const statusConfig = {
-    upcoming: { label: 'Upcoming', cta: 'Register →' },
-    live: { label: '● Live', cta: 'Follow live →' },
-    past: { label: 'Past', cta: 'View recap →' },
+    upcoming: { label: 'Upcoming' },
+    live: { label: '● Live' },
+    past: { label: 'Past' },
   };
 
   function getStatus(start, end) {
@@ -114,15 +133,16 @@ const statusConfig = {
       .forEach((event) => {
         const status = getStatus(event.startsAt, event.endsAt);
         const config = statusConfig[status];
-        const eventUrl = event.detailsUrl ?? event.registrationUrl ?? event.onlineUrl ?? '/events/';
+        const detailsUrl = event.detailsUrl ? withHomepageEventContext(event.detailsUrl) : '/events/';
+        const directAction = getEventCardAction(event, status);
         const card = document.createElement('li');
-        card.className = 'meetup-card card';
+        card.className = 'meetup-card card has-detail-link';
 
-        const coverLink = document.createElement('a');
-        coverLink.href = eventUrl;
-        coverLink.className = 'meetup-cover-link';
-        coverLink.setAttribute('aria-hidden', 'true');
-        coverLink.tabIndex = -1;
+        const detailLink = document.createElement('a');
+        detailLink.href = detailsUrl;
+        detailLink.className = 'meetup-card-detail-link';
+        detailLink.setAttribute('aria-label', `View details for ${event.title}`);
+        applyExternalLinkAttributes(detailLink, detailsUrl);
         const cover = document.createElement('div');
         cover.className = 'meetup-cover';
         if (event.coverUrl) {
@@ -138,7 +158,6 @@ const statusConfig = {
         statusBadge.className = `meetup-status-badge status-${status}`;
         statusBadge.textContent = config.label;
         cover.append(statusBadge);
-        coverLink.append(cover);
 
         const body = document.createElement('div');
         body.className = 'meetup-body';
@@ -156,22 +175,33 @@ const statusConfig = {
         const title = document.createElement('h3');
         title.className = 'heading-serif meetup-name';
         title.title = event.title;
-        const titleLink = document.createElement('a');
-        titleLink.href = eventUrl;
-        titleLink.textContent = event.title;
-        title.append(titleLink);
+        title.textContent = event.title;
 
         const description = document.createElement('p');
         description.className = 'meetup-desc';
         description.textContent = event.summary;
-        const cta = document.createElement('a');
-        cta.href = eventUrl;
-        cta.className = 'btn btn-outline meetup-cta';
-        cta.textContent = config.cta;
-        body.append(meta, title, description, cta);
-        card.append(coverLink, body);
+        body.append(meta, title, description);
+        if (directAction) {
+          const actions = document.createElement('div');
+          actions.className = 'meetup-card-actions';
+          const cta = document.createElement('a');
+          cta.href = directAction.href;
+          cta.className = 'btn btn-primary meetup-cta';
+          cta.textContent = directAction.label;
+          applyExternalLinkAttributes(cta, directAction.href);
+          actions.append(cta);
+          body.append(actions);
+        }
+        card.append(detailLink, cover, body);
         grid.append(card);
       });
+  }
+
+  function applyExternalLinkAttributes(element, url) {
+    if (url.startsWith('http')) {
+      element.target = '_blank';
+      element.rel = 'noopener noreferrer';
+    }
   }
 
   void fetchLivePublicEvents().then(render).catch(() => undefined);
@@ -243,9 +273,18 @@ const statusConfig = {
 
 
   /* ── Shared card styles ────────────────────────────────── */
-  .meetup-card { overflow: hidden; display: flex; flex-direction: column; }
-
-  .meetup-cover-link { display: block; }
+  .meetup-card { position: relative; overflow: hidden; display: flex; flex-direction: column; }
+  .meetup-card.has-detail-link { cursor: pointer; }
+  .meetup-card-detail-link {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    border-radius: inherit;
+  }
+  .meetup-card-detail-link:focus-visible {
+    outline: 3px solid var(--pink);
+    outline-offset: -5px;
+  }
 
   .meetup-cover {
     width: 100%;
@@ -305,9 +344,10 @@ const statusConfig = {
   }
   .meetup-location {
     min-width: 0;
-    max-width: 100%;
+    width: 22ch;
+    max-width: 50%;
     overflow: hidden;
-    flex: 1 1 auto;
+    flex: 0 1 22ch;
     color: var(--pink);
     text-align: right;
     text-overflow: ellipsis;
@@ -322,8 +362,6 @@ const statusConfig = {
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-  .meetup-name a:hover { color: var(--pink); }
-
   .meetup-desc {
     font-size: var(--text-sm);
     color: var(--text-mid);
@@ -335,7 +373,18 @@ const statusConfig = {
     flex: 1;
   }
 
-  .meetup-cta { align-self: flex-end; margin-top: auto; }
+  .meetup-card-actions {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: var(--s3);
+    margin-top: auto;
+    pointer-events: none;
+  }
+  .meetup-card-actions .meetup-cta { align-self: auto; margin-top: 0; pointer-events: auto; }
 
   @media (prefers-reduced-motion: reduce) {
     .meetup-cover-image { transition: none; }

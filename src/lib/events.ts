@@ -17,6 +17,10 @@ export const EVENT_SUBMISSIONS_WITH_COVER_API_URL = new URL(
   "/api/public/event-submissions/with-cover",
   EVENTS_MANAGEMENT_ORIGIN,
 ).toString();
+export const EVENT_SUBMISSION_EMAIL_PREFLIGHT_API_URL = new URL(
+  "/api/public/email-preflight",
+  EVENTS_MANAGEMENT_ORIGIN,
+).toString();
 export const EVENT_SUBMISSION_TURNSTILE_ACTION = "event_submission";
 export const EVENT_SUBMISSION_TURNSTILE_SITE_KEY = "0x4AAAAAADov8n7eB5-btoDw";
 

@@ -6,6 +6,7 @@ import {
 } from "./public-event-contract";
 
 export type { EventFormat } from "./public-event-contract";
+export { sortEventsBySoonest } from "./event-order";
 
 export const EVENTS_MANAGEMENT_ORIGIN = new URL("https://em.devcongress.org");
 export const EVENT_SUBMISSIONS_API_URL = new URL(
@@ -54,19 +55,6 @@ let eventsPromise: Promise<WebsiteEvent[]> | undefined;
 export async function getEvents(): Promise<WebsiteEvent[]> {
   eventsPromise ??= loadEvents();
   return eventsPromise;
-}
-
-export function sortEventsBySoonest(events: WebsiteEvent[]): WebsiteEvent[] {
-  const now = Date.now();
-  return [...events].sort((a, b) => {
-    const aTime = new Date(a.startsAt).getTime();
-    const bTime = new Date(b.startsAt).getTime();
-    const aUpcoming = new Date(a.endsAt).getTime() >= now;
-    const bUpcoming = new Date(b.endsAt).getTime() >= now;
-
-    if (aUpcoming !== bUpcoming) return aUpcoming ? -1 : 1;
-    return aUpcoming ? aTime - bTime : bTime - aTime;
-  });
 }
 
 async function loadEvents(): Promise<WebsiteEvent[]> {

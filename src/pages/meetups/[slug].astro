@@ -704,6 +704,15 @@ function sharedLinkLabel(value: string): string {
 </style>
 
 <script>
+  import { getEventReturnLink } from '../../lib/event-navigation';
+
+  const backLink = document.querySelector('.mnav-back');
+  if (backLink instanceof HTMLAnchorElement) {
+    const returnLink = getEventReturnLink(window.location.search);
+    backLink.href = returnLink.href;
+    backLink.textContent = returnLink.label;
+  }
+
   (() => {
     /* ── Lightbox ─────────────────────────────────────── */
     const lightbox = document.querySelector('[data-lightbox]');

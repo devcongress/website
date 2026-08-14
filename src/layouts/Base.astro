@@ -235,14 +235,34 @@ const site        = siteEntries[0]!.data;
      compatibility layer narrow so only the live homepage/list card surfaces
      opt into the same geometry as their server-rendered counterparts. */
   [data-home-events-grid] > .meetup-card {
+    position: relative;
     width: calc((min(var(--max-w), 100vw) - 2 * var(--pad) - 2 * var(--s5)) / 3);
     flex-shrink: 0;
     overflow: hidden;
     display: flex;
     flex-direction: column;
   }
-  [data-home-events-grid] > .meetup-card .meetup-cover-link,
-  #events-list-view .event-card .event-cover-link { display: block; }
+  #events-list-view .event-card {
+    position: relative;
+    min-width: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  [data-home-events-grid] > .meetup-card.has-detail-link,
+  #events-list-view .event-card.has-detail-link { cursor: pointer; }
+  [data-home-events-grid] > .meetup-card .meetup-card-detail-link,
+  #events-list-view .event-card .event-card-detail-link {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    border-radius: inherit;
+  }
+  [data-home-events-grid] > .meetup-card .meetup-card-detail-link:focus-visible,
+  #events-list-view .event-card .event-card-detail-link:focus-visible {
+    outline: 3px solid var(--pink);
+    outline-offset: -5px;
+  }
   [data-home-events-grid] > .meetup-card .meetup-cover,
   #events-list-view .event-card .event-cover {
     width: 100%;
@@ -305,8 +325,9 @@ const site        = siteEntries[0]!.data;
   [data-home-events-grid] > .meetup-card .meetup-location,
   #events-list-view .event-card .event-location {
     min-width: 0;
-    max-width: 100%;
-    flex: 1 1 0;
+    width: 22ch;
+    max-width: 50%;
+    flex: 0 1 22ch;
     overflow: hidden;
     color: var(--pink);
     text-align: right;
@@ -338,14 +359,27 @@ const site        = siteEntries[0]!.data;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 3;
   }
+  [data-home-events-grid] > .meetup-card .meetup-card-actions,
+  #events-list-view .event-card .event-card-actions {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: var(--s3);
+    margin-top: auto;
+    pointer-events: none;
+  }
   [data-home-events-grid] > .meetup-card .meetup-cta,
   #events-list-view .event-card .event-cta {
-    align-self: flex-end;
-    margin-top: auto;
+    align-self: auto;
+    margin-top: 0;
+    pointer-events: auto;
   }
   #events-list-view .events-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: var(--s5);
   }
   #events-list-view[hidden],
@@ -366,7 +400,7 @@ const site        = siteEntries[0]!.data;
   }
   @media (max-width: 640px) {
     [data-home-events-grid] > .meetup-card { width: 85vw; }
-    #events-list-view .events-grid { grid-template-columns: 1fr; }
+    #events-list-view .events-grid { grid-template-columns: minmax(0, 1fr); }
   }
 
   /* ─── Divider ────────────────────────────────────────────── */

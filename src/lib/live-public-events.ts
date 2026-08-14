@@ -1,4 +1,5 @@
 import type { WebsiteEvent } from './events';
+import { sortEventsBySoonest } from './event-order';
 import {
   isPublicEventSlug,
   parsePublicEventPayload,
@@ -17,7 +18,7 @@ export async function fetchLivePublicEvents(): Promise<WebsiteEvent[]> {
   });
 
   if (!response.ok) throw new Error(`Public events API returned ${response.status}`);
-  return parsePublicEventsPayload(await readPublicEventJson(response));
+  return sortEventsBySoonest(parsePublicEventsPayload(await readPublicEventJson(response)));
 }
 
 export async function fetchLivePublicEvent(slug: string): Promise<WebsiteEvent | null> {

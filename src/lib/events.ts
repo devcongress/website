@@ -1,5 +1,8 @@
 import { z } from "zod";
 import { getMeetups } from "./meetups";
+import { normalizePublicHttpUrl, normalizePublicWebsiteUrl } from "./public-url";
+
+export { sortEventsBySoonest } from "./event-order";
 
 export const EVENTS_MANAGEMENT_ORIGIN = new URL("https://em.devcongress.org");
 export const EVENT_SUBMISSIONS_API_URL = new URL(
@@ -21,19 +24,7 @@ const publicHttpUrlSchema = z
   .string()
   .trim()
   .max(2_048)
-  .refine((value) => {
-    try {
-      const url = new URL(value);
-      return (
-        (url.protocol === "https:" || url.protocol === "http:") &&
-        !url.username &&
-        !url.password &&
-        Boolean(url.hostname)
-      );
-    } catch {
-      return false;
-    }
-  }, "Expected a public HTTP(S) URL");
+  .refine((value) => normalizePublicHttpUrl(value) !== null, "Expected a public HTTP(S) URL");
 
 const publicWebsiteUrlSchema = z
   .string()
@@ -41,8 +32,7 @@ const publicWebsiteUrlSchema = z
   .max(2_048)
   .refine(
     (value) =>
-      (value.startsWith("/") && !value.startsWith("//")) ||
-      publicHttpUrlSchema.safeParse(value).success,
+      normalizePublicWebsiteUrl(value, EVENTS_MANAGEMENT_ORIGIN) !== null,
     "Expected a relative website path or public HTTP(S) URL",
   );
 
@@ -159,19 +149,6 @@ export async function getEvents(): Promise<WebsiteEvent[]> {
   return eventsPromise;
 }
 
-export function sortEventsBySoonest(events: WebsiteEvent[]): WebsiteEvent[] {
-  const now = Date.now();
-  return [...events].sort((a, b) => {
-    const aTime = new Date(a.startsAt).getTime();
-    const bTime = new Date(b.startsAt).getTime();
-    const aUpcoming = new Date(a.endsAt).getTime() >= now;
-    const bUpcoming = new Date(b.endsAt).getTime() >= now;
-
-    if (aUpcoming !== bUpcoming) return aUpcoming ? -1 : 1;
-    return aUpcoming ? aTime - bTime : bTime - aTime;
-  });
-}
-
 async function loadEvents(): Promise<WebsiteEvent[]> {
   try {
     return await fetchRemoteEvents();
@@ -273,24 +250,16 @@ function mapPublicEvent(event: PublicEvent): WebsiteEvent {
     locationType: event.location_type,
     venueName: event.venue_name,
     venueAddress: event.venue_address,
-    onlineUrl: event.online_url,
-    streamUrl: event.stream_url ?? null,
+    onlineUrl: normalizePublicHttpUrl(event.online_url),
+    streamUrl: normalizePublicHttpUrl(event.stream_url),
     embedStream: event.embed_stream,
-    registrationUrl: resolveOptionalWebsiteUrl(event.registration_url),
+    registrationUrl: normalizePublicWebsiteUrl(event.registration_url, EVENTS_MANAGEMENT_ORIGIN),
     organizerName: event.organizer_name,
-    organizerWebsite: event.organizer_website,
-    coverUrl: resolveOptionalWebsiteUrl(event.cover_url),
+    organizerWebsite: normalizePublicHttpUrl(event.organizer_website),
+    coverUrl: normalizePublicWebsiteUrl(event.cover_url, EVENTS_MANAGEMENT_ORIGIN),
     detailsUrl: `/events/${event.slug}/`,
     updatedAt: event.updated_at,
   };
-}
-
-function resolveOptionalWebsiteUrl(value: string | null): string | null {
-  return value
-    ? value.startsWith("/")
-      ? new URL(value, EVENTS_MANAGEMENT_ORIGIN).toString()
-      : value
-    : null;
 }
 
 async function readResponseBody(response: Response): Promise<string> {

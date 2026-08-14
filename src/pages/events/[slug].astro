@@ -111,11 +111,19 @@ const externalAction = action?.href.startsWith('http') ?? false;
 
 <script>
   import { fetchLivePublicEvent } from '../../lib/live-public-events';
+  import { getEventReturnLink } from '../../lib/event-navigation';
 
   const page = document.querySelector('[data-event-detail]');
+  const backLink = document.querySelector('.event-detail-back');
   const actionLink = page?.querySelector('[data-event-action]');
   const state = page?.querySelector('[data-event-state]');
   const slug = page?.getAttribute('data-event-slug');
+
+  if (backLink instanceof HTMLAnchorElement) {
+    const returnLink = getEventReturnLink(window.location.search);
+    backLink.href = returnLink.href;
+    backLink.textContent = returnLink.label;
+  }
 
   function currentStatus(event) {
     const now = Date.now();

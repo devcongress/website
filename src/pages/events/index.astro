@@ -2,6 +2,7 @@
 import Base from '../../layouts/Base.astro';
 import { getEvents, sortEventsBySoonest, type WebsiteEvent } from '../../lib/events';
 import { upcomingCalendarEvents } from '../../lib/event-calendar';
+import { getEventCardAction } from '../../lib/event-card-actions';
 
 const events = sortEventsBySoonest(await getEvents()).map((event) => ({
   ...event,
@@ -57,9 +58,9 @@ function getCalendarDateKey(iso: string, timezone: string): string {
 }
 
 const statusConfig = {
-  upcoming: { label: 'Upcoming', cta: 'Register →' },
-  live: { label: '● Live', cta: 'Follow live →' },
-  past: { label: 'Past', cta: 'View event →' },
+  upcoming: { label: 'Upcoming' },
+  live: { label: '● Live' },
+  past: { label: 'Past' },
 };
 
 const calendarEvents = events.map((event) => {
@@ -202,56 +203,43 @@ const calendarEvents = events.map((event) => {
       <ul class="events-grid">
         {events.map((event) => {
           const config = statusConfig[event.status];
-          const eventUrl = getEventUrl(event);
-          const external = eventUrl?.startsWith('http');
+          const detailsUrl = event.detailsUrl;
+          const detailsExternal = detailsUrl?.startsWith('http');
+          const directAction = getEventCardAction(event, event.status);
+          const actionExternal = directAction?.href.startsWith('http');
           return (
-            <li class="event-card card">
-              {eventUrl ? (
+            <li class:list={['event-card', 'card', { 'has-detail-link': detailsUrl }]}>
+              {detailsUrl && (
                 <a
-                  href={eventUrl}
-                  class="event-cover-link"
-                  aria-hidden="true"
-                  tabindex="-1"
-                  target={external ? '_blank' : undefined}
-                  rel={external ? 'noopener noreferrer' : undefined}
-                >
-                  <div class="event-cover">
-                    {event.coverUrl && <img class="event-cover-image" src={event.coverUrl} alt="" loading="lazy" decoding="async" />}
-                    <span class={`event-status-badge status-${event.status}`}>{config.label}</span>
-                  </div>
-                </a>
-              ) : (
-                <div class="event-cover">
-                    {event.coverUrl && <img class="event-cover-image" src={event.coverUrl} alt="" loading="lazy" decoding="async" />}
-                    <span class={`event-status-badge status-${event.status}`}>{config.label}</span>
-                  </div>
+                  href={detailsUrl}
+                  class="event-card-detail-link"
+                  aria-label={`View details for ${event.title}`}
+                  target={detailsExternal ? '_blank' : undefined}
+                  rel={detailsExternal ? 'noopener noreferrer' : undefined}
+                ></a>
               )}
+              <div class="event-cover">
+                {event.coverUrl && <img class="event-cover-image" src={event.coverUrl} alt="" loading="lazy" decoding="async" />}
+                <span class={`event-status-badge status-${event.status}`}>{config.label}</span>
+              </div>
               <div class="event-body">
                 <div class="event-meta">
                   <time datetime={event.startsAt}>{formatDate(event.startsAt, event.timezone)}</time>
                   <span class="event-location" title={getLocation(event)}>{getLocation(event)}</span>
                 </div>
-                <h2 class="heading-serif event-name" title={event.title}>
-                  {eventUrl ? (
-                    <a
-                      href={eventUrl}
-                      target={external ? '_blank' : undefined}
-                      rel={external ? 'noopener noreferrer' : undefined}
-                    >
-                      {event.title}
-                    </a>
-                  ) : event.title}
-                </h2>
+                <h2 class="heading-serif event-name" title={event.title}>{event.title}</h2>
                 <p class="event-desc">{event.summary}</p>
-                {eventUrl && (
-                  <a
-                    href={eventUrl}
-                    class="btn btn-outline event-cta"
-                    target={external ? '_blank' : undefined}
-                    rel={external ? 'noopener noreferrer' : undefined}
-                  >
-                    {config.cta}
-                  </a>
+                {directAction && (
+                  <div class="event-card-actions">
+                    <a
+                      href={directAction.href}
+                      class="btn btn-primary event-cta"
+                      target={actionExternal ? '_blank' : undefined}
+                      rel={actionExternal ? 'noopener noreferrer' : undefined}
+                    >
+                      {directAction.label}
+                    </a>
+                  </div>
                 )}
               </div>
             </li>
@@ -314,11 +302,13 @@ const calendarEvents = events.map((event) => {
 <script>
   import { fetchLivePublicEvent, fetchLivePublicEvents } from '../../lib/live-public-events';
   import type { WebsiteEvent } from '../../lib/events';
+  import { getEventCardAction } from '../../lib/event-card-actions';
+  import { getEventReturnLink } from '../../lib/event-navigation';
 
   const statusConfig = {
-    upcoming: { label: 'Upcoming', cta: 'Register →' },
-    live: { label: '● Live', cta: 'Follow live →' },
-    past: { label: 'Past', cta: 'View event →' },
+    upcoming: { label: 'Upcoming' },
+    live: { label: '● Live' },
+    past: { label: 'Past' },
   };
 
   const calendarEvents = (() => {
@@ -499,20 +489,21 @@ const calendarEvents = events.map((event) => {
   function createLiveEventCard(event) {
     const status = getLiveStatus(event);
     const config = statusConfig[status];
-    const eventUrl = liveEventUrl(event);
+    const detailsUrl = event.detailsUrl;
+    const directAction = getEventCardAction(event, status);
     const item = document.createElement('li');
-    item.className = 'event-card card';
+    item.className = detailsUrl ? 'event-card card has-detail-link' : 'event-card card';
 
-    const cover = document.createElement(eventUrl ? 'a' : 'div');
-    cover.className = eventUrl ? 'event-cover-link' : 'event-cover';
-    if (eventUrl) {
-      cover.href = eventUrl;
-      cover.setAttribute('aria-hidden', 'true');
-      cover.tabIndex = -1;
-      applyExternalLinkAttributes(cover, eventUrl);
+    let detailLink;
+    if (detailsUrl) {
+      detailLink = document.createElement('a');
+      detailLink.href = detailsUrl;
+      detailLink.className = 'event-card-detail-link';
+      detailLink.setAttribute('aria-label', `View details for ${event.title}`);
+      applyExternalLinkAttributes(detailLink, detailsUrl);
     }
-    const coverContent = eventUrl ? document.createElement('div') : cover;
-    if (eventUrl) coverContent.className = 'event-cover';
+    const cover = document.createElement('div');
+    cover.className = 'event-cover';
     if (event.coverUrl) {
       const image = document.createElement('img');
       image.className = 'event-cover-image';
@@ -520,16 +511,12 @@ const calendarEvents = events.map((event) => {
       image.alt = '';
       image.loading = 'lazy';
       image.decoding = 'async';
-      coverContent.append(image);
+      cover.append(image);
     }
     const statusBadge = document.createElement('span');
     statusBadge.className = `event-status-badge status-${status}`;
     statusBadge.textContent = config.label;
-    coverContent.append(statusBadge);
-    if (eventUrl) {
-      cover.append(coverContent);
-      applyExternalLinkAttributes(cover, eventUrl);
-    }
+    cover.append(statusBadge);
 
     const body = document.createElement('div');
     body.className = 'event-body';
@@ -547,27 +534,23 @@ const calendarEvents = events.map((event) => {
     const title = document.createElement('h2');
     title.className = 'heading-serif event-name';
     title.title = event.title;
-    if (eventUrl) {
-      const link = document.createElement('a');
-      link.href = eventUrl;
-      link.textContent = event.title;
-      applyExternalLinkAttributes(link, eventUrl);
-      title.append(link);
-    } else {
-      title.textContent = event.title;
-    }
+    title.textContent = event.title;
     const summary = document.createElement('p');
     summary.className = 'event-desc';
     summary.textContent = event.summary;
     body.append(meta, title, summary);
-    if (eventUrl) {
+    if (directAction) {
+      const actions = document.createElement('div');
+      actions.className = 'event-card-actions';
       const cta = document.createElement('a');
-      cta.href = eventUrl;
-      cta.className = 'btn btn-outline event-cta';
-      cta.textContent = config.cta;
-      applyExternalLinkAttributes(cta, eventUrl);
-      body.append(cta);
+      cta.href = directAction.href;
+      cta.className = 'btn btn-primary event-cta';
+      cta.textContent = directAction.label;
+      applyExternalLinkAttributes(cta, directAction.href);
+      actions.append(cta);
+      body.append(actions);
     }
+    if (detailLink) item.append(detailLink);
     item.append(cover, body);
     return item;
   }
@@ -582,13 +565,38 @@ const calendarEvents = events.map((event) => {
 
   function updateCalendarSubscription(events) {
     const hasUpcomingEvents = events.some((event) => new Date(event.endsAt).getTime() >= Date.now());
-    if (!calendarSubscribe || !hasUpcomingEvents) return;
+    if (!calendarSubscribe) return;
+
+    if (!hasUpcomingEvents) {
+      if (subscribeButton instanceof HTMLAnchorElement) {
+        const button = document.createElement('button');
+        button.className = subscribeButton.className;
+        button.type = 'button';
+        button.disabled = true;
+        button.setAttribute('aria-describedby', 'calendar-subscribe-note');
+        button.replaceChildren(...[...subscribeButton.childNodes].map((node) => node.cloneNode(true)));
+        button.querySelector('.calendar-subscribe-arrow')?.remove();
+        subscribeButton.replaceWith(button);
+        subscribeButton = button;
+      } else if (subscribeButton instanceof HTMLButtonElement) {
+        subscribeButton.disabled = true;
+      }
+      calendarSubscribe.querySelector('.calendar-feed-link')?.remove();
+      const note = calendarSubscribe.querySelector('#calendar-subscribe-note');
+      if (note) note.textContent = 'No upcoming events yet. Subscriptions open when the next event is published.';
+      return;
+    }
 
     if (subscribeButton instanceof HTMLButtonElement) {
       const anchor = document.createElement('a');
       anchor.className = subscribeButton.className;
       anchor.setAttribute('aria-describedby', 'calendar-subscribe-note');
       anchor.replaceChildren(...[...subscribeButton.childNodes].map((node) => node.cloneNode(true)));
+      const arrow = document.createElement('span');
+      arrow.className = 'calendar-subscribe-arrow';
+      arrow.setAttribute('aria-hidden', 'true');
+      arrow.textContent = '↗';
+      anchor.append(arrow);
       subscribeButton.replaceWith(anchor);
       subscribeButton = anchor;
     }
@@ -596,6 +604,8 @@ const calendarEvents = events.map((event) => {
     if (subscribeButton instanceof HTMLAnchorElement) {
       const feedUrl = new URL('/events/calendar.ics', window.location.origin);
       subscribeButton.href = `https://calendar.google.com/calendar/r?cid=${encodeURIComponent(`webcal://${feedUrl.host}${feedUrl.pathname}`)}`;
+      subscribeButton.target = '_blank';
+      subscribeButton.rel = 'noopener noreferrer';
       subscribeButton.removeAttribute('aria-disabled');
     }
 
@@ -864,6 +874,13 @@ const calendarEvents = events.map((event) => {
 
   function syncDetailBackLink() {
     if (!(detailBack instanceof HTMLAnchorElement)) return;
+    const returnLink = getEventReturnLink(window.location.search);
+    detailBack.textContent = returnLink.label;
+    if (returnLink.href !== '/events/') {
+      detailBack.href = returnLink.href;
+      return;
+    }
+
     const url = new URL('/events/', window.location.origin);
     const search = new URLSearchParams(window.location.search);
     if (search.get('view') === 'calendar') {
@@ -1198,8 +1215,14 @@ const calendarEvents = events.map((event) => {
     gap: var(--s5);
   }
 
-  .event-card { overflow: hidden; display: flex; flex-direction: column; }
-  .event-cover-link { display: block; }
+  .event-card { position: relative; overflow: hidden; display: flex; flex-direction: column; }
+  .event-card.has-detail-link { cursor: pointer; }
+  .event-card-detail-link {
+    position: absolute; inset: 0; z-index: 1; border-radius: inherit;
+  }
+  .event-card-detail-link:focus-visible {
+    outline: 3px solid var(--pink); outline-offset: -5px;
+  }
   .event-cover {
     width: 100%; aspect-ratio: 16/9;
     background-color: var(--border-light);
@@ -1238,7 +1261,7 @@ const calendarEvents = events.map((event) => {
     flex-wrap: nowrap; gap: var(--s2);
   }
   .event-location {
-    min-width: 0; max-width: 100%; overflow: hidden; flex: 1 1 0;
+    min-width: 0; width: 22ch; max-width: 50%; overflow: hidden; flex: 0 1 22ch;
     color: var(--pink); text-align: right; text-overflow: ellipsis; white-space: nowrap;
   }
   .event-meta time { flex: 0 0 auto; white-space: nowrap; }
@@ -1246,14 +1269,18 @@ const calendarEvents = events.map((event) => {
     min-width: 0; overflow: hidden; font-size: var(--text-xl);
     line-height: var(--leading-snug); text-overflow: ellipsis; white-space: nowrap;
   }
-  .event-name a:hover { color: var(--pink); }
   .event-desc {
     font-size: var(--text-sm); color: var(--text-mid);
     line-height: var(--leading-body);
     display: -webkit-box; -webkit-line-clamp: 3;
     -webkit-box-orient: vertical; overflow: hidden; flex: 1;
   }
-  .event-cta { align-self: flex-end; margin-top: auto; }
+  .event-card-actions {
+    position: relative; z-index: 2;
+    display: flex; align-items: center; justify-content: flex-end;
+    flex-wrap: wrap; gap: var(--s3); margin-top: auto; pointer-events: none;
+  }
+  .event-card-actions .event-cta { align-self: auto; margin-top: 0; pointer-events: auto; }
 
   #events-page-header[hidden],
   .events-body[hidden],

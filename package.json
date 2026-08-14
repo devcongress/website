@@ -2,6 +2,7 @@
   "name": "devcongres_2_0",
   "type": "module",
   "version": "0.0.1",
+  "packageManager": "pnpm@10.34.5",
   "engines": {
     "node": ">=22.12.0"
   },
@@ -14,10 +15,17 @@
     "astro": "astro"
   },
   "dependencies": {
-    "astro": "^7.1.5",
+    "astro": "^7.2.1",
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "wrangler": "^4.115.0"
+    "@cloudflare/workers-types": "5.20260813.1",
+    "wrangler": "^4.122.0"
+  },
+  "pnpm": {
+    "overrides": {
+      "js-yaml@<4.3.1": "4.3.1",
+      "nanoid@<3.3.18": "3.3.18"
+    }
   }
 }

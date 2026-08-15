@@ -5,6 +5,7 @@ import AppTimezonePicker from '../../components/AppTimezonePicker.astro';
 import {
   EVENT_SUBMISSIONS_API_URL,
   EVENT_SUBMISSIONS_WITH_COVER_API_URL,
+  EVENT_SUBMISSION_EMAIL_PREFLIGHT_API_URL,
   EVENT_SUBMISSION_TURNSTILE_ACTION,
   EVENT_SUBMISSION_TURNSTILE_SITE_KEY,
 } from '../../lib/events';
@@ -50,6 +51,7 @@ if (!EVENT_SUBMISSIONS_ENABLED) {
           id="event-submission-form"
           data-endpoint={EVENT_SUBMISSIONS_API_URL}
           data-cover-endpoint={EVENT_SUBMISSIONS_WITH_COVER_API_URL}
+          data-email-preflight-endpoint={EVENT_SUBMISSION_EMAIL_PREFLIGHT_API_URL}
           data-turnstile-action={EVENT_SUBMISSION_TURNSTILE_ACTION}
           novalidate
         >
@@ -301,8 +303,11 @@ if (!EVENT_SUBMISSIONS_ENABLED) {
                 <button type="button" class="step-back" data-previous-step="1">← Back</button>
                 <button type="submit" class="btn btn-primary submit-button">
                   <span class="submit-label">Preview event</span>
-                  <span class="submit-loading" hidden>Submitting…</span>
-                  <span aria-hidden="true">→</span>
+                  <span class="submit-loading" hidden>
+                    <span class="submit-loading-label">Checking email</span>
+                    <span class="submit-loading-dots" aria-hidden="true"><span></span><span></span><span></span></span>
+                  </span>
+                  <span class="submit-arrow" aria-hidden="true">→</span>
                 </button>
               </div>
               <p class="submission-note">
@@ -394,6 +399,14 @@ if (!EVENT_SUBMISSIONS_ENABLED) {
     };
   }
 
+  interface EmailPreflightResponse {
+    accepted?: boolean;
+    normalized_email?: string;
+    error?: string;
+  }
+
+  type SubmissionStage = 'checking' | 'submitting';
+
   interface TurnstileApi {
     render: (container: HTMLElement, options: Record<string, string | (() => void)>) => string;
     reset: (widget?: string) => void;
@@ -424,6 +437,8 @@ if (!EVENT_SUBMISSIONS_ENABLED) {
   const submitButton = form?.querySelector<HTMLButtonElement>('.submit-button');
   const submitLabel = form?.querySelector<HTMLElement>('.submit-label');
   const submitLoading = form?.querySelector<HTMLElement>('.submit-loading');
+  const submitLoadingLabel = form?.querySelector<HTMLElement>('.submit-loading-label');
+  const submitArrow = form?.querySelector<HTMLElement>('.submit-arrow');
   const startsInput = document.querySelector<HTMLInputElement>('#starts_at');
   const endsInput = document.querySelector<HTMLInputElement>('#ends_at');
   const summaryInput = document.querySelector<HTMLTextAreaElement>('#summary');
@@ -1290,12 +1305,18 @@ if (!EVENT_SUBMISSIONS_ENABLED) {
     eventPreviewDialog.showModal();
   }
 
-  function setSubmitting(submitting: boolean): void {
+  function setSubmissionStage(stage: SubmissionStage): void {
+    if (submitLoadingLabel) submitLoadingLabel.textContent = stage === 'checking' ? 'Checking email' : 'Submitting';
+  }
+
+  function setSubmitting(submitting: boolean, stage: SubmissionStage = 'submitting'): void {
     if (!submitButton || !submitLabel || !submitLoading) return;
+    setSubmissionStage(stage);
     submitButton.disabled = submitting;
     submitButton.setAttribute('aria-busy', String(submitting));
     submitLabel.hidden = submitting;
     submitLoading.hidden = !submitting;
+    if (submitArrow) submitArrow.hidden = submitting;
     if (coverInput) coverInput.disabled = submitting;
     if (coverRemove) coverRemove.disabled = submitting;
     if (editEventButton) editEventButton.disabled = submitting;
@@ -1351,6 +1372,52 @@ if (!EVENT_SUBMISSIONS_ENABLED) {
     const contentType = response.headers.get('content-type') ?? '';
     if (!contentType.toLowerCase().includes('application/json')) return {};
     try { return await response.json() as SubmissionErrorResponse; } catch { return {}; }
+  }
+
+  async function preflightOrganizerEmail(endpoint: string, email: string): Promise<{
+    accepted: boolean;
+    normalizedEmail: string;
+    message?: string;
+  }> {
+    try {
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { accept: 'application/json', 'content-type': 'application/json' },
+        redirect: 'error',
+        body: JSON.stringify({ email }),
+      });
+      const contentType = response.headers.get('content-type') ?? '';
+      const body = contentType.toLowerCase().includes('application/json')
+        ? await response.json().catch(() => ({})) as EmailPreflightResponse
+        : {};
+
+      if (response.ok && body.accepted && typeof body.normalized_email === 'string') {
+        return { accepted: true, normalizedEmail: body.normalized_email };
+      }
+
+      // The final submission endpoint repeats this check. Infrastructure or
+      // resolver uncertainty, an unexpected response, or a staggered deploy
+      // must not create a new intake outage.
+      if (![400, 422, 429].includes(response.status)) {
+        return { accepted: true, normalizedEmail: email };
+      }
+
+      const retryAfter = response.headers.get('retry-after');
+      const retryMinutes = retryAfter && Number.isFinite(Number(retryAfter))
+        ? Math.max(1, Math.ceil(Number(retryAfter) / 60))
+        : null;
+      return {
+        accepted: false,
+        normalizedEmail: email,
+        message: response.status === 429 && retryMinutes
+          ? `Too many email checks. Please try again in ${retryMinutes} minute(s).`
+          : body.error || 'Check the contact email and try again.',
+      };
+    } catch {
+      // Continue to the authoritative submission endpoint, which applies the
+      // same validation and safely handles inconclusive DNS results.
+      return { accepted: true, normalizedEmail: email };
+    }
   }
 
   initializeDateDefaults();
@@ -1497,8 +1564,9 @@ if (!EVENT_SUBMISSIONS_ENABLED) {
     }
 
     const endpoint = coverFile ? form.dataset.coverEndpoint : form.dataset.endpoint;
+    const emailPreflightEndpoint = form.dataset.emailPreflightEndpoint;
     const turnstileAction = form.dataset.turnstileAction;
-    if (!endpoint || !turnstileAction) return;
+    if (!endpoint || !emailPreflightEndpoint || !turnstileAction) return;
 
     const payload = {
       title: sanitizePlainText(data.get('title')),
@@ -1520,8 +1588,19 @@ if (!EVENT_SUBMISSIONS_ENABLED) {
       turnstile_token: String(data.get('cf-turnstile-response')),
     };
 
-    setSubmitting(true);
+    setSubmitting(true, 'checking');
     try {
+      const emailCheck = await preflightOrganizerEmail(emailPreflightEndpoint, payload.organizer_email);
+      if (!emailCheck.accepted) {
+        const emailError = showFieldError('organizer_email', emailCheck.message ?? 'Check the contact email and try again.');
+        if (emailError) revealAndFocus(emailError);
+        return;
+      }
+      payload.organizer_email = emailCheck.normalizedEmail;
+      const organizerEmailInput = form.elements.namedItem('organizer_email');
+      if (organizerEmailInput instanceof HTMLInputElement) organizerEmailInput.value = emailCheck.normalizedEmail;
+      setSubmissionStage('submitting');
+
       const requestBody = coverFile
         ? (() => {
             const body = new FormData();
@@ -1889,6 +1968,13 @@ if (!EVENT_SUBMISSIONS_ENABLED) {
   .form-status { border: 2px solid #be123c; border-radius: var(--r-md); background: #fff1f2; color: #9f1239; font-size: var(--text-sm); font-weight: 600; padding: var(--s3); margin-block: var(--s3); }
   .submit-button { justify-content: center; min-height: 52px; font-size: var(--text-base); }
   .submit-button:disabled { cursor: wait; opacity: 0.7; }
+  .submit-loading, .submit-loading-dots { display: inline-flex; align-items: center; }
+  .submit-loading { gap: 0.42rem; }
+  .submit-loading-dots { gap: 0.2rem; }
+  .submit-loading-dots > span { width: 0.28rem; height: 0.28rem; border-radius: 50%; background: currentColor; opacity: 0.55; animation: submit-loading-dot 240ms cubic-bezier(0.4, 0, 0.2, 1) infinite alternate; }
+  .submit-loading-dots > span:nth-child(2) { animation-delay: 80ms; }
+  .submit-loading-dots > span:nth-child(3) { animation-delay: 160ms; }
+  @keyframes submit-loading-dot { to { opacity: 1; transform: translateY(-0.18rem); } }
   .submission-note { color: var(--text-muted); font-size: var(--text-xs); text-align: center; margin-top: var(--s3); }
   .trap-field { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
   .success-panel { padding: clamp(var(--s7), 8vw, var(--s9)); text-align: center; }
@@ -1947,5 +2033,6 @@ if (!EVENT_SUBMISSIONS_ENABLED) {
     .form-section, .step-dot, .step-back, .app-select-menu, .app-select-chevron, .character-count, .leave-dialog, .event-preview-dialog, .preview-close, .draft-notice, .draft-discard { transition: none; }
     .form-section.is-leaving-forward, .form-section.is-leaving-back,
     .form-section.is-entering-forward, .form-section.is-entering-back { transform: none; }
+    .submit-loading-dots > span { opacity: 1; animation: none; transform: none; }
   }
 </style>

@@ -3,6 +3,7 @@ import Base from '../../layouts/Base.astro';
 import { getEvents, sortEventsBySoonest, type WebsiteEvent } from '../../lib/events';
 import { upcomingCalendarEvents } from '../../lib/event-calendar';
 import { getEventCardAction } from '../../lib/event-card-actions';
+import { EVENT_SUBMISSIONS_ENABLED } from '../../lib/features';
 
 const events = sortEventsBySoonest(await getEvents()).map((event) => ({
   ...event,
@@ -129,36 +130,43 @@ const calendarEvents = events.map((event) => {
           <p class="page-sub" id="events-page-sub">
             {events.length} event{events.length !== 1 ? 's' : ''} and counting.
           </p>
-          <div class="calendar-subscribe" id="calendar-subscribe">
-            {hasSubscribableEvents ? (
-              <a
-                class="btn btn-primary calendar-subscribe-button"
-                href={googleCalendarUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-describedby="calendar-subscribe-note"
-              >
-                <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
-                  <rect x="2.5" y="4" width="15" height="13" rx="1.5" />
-                  <path d="M6 2.5v3M14 2.5v3M2.5 8h15M6 11h2M12 11h2M6 14h2M12 14h2" />
-                </svg>
-                <span>Add to Google Calendar</span>
-                <span class="calendar-subscribe-arrow" aria-hidden="true">↗</span>
-              </a>
-            ) : (
-              <button
-                class="btn btn-primary calendar-subscribe-button"
-                type="button"
-                disabled
-                aria-describedby="calendar-subscribe-note"
-              >
-                <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
-                  <rect x="2.5" y="4" width="15" height="13" rx="1.5" />
-                  <path d="M6 2.5v3M14 2.5v3M2.5 8h15M6 11h2M12 11h2M6 14h2M12 14h2" />
-                </svg>
-                <span>Add to Google Calendar</span>
-              </button>
-            )}
+          <div class="events-page-actions" id="calendar-subscribe">
+            <div class="events-page-buttons">
+              {hasSubscribableEvents ? (
+                <a
+                  class="btn btn-primary calendar-subscribe-button"
+                  href={googleCalendarUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-describedby="calendar-subscribe-note"
+                >
+                  <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                    <rect x="2.5" y="4" width="15" height="13" rx="1.5" />
+                    <path d="M6 2.5v3M14 2.5v3M2.5 8h15M6 11h2M12 11h2M6 14h2M12 14h2" />
+                  </svg>
+                  <span>Add to Google Calendar</span>
+                  <span class="calendar-subscribe-arrow" aria-hidden="true">↗</span>
+                </a>
+              ) : (
+                <button
+                  class="btn btn-primary calendar-subscribe-button"
+                  type="button"
+                  disabled
+                  aria-describedby="calendar-subscribe-note"
+                >
+                  <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                    <rect x="2.5" y="4" width="15" height="13" rx="1.5" />
+                    <path d="M6 2.5v3M14 2.5v3M2.5 8h15M6 11h2M12 11h2M6 14h2M12 14h2" />
+                  </svg>
+                  <span>Add to Google Calendar</span>
+                </button>
+              )}
+              {EVENT_SUBMISSIONS_ENABLED && (
+                <a class="btn btn-yellow event-submit-button" href="/events/submit/">
+                  Submit an event <span aria-hidden="true">→</span>
+                </a>
+              )}
+            </div>
             {hasSubscribableEvents && (
               <a
                 class="calendar-feed-link"
@@ -1147,13 +1155,15 @@ const calendarEvents = events.map((event) => {
     display: flex; align-items: flex-end; justify-content: space-between;
     gap: var(--s5); flex-wrap: wrap;
   }
-  .calendar-subscribe { display: flex; flex-direction: column; align-items: flex-end; gap: var(--s2); }
-  .calendar-subscribe p { color: var(--text-muted); font-size: var(--text-xs); }
+  .events-page-actions { display: flex; flex-direction: column; align-items: flex-end; gap: var(--s2); }
+  .events-page-buttons { display: flex; align-items: center; justify-content: flex-end; gap: var(--s3); flex-wrap: wrap; }
+  .events-page-actions p { color: var(--text-muted); font-size: var(--text-xs); }
   .calendar-feed-link {
     color: var(--text-mid); font-size: var(--text-xs); text-decoration: underline;
     text-underline-offset: 3px;
   }
   .calendar-feed-link:hover { color: var(--text); }
+  .event-submit-button,
   .calendar-subscribe-button {
     display: inline-flex; min-height: 44px; align-items: center; justify-content: center; gap: 8px;
     border-radius: var(--r-sm); padding: 9px 14px;
@@ -1517,9 +1527,11 @@ const calendarEvents = events.map((event) => {
     .event-detail-body { padding-block: var(--s7); }
     .event-detail-layout { grid-template-columns: 1fr; gap: var(--s5); margin-top: var(--s6); }
     .event-detail-action { padding-top: 0; }
-    .calendar-subscribe { align-items: center; width: 100%; }
-    .calendar-subscribe-button { width: auto; align-self: center; }
-    .calendar-subscribe p { max-width: 310px; line-height: 1.45; text-align: center; }
+    .events-page-actions { align-items: center; width: 100%; }
+    .events-page-buttons { width: 100%; flex-direction: column; align-items: center; }
+    .event-submit-button,
+    .calendar-subscribe-button { width: min(100%, 280px); }
+    .events-page-actions p { max-width: 310px; line-height: 1.45; text-align: center; }
     .events-view-bar { justify-content: stretch; }
     .view-switcher { width: 100%; }
     .view-switcher-button { min-width: 0; }

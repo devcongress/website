@@ -20,13 +20,13 @@ if (!EVENT_SUBMISSIONS_ENABLED) {
   title="Create Event | DevCongress"
   description="Submit a technology event for review and inclusion in the DevCongress community calendar."
   showFooter={false}
-  noindex
 >
   <header class="page-nav">
     <div class="container page-nav-inner">
       <a href="/" class="page-logo" aria-label="DevCongress home" data-confirm-navigation>
         <img src="/images/logo.png" alt="DevCongress" height="36" />
       </a>
+      <a href="/#events" class="page-home-link" data-confirm-navigation>← Home</a>
     </div>
   </header>
 
@@ -1749,8 +1749,15 @@ if (!EVENT_SUBMISSIONS_ENABLED) {
 
 <style>
   .page-nav { position: sticky; top: 0; z-index: 100; background: var(--bg); border-bottom: 2px solid var(--black); }
-  .page-nav-inner { min-height: 68px; display: flex; align-items: center; }
+  .page-nav-inner { min-height: 68px; display: flex; align-items: center; justify-content: space-between; gap: var(--s4); }
   .page-logo img { height: 36px; width: auto; }
+  .page-home-link {
+    color: var(--text-mid);
+    font-size: var(--text-sm);
+    font-weight: 500;
+    transition: color 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .page-home-link:hover { color: var(--pink); }
   .leave-dialog {
     width: min(460px, calc(100vw - 2rem));
     max-height: calc(100svh - 2rem);
@@ -2030,7 +2037,7 @@ if (!EVENT_SUBMISSIONS_ENABLED) {
     .event-preview-actions .btn { justify-content: center; width: 100%; }
   }
   @media (prefers-reduced-motion: reduce) {
-    .form-section, .step-dot, .step-back, .app-select-menu, .app-select-chevron, .character-count, .leave-dialog, .event-preview-dialog, .preview-close, .draft-notice, .draft-discard { transition: none; }
+    .form-section, .step-dot, .step-back, .page-home-link, .app-select-menu, .app-select-chevron, .character-count, .leave-dialog, .event-preview-dialog, .preview-close, .draft-notice, .draft-discard { transition: none; }
     .form-section.is-leaving-forward, .form-section.is-leaving-back,
     .form-section.is-entering-forward, .form-section.is-entering-back { transform: none; }
     .submit-loading-dots > span { opacity: 1; animation: none; transform: none; }

@@ -2,6 +2,7 @@
 import type { WebsiteEvent } from '../lib/events';
 import { getEventCardAction } from '../lib/event-card-actions';
 import { withHomepageEventContext } from '../lib/event-navigation';
+import { EVENT_SUBMISSIONS_ENABLED } from '../lib/features';
 
 interface Props { events: WebsiteEvent[]; }
 const { events } = Astro.props;
@@ -42,9 +43,16 @@ const statusConfig = {
       <span class="eyebrow">Events</span>
       <div class="meetups-title-row">
         <h2 class="heading-serif meetups-heading">Where we show up</h2>
-        <a href="/events/" class="btn btn-outline meetups-all-btn">
-          All Events →
-        </a>
+        <div class="meetups-actions">
+          <a href="/events/" class="btn btn-outline meetups-all-btn">
+            All Events →
+          </a>
+          {EVENT_SUBMISSIONS_ENABLED && (
+            <a href="/events/submit/" class="btn btn-primary meetups-submit-btn">
+              Submit an event <span aria-hidden="true">→</span>
+            </a>
+          )}
+        </div>
       </div>
     </div>
 
@@ -226,8 +234,18 @@ const statusConfig = {
 
   .meetups-heading { font-size: clamp(var(--text-3xl), 5vw, var(--text-4xl)); }
 
-  .meetups-all-btn {
-    flex-shrink: 0;
+  .meetups-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--s3);
+    flex-wrap: wrap;
+  }
+
+  .meetups-actions .btn { flex-shrink: 0; }
+  .meetups-submit-btn {
+    width: max-content;
+    padding-inline: var(--s4);
   }
 
   /* ── Horizontal scroll row ─────────────────────────────── */

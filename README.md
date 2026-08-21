@@ -84,16 +84,15 @@ static release:
 | :-- | :-- |
 | `PUBLIC_EVENT_SUBMISSIONS_ENABLED` | Hard website safety switch. When it is not `true`, `/events/submit/` redirects to `/events/`. |
 
-- Private beta: set the variable to `true`, then share `/events/submit/`
-  directly with testers.
+- Public launch: set the variable to `true`. The homepage Events section and
+  `/events/` page render a `Submit an event` button linking to `/events/submit/`.
 - Safety shutdown: set enabled to `false` and rebuild both static deployments.
 
-The website does not render an event-submission link during beta, and the form
-page remains `noindex`. Its permanent public entry point will be chosen after
-beta. An unset variable is treated as `false`. Local development can copy
-`.env.example` to `.env` and opt in explicitly. This website flag does not
-disable direct requests to Events Management; the backend needs its own runtime
-switch for a system-wide shutdown.
+When enabled, the public form is indexable. An unset variable is treated as
+`false`, hides both public entry points, and redirects direct form visits to the
+Events page. Local development can copy `.env.example` to `.env` and opt in
+explicitly. This website flag does not disable direct requests to Events
+Management; the backend needs its own runtime switch for a system-wide shutdown.
 
 ## Cloudflare Workers deployment
 

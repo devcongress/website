@@ -27,6 +27,39 @@ export function normalizePublicWebsiteUrl(value: unknown, relativeOrigin: URL): 
   return normalizePublicHttpUrl(candidate);
 }
 
+export function normalizePublicSlackProfileUrl(value: unknown): string | null {
+  if (typeof value !== 'string') return null;
+  const candidate = value.trim();
+  if (!candidate || candidate.length > MAX_PUBLIC_URL_LENGTH) return null;
+
+  try {
+    const url = new URL(candidate);
+    const entries = [...url.searchParams.entries()];
+    const team = url.searchParams.get('team');
+    const member = url.searchParams.get('id');
+    const hasOnlyExpectedParameters = entries.length === 2
+      && entries.every(([key]) => key === 'team' || key === 'id');
+
+    if (
+      url.protocol !== 'slack:'
+      || url.hostname !== 'user'
+      || (url.pathname !== '' && url.pathname !== '/')
+      || url.username
+      || url.password
+      || url.hash
+      || !hasOnlyExpectedParameters
+      || !team
+      || !/^T[A-Z0-9]{8,}$/.test(team)
+      || !member
+      || !/^[UW][A-Z0-9]{8,}$/.test(member)
+    ) return null;
+
+    return `slack://user?team=${encodeURIComponent(team)}&id=${encodeURIComponent(member)}`;
+  } catch {
+    return null;
+  }
+}
+
 function isPrivateOrLocalHost(hostname: string): boolean {
   const host = hostname.toLowerCase().replace(/^\[|\]$/g, '').replace(/\.$/, '');
   if (host === 'localhost' || host.endsWith('.localhost') || host.endsWith('.local')) return true;

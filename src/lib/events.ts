@@ -29,6 +29,12 @@ const EVENTS_API_TIMEOUT_MS = 8_000;
 export type EventLocationType = "in_person" | "online" | "hybrid";
 export type EventClassification = "official" | "community";
 
+export interface WebsiteEventPrimaryAction {
+  kind: "slack_profile";
+  label: string;
+  url: string;
+}
+
 export interface WebsiteEvent {
   id: string;
   slug: string;
@@ -47,6 +53,7 @@ export interface WebsiteEvent {
   streamUrl: string | null;
   embedStream: boolean;
   registrationUrl: string | null;
+  primaryAction: WebsiteEventPrimaryAction | null;
   organizerName: string;
   organizerWebsite: string | null;
   coverUrl: string | null;
@@ -115,6 +122,7 @@ async function fetchMeetupFallback(): Promise<WebsiteEvent[]> {
     streamUrl: meetup.data.stream_url ?? null,
     embedStream: meetup.data.embed_stream,
     registrationUrl: meetup.data.registration_url ?? null,
+    primaryAction: null,
     organizerName: "DevCongress",
     organizerWebsite: "https://devcongress.org",
     coverUrl: meetup.data.cover,

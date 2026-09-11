@@ -310,7 +310,7 @@ const calendarEvents = events.map((event) => {
 <script>
   import { fetchLivePublicEvent, fetchLivePublicEvents } from '../../lib/live-public-events';
   import type { WebsiteEvent } from '../../lib/events';
-  import { getEventCardAction } from '../../lib/event-card-actions';
+  import { getEventCardAction, getEventPrimaryAction } from '../../lib/event-card-actions';
   import { getEventReturnLink } from '../../lib/event-navigation';
 
   const statusConfig = {
@@ -475,22 +475,13 @@ const calendarEvents = events.map((event) => {
     return event.detailsUrl ?? event.registrationUrl ?? event.onlineUrl;
   }
 
-  function liveDetailAction(event, status) {
-    if (status === 'past') {
-      return event.streamUrl && !event.embedStream ? { href: event.streamUrl, label: 'Watch recording' } : null;
-    }
-    if (status === 'live') {
-      if (event.streamUrl) return { href: event.streamUrl, label: 'Watch live' };
-      if (event.onlineUrl) return { href: event.onlineUrl, label: 'Join online' };
-      return null;
-    }
-    return event.registrationUrl ? { href: event.registrationUrl, label: 'Register' } : null;
-  }
-
   function applyExternalLinkAttributes(element, url) {
     if (url?.startsWith('http')) {
       element.target = '_blank';
       element.rel = 'noopener noreferrer';
+    } else {
+      element.removeAttribute('target');
+      element.removeAttribute('rel');
     }
   }
 
@@ -674,7 +665,7 @@ const calendarEvents = events.map((event) => {
     if (!detailPanel || !detailTitle || !detailSummary || !detailMeta || !detailStatus || !detailState) return;
     const status = getLiveStatus(event);
     const config = statusConfig[status];
-    const action = liveDetailAction(event, status);
+    const action = getEventPrimaryAction(event, status);
     setDetailMode(true);
     if (eventsPageTitle) eventsPageTitle.textContent = event.title;
     if (eventsPageSub) eventsPageSub.textContent = `${formatLiveDate(event.startsAt, event.timezone)} · ${liveLocation(event)}`;
@@ -683,7 +674,7 @@ const calendarEvents = events.map((event) => {
     detailMeta.textContent = `${formatLiveDate(event.startsAt, event.timezone)} · ${formatLiveTime(event.startsAt, event.timezone)} · ${liveLocation(event)}`;
     detailTitle.textContent = event.title;
     detailSummary.textContent = event.summary;
-    detailState.textContent = status === 'past' && !(event.streamUrl && !event.embedStream) ? 'This event has ended.' : '';
+    detailState.textContent = status === 'past' && !action ? 'This event has ended.' : '';
     if (detailCover instanceof HTMLImageElement) {
       detailCover.hidden = !event.coverUrl;
       if (event.coverUrl) detailCover.src = event.coverUrl;
@@ -694,6 +685,10 @@ const calendarEvents = events.map((event) => {
         detailCta.href = action.href;
         detailCta.textContent = `${action.label} →`;
         applyExternalLinkAttributes(detailCta, action.href);
+      } else {
+        detailCta.removeAttribute('href');
+        detailCta.removeAttribute('target');
+        detailCta.removeAttribute('rel');
       }
     }
     document.title = `${event.title} — DevCongress`;

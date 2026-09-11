@@ -1,6 +1,10 @@
 import { z } from 'zod';
 import type { WebsiteEvent } from './events';
-import { normalizePublicHttpUrl, normalizePublicWebsiteUrl } from './public-url';
+import {
+  normalizePublicHttpUrl,
+  normalizePublicSlackProfileUrl,
+  normalizePublicWebsiteUrl,
+} from './public-url';
 
 const EVENTS_MANAGEMENT_ORIGIN = new URL('https://em.devcongress.org');
 const MAX_EVENTS_RESPONSE_BYTES = 2 * 1024 * 1024;
@@ -20,6 +24,15 @@ const publicWebsiteUrlSchema = z
     (value) => normalizePublicWebsiteUrl(value, EVENTS_MANAGEMENT_ORIGIN) !== null,
     'Expected a public website URL',
   );
+
+const publicPrimaryActionSchema = z.object({
+  kind: z.literal('slack_profile'),
+  label: z.string().trim().min(1).max(80),
+  url: z.string().trim().max(2_048).refine(
+    (value) => normalizePublicSlackProfileUrl(value) !== null,
+    'Expected a Slack member profile URL',
+  ),
+}).nullable().optional().default(null);
 
 export const eventFormatSchema = z.enum([
   'meetup',
@@ -53,6 +66,7 @@ const publicEventSchema = z
     stream_url: publicHttpUrlSchema.nullable().optional(),
     embed_stream: z.boolean().optional().default(false),
     registration_url: publicWebsiteUrlSchema.nullable(),
+    primary_action: publicPrimaryActionSchema,
     organizer_name: z.string().trim().min(1).max(300),
     organizer_website: publicHttpUrlSchema.nullable(),
     cover_url: publicWebsiteUrlSchema.nullable(),
@@ -176,6 +190,10 @@ export async function readPublicEventJson(response: Response): Promise<unknown> 
 }
 
 function mapPublicEvent(event: PublicEvent): WebsiteEvent {
+  const primaryActionUrl = event.primary_action
+    ? normalizePublicSlackProfileUrl(event.primary_action.url)
+    : null;
+
   return {
     id: event.id,
     slug: event.slug,
@@ -194,6 +212,13 @@ function mapPublicEvent(event: PublicEvent): WebsiteEvent {
     streamUrl: normalizePublicHttpUrl(event.stream_url),
     embedStream: event.embed_stream,
     registrationUrl: normalizePublicWebsiteUrl(event.registration_url, EVENTS_MANAGEMENT_ORIGIN),
+    primaryAction: event.primary_action && primaryActionUrl
+      ? {
+          kind: event.primary_action.kind,
+          label: event.primary_action.label,
+          url: primaryActionUrl,
+        }
+      : null,
     organizerName: event.organizer_name,
     organizerWebsite: normalizePublicHttpUrl(event.organizer_website),
     coverUrl: normalizePublicWebsiteUrl(event.cover_url, EVENTS_MANAGEMENT_ORIGIN),

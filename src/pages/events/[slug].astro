@@ -1,6 +1,7 @@
 ---
 import Base from '../../layouts/Base.astro';
 import { getEvents, type WebsiteEvent } from '../../lib/events';
+import { getEventPrimaryAction } from '../../lib/event-card-actions';
 
 export async function getStaticPaths() {
   const events = await getEvents();
@@ -40,22 +41,8 @@ function getStatus(value: WebsiteEvent): EventStatus {
   return now < start ? 'upcoming' : now <= end ? 'live' : 'past';
 }
 
-function getPrimaryAction(value: WebsiteEvent, valueStatus: EventStatus): { href: string; label: string } | null {
-  if (valueStatus === 'past') {
-    return value.streamUrl && !value.embedStream ? { href: value.streamUrl, label: 'Watch recording' } : null;
-  }
-
-  if (valueStatus === 'live') {
-    if (value.streamUrl) return { href: value.streamUrl, label: 'Watch live' };
-    if (value.onlineUrl) return { href: value.onlineUrl, label: 'Join online' };
-    return null;
-  }
-
-  return value.registrationUrl ? { href: value.registrationUrl, label: 'Register' } : null;
-}
-
 const status = getStatus(event);
-const action = getPrimaryAction(event, status);
+const action = getEventPrimaryAction(event, status);
 const statusLabel = status === 'live' ? 'Live' : status === 'upcoming' ? 'Upcoming' : 'Past';
 const externalAction = action?.href.startsWith('http') ?? false;
 ---
@@ -111,6 +98,7 @@ const externalAction = action?.href.startsWith('http') ?? false;
 
 <script>
   import { fetchLivePublicEvent } from '../../lib/live-public-events';
+  import { getEventPrimaryAction } from '../../lib/event-card-actions';
   import { getEventReturnLink } from '../../lib/event-navigation';
 
   const page = document.querySelector('[data-event-detail]');
@@ -132,22 +120,10 @@ const externalAction = action?.href.startsWith('http') ?? false;
     return now < start ? 'upcoming' : now <= end ? 'live' : 'past';
   }
 
-  function liveAction(event, status) {
-    if (status === 'past') {
-      return event.streamUrl && !event.embedStream ? { href: event.streamUrl, label: 'Watch recording' } : null;
-    }
-    if (status === 'live') {
-      if (event.streamUrl) return { href: event.streamUrl, label: 'Watch live' };
-      if (event.onlineUrl) return { href: event.onlineUrl, label: 'Join online' };
-      return null;
-    }
-    return event.registrationUrl ? { href: event.registrationUrl, label: 'Register' } : null;
-  }
-
   function updateAction(event) {
     if (!(actionLink instanceof HTMLAnchorElement) || !(state instanceof HTMLElement)) return;
     const status = currentStatus(event);
-    const action = liveAction(event, status);
+    const action = getEventPrimaryAction(event, status);
     actionLink.hidden = !action;
     state.textContent = status === 'past' && !action ? 'This event has ended.' : '';
     if (!action) {

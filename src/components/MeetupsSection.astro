@@ -2,6 +2,7 @@
 import type { WebsiteEvent } from '../lib/events';
 import { getEventCardAction } from '../lib/event-card-actions';
 import { withHomepageEventContext } from '../lib/event-navigation';
+import { sortEventsBySoonest } from '../lib/event-order';
 import { EVENT_SUBMISSIONS_ENABLED } from '../lib/features';
 
 interface Props { events: WebsiteEvent[]; }
@@ -20,8 +21,7 @@ function formatDate(iso: string): string {
   });
 }
 
-const sorted = [...events]
-  .sort((a, b) => new Date(b.startsAt).getTime() - new Date(a.startsAt).getTime())
+const sorted = sortEventsBySoonest(events)
   .map((m) => ({
     ...m,
     status: getMeetupStatus(m.startsAt, m.endsAt),
@@ -113,6 +113,7 @@ const statusConfig = {
   import { fetchLivePublicEvents } from '../lib/live-public-events';
   import { getEventCardAction } from '../lib/event-card-actions';
   import { withHomepageEventContext } from '../lib/event-navigation';
+  import { sortEventsBySoonest } from '../lib/event-order';
 
   const grid = document.querySelector('[data-home-events-grid]');
   const statusConfig = {
@@ -135,8 +136,7 @@ const statusConfig = {
   function render(events) {
     if (!(grid instanceof HTMLUListElement)) return;
     grid.replaceChildren();
-    [...events]
-      .sort((left, right) => new Date(right.startsAt).getTime() - new Date(left.startsAt).getTime())
+    sortEventsBySoonest(events)
       .slice(0, 3)
       .forEach((event) => {
         const status = getStatus(event.startsAt, event.endsAt);

@@ -24,7 +24,7 @@ function formatDate(iso: string, timezone: string): string {
 
 function formatTime(iso: string, timezone: string): string {
   return new Date(iso).toLocaleTimeString('en-GB', {
-    hour: '2-digit', minute: '2-digit', timeZone: timezone,
+    hour: '2-digit', minute: '2-digit', timeZone: timezone, timeZoneName: 'short',
   });
 }
 
@@ -59,10 +59,10 @@ const externalAction = action?.href.startsWith('http') ?? false;
       {event.coverUrl && <img class="event-hero-image" src={event.coverUrl} alt="" fetchpriority="high" />}
       <div class="event-hero-overlay" aria-hidden="true"></div>
       <div class="container event-hero-content">
-        <span class={`event-status-badge status-${status}`}>{statusLabel}</span>
+        <span class={`event-status-badge status-${status}`} data-event-status>{statusLabel}</span>
         <h1 class="heading-serif event-hero-title" id="event-title">{event.title}</h1>
         <p class="event-hero-meta">
-          <time datetime={event.startsAt}>{formatDate(event.startsAt, event.timezone)} · {formatTime(event.startsAt, event.timezone)}</time>
+          <time datetime={event.startsAt} data-event-time>{formatDate(event.startsAt, event.timezone)} · {formatTime(event.startsAt, event.timezone)}</time>
           <span aria-hidden="true">•</span>
           <span>{getLocation(event)}</span>
         </p>
@@ -105,6 +105,8 @@ const externalAction = action?.href.startsWith('http') ?? false;
   const backLink = document.querySelector('.event-detail-back');
   const actionLink = page?.querySelector('[data-event-action]');
   const state = page?.querySelector('[data-event-state]');
+  const statusBadge = page?.querySelector('[data-event-status]');
+  const eventTime = page?.querySelector('[data-event-time]');
   const slug = page?.getAttribute('data-event-slug');
 
   if (backLink instanceof HTMLAnchorElement) {
@@ -120,10 +122,35 @@ const externalAction = action?.href.startsWith('http') ?? false;
     return now < start ? 'upcoming' : now <= end ? 'live' : 'past';
   }
 
-  function updateAction(event) {
-    if (!(actionLink instanceof HTMLAnchorElement) || !(state instanceof HTMLElement)) return;
+  function formatEventTime(event) {
+    return new Intl.DateTimeFormat('en-GB', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      timeZone: event.timezone,
+      timeZoneName: 'short',
+    }).format(new Date(event.startsAt));
+  }
+
+  function updateEventDetail(event) {
     const status = currentStatus(event);
+
+    if (statusBadge instanceof HTMLElement) {
+      statusBadge.className = `event-status-badge status-${status}`;
+      statusBadge.textContent = status === 'live' ? 'Live' : status === 'upcoming' ? 'Upcoming' : 'Past';
+    }
+
+    if (eventTime instanceof HTMLTimeElement) {
+      eventTime.dateTime = event.startsAt;
+      eventTime.textContent = formatEventTime(event);
+    }
+
+    if (!(actionLink instanceof HTMLAnchorElement) || !(state instanceof HTMLElement)) return;
+
     const action = getEventPrimaryAction(event, status);
+
     actionLink.hidden = !action;
     state.textContent = status === 'past' && !action ? 'This event has ended.' : '';
     if (!action) {
@@ -145,7 +172,7 @@ const externalAction = action?.href.startsWith('http') ?? false;
   }
 
   if (slug) void fetchLivePublicEvent(slug).then((event) => {
-    if (event) updateAction(event);
+    if (event) updateEventDetail(event);
   }).catch(() => undefined);
 </script>
 

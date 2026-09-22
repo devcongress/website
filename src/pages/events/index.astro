@@ -30,7 +30,7 @@ function formatDate(iso: string, timezone: string): string {
 
 function formatTime(iso: string, timezone: string): string {
   return new Date(iso).toLocaleTimeString('en-GB', {
-    hour: '2-digit', minute: '2-digit', timeZone: timezone,
+    hour: '2-digit', minute: '2-digit', timeZone: timezone, timeZoneName: 'short',
   });
 }
 
@@ -448,7 +448,7 @@ const calendarEvents = events.map((event) => {
 
   function formatLiveTime(iso, timezone) {
     return new Date(iso).toLocaleTimeString('en-GB', {
-      hour: '2-digit', minute: '2-digit', timeZone: timezone,
+      hour: '2-digit', minute: '2-digit', timeZone: timezone, timeZoneName: 'short',
     });
   }
 

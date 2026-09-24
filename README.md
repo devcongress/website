@@ -71,7 +71,9 @@ It includes only published events that are still in progress or have not
 started at request/build time; past events remain available on the website but
 are not carried into subscribers' calendars.
 
-The Events page links the feed to Google Calendar. No organizer credentials or
+The Events page offers Google Calendar, Apple Calendar, and an HTTPS subscription
+address for Outlook and other calendar apps. The downloaded `.ics` file is for a
+one-time import; it does not update automatically. No organizer credentials or
 unmoderated submissions are included.
 
 ## Public event submission launch controls

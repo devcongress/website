@@ -13,6 +13,7 @@ const events = sortEventsBySoonest(await getEvents()).map((event) => ({
 const calendarFeedUrl = 'https://devcongress.org/events/calendar.ics';
 const googleCalendarFeedUrl = `webcal://${new URL(calendarFeedUrl).host}${new URL(calendarFeedUrl).pathname}`;
 const googleCalendarUrl = `https://calendar.google.com/calendar/r?cid=${encodeURIComponent(googleCalendarFeedUrl)}`;
+const appleCalendarUrl = googleCalendarFeedUrl;
 const hasSubscribableEvents = upcomingCalendarEvents(events).length > 0;
 
 function getEventStatus(event: WebsiteEvent): 'upcoming' | 'live' | 'past' {
@@ -132,50 +133,121 @@ const calendarEvents = events.map((event) => {
           </p>
           <div class="events-page-actions" id="calendar-subscribe">
             <div class="events-page-buttons">
-              {hasSubscribableEvents ? (
-                <a
-                  class="btn btn-primary calendar-subscribe-button"
-                  href={googleCalendarUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-describedby="calendar-subscribe-note"
-                >
-                  <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
-                    <rect x="2.5" y="4" width="15" height="13" rx="1.5" />
-                    <path d="M6 2.5v3M14 2.5v3M2.5 8h15M6 11h2M12 11h2M6 14h2M12 14h2" />
-                  </svg>
-                  <span>Add to Google Calendar</span>
-                  <span class="calendar-subscribe-arrow" aria-hidden="true">↗</span>
-                </a>
-              ) : (
+              <div class="calendar-subscribe-control">
                 <button
                   class="btn btn-primary calendar-subscribe-button"
+                  id="calendar-subscribe-button"
                   type="button"
-                  disabled
+                  aria-expanded="false"
+                  aria-controls="calendar-subscribe-panel"
                   aria-describedby="calendar-subscribe-note"
+                  disabled={!hasSubscribableEvents}
                 >
                   <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
                     <rect x="2.5" y="4" width="15" height="13" rx="1.5" />
                     <path d="M6 2.5v3M14 2.5v3M2.5 8h15M6 11h2M12 11h2M6 14h2M12 14h2" />
                   </svg>
-                  <span>Add to Google Calendar</span>
+                  <span>Subscribe to calendar</span>
+                  <svg class="calendar-subscribe-chevron" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                    <path d="m3.5 6 4.5 4.5L12.5 6" />
+                  </svg>
                 </button>
-              )}
+                <div class="calendar-subscribe-panel" id="calendar-subscribe-panel" aria-labelledby="calendar-subscribe-panel-title" hidden>
+                  <div class="calendar-subscribe-panel-header">
+                    <h2 class="calendar-subscribe-panel-title" id="calendar-subscribe-panel-title">Add DevCongress events</h2>
+                    <button class="calendar-subscribe-close" type="button" aria-label="Close calendar options">
+                      <svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                        <path d="m4 4 8 8m0-8-8 8" />
+                      </svg>
+                    </button>
+                  </div>
+                  <nav class="calendar-provider-links" aria-label="Calendar subscription options">
+                    <a href={googleCalendarUrl} target="_blank" rel="noopener noreferrer">
+                      <span class="calendar-provider-icon google-calendar-icon" aria-hidden="true">
+                        <svg viewBox="0 0 256 262" aria-hidden="true">
+                          <path fill="#4285F4" d="M255.878 133.451c0-10.734-.871-18.567-2.756-26.69H130.55v48.448h71.947c-1.45 12.04-9.283 30.172-26.69 42.356l-.244 1.622 38.755 30.023 2.685.268c24.659-22.774 38.875-56.282 38.875-96.027" />
+                          <path fill="#34A853" d="M130.55 261.1c35.248 0 64.839-11.605 86.453-31.622l-41.196-31.913c-11.024 7.688-25.82 13.055-45.257 13.055-34.523 0-63.824-22.773-74.269-54.25l-1.531.13-40.298 31.187-.527 1.465c21.468 42.646 65.565 71.948 116.625 71.948" />
+                          <path fill="#FBBC05" d="M56.281 156.37c-2.756-8.123-4.351-16.827-4.351-25.82 0-8.994 1.595-17.697 4.206-25.82l-.073-1.73L15.26 71.312l-1.335.635C5.077 89.644 0 109.517 0 130.55c0 21.033 5.077 40.905 13.925 58.602l42.356-32.782" />
+                          <path fill="#EB4335" d="M130.55 50.479c24.514 0 41.05 10.589 50.479 19.438l36.844-35.974C195.245 12.91 165.798 0 130.55 0 79.49 0 35.393 29.301 13.925 71.947l42.211 32.783C66.726 73.253 96.027 50.479 130.55 50.479" />
+                        </svg>
+                      </span>
+                      <span class="calendar-provider-copy"><span>Google Calendar</span><small>Subscribe with Google</small></span>
+                      <svg class="calendar-provider-external" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M9 3h4v4m-.5-3.5L7 9m-1-4H4a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2" /></svg>
+                    </a>
+                    <a href={appleCalendarUrl}>
+                      <span class="calendar-provider-icon apple-calendar-icon" aria-hidden="true">
+                        <svg viewBox="0 0 256 315" aria-hidden="true">
+                          <path fill="#000" d="M213.803 167.031c.442 47.579 41.739 63.412 42.197 63.614-.349 1.117-6.599 22.564-21.757 44.717-13.104 19.153-26.704 38.235-48.129 38.63-21.052.388-27.821-12.484-51.889-12.484-24.061 0-31.582 12.088-51.51 12.872-20.68.783-36.428-20.711-49.641-39.793C6.075 235.553-14.558 164.286 13.147 116.18c13.763-23.89 38.359-39.017 65.056-39.405 20.307-.387 39.475 13.662 51.889 13.662 12.406 0 35.699-16.896 60.186-14.414 10.251.426 39.026 4.141 57.503 31.186-1.489.923-34.334 20.044-33.977 59.822" />
+                          <path fill="#000" d="M174.239 50.199C185.218 36.909 192.608 18.408 190.592 0c-15.826.636-34.962 10.546-46.314 23.829-10.173 11.762-19.082 30.588-16.678 48.632 17.639 1.365 35.66-12.964 46.639-26.262" />
+                        </svg>
+                      </span>
+                      <span class="calendar-provider-copy"><span>Apple Calendar</span><small>Open in your calendar app</small></span>
+                      <svg class="calendar-provider-external" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M9 3h4v4m-.5-3.5L7 9m-1-4H4a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2" /></svg>
+                    </a>
+                    <button type="button" id="calendar-copy-option" aria-expanded="false" aria-controls="calendar-copy-details">
+                      <span class="calendar-provider-icon outlook-calendar-icon" aria-hidden="true">
+                        <svg viewBox="0 0 32 32" aria-hidden="true">
+                          <path fill="#0072C6" d="M19.484 7.937v5.477l1.916 1.205a.489.489 0 0 0 .21 0l8.238-5.554a1.174 1.174 0 0 0-.959-1.128z" />
+                          <path fill="#0072C6" d="m19.484 15.457 1.747 1.2a.522.522 0 0 0 .543 0c-.3.181 8.073-5.378 8.073-5.378v10.066a1.408 1.408 0 0 1-1.49 1.555h-8.874z" />
+                          <path fill="#0072C6" d="M10.44 12.932a1.609 1.609 0 0 0-1.42.838 4.131 4.131 0 0 0-.526 2.218A4.05 4.05 0 0 0 9.02 18.2a1.6 1.6 0 0 0 2.771.022 4.014 4.014 0 0 0 .515-2.2 4.369 4.369 0 0 0-.5-2.281 1.536 1.536 0 0 0-1.366-.809" />
+                          <path fill="#0072C6" d="M2.153 5.155v21.427L18.453 30V2zM13.061 19.491a3.231 3.231 0 0 1-2.7 1.361 3.19 3.19 0 0 1-2.64-1.318A5.459 5.459 0 0 1 6.706 16.1a5.868 5.868 0 0 1 1.036-3.616 3.267 3.267 0 0 1 2.744-1.384 3.116 3.116 0 0 1 2.61 1.321 5.639 5.639 0 0 1 1 3.484 5.763 5.763 0 0 1-1.035 3.586" />
+                        </svg>
+                      </span>
+                      <span class="calendar-provider-copy"><span>Outlook and other apps</span><small>Paste the calendar address</small></span>
+                      <svg class="calendar-copy-chevron" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="m3.5 6 4.5 4.5L12.5 6" /></svg>
+                    </button>
+                  </nav>
+                  <div class="calendar-copy-details" id="calendar-copy-details" hidden>
+                    <p>In Outlook, choose <strong>Add calendar → Subscribe from web</strong>, then paste this address. In other apps, look for a calendar subscription or “from URL” option.</p>
+                    <label class="calendar-feed-label" for="calendar-feed-url">Calendar address</label>
+                    <div class="calendar-copy-row">
+                      <input id="calendar-feed-url" type="url" value={calendarFeedUrl} readonly />
+                      <button
+                        class="btn btn-primary calendar-copy-button"
+                        type="button"
+                        id="calendar-copy-button"
+                        data-copy-state="idle"
+                        aria-label="Copy calendar address"
+                        aria-busy="false"
+                        aria-disabled="false"
+                      >
+                        <span class="calendar-copy-button-states" aria-hidden="true">
+                          <span class="calendar-copy-button-state is-active" data-copy-label="idle">
+                            <svg viewBox="0 0 20 20" fill="none"><rect x="3.5" y="6.5" width="10" height="10" rx="1.75" /><path d="M6.5 6.5V4.75A1.75 1.75 0 0 1 8.25 3h7A1.75 1.75 0 0 1 17 4.75v7a1.75 1.75 0 0 1-1.75 1.75H13.5" /></svg>
+                            <span>Copy</span>
+                          </span>
+                          <span class="calendar-copy-button-state" data-copy-label="copying">
+                            <svg viewBox="0 0 20 20" fill="none"><rect x="3.5" y="6.5" width="10" height="10" rx="1.75" /><path d="M6.5 6.5V4.75A1.75 1.75 0 0 1 8.25 3h7A1.75 1.75 0 0 1 17 4.75v7a1.75 1.75 0 0 1-1.75 1.75H13.5" /></svg>
+                            <span>Copying…</span>
+                          </span>
+                          <span class="calendar-copy-button-state" data-copy-label="copied">
+                            <svg viewBox="0 0 20 20" fill="none"><path d="m4.5 10.25 3.5 3.5 7.5-8" /></svg>
+                            <span>Copied</span>
+                          </span>
+                        </span>
+                      </button>
+                    </div>
+                    <p class="calendar-copy-status" id="calendar-copy-status" role="status" aria-live="polite"></p>
+                  </div>
+                  <div class="calendar-download-option">
+                    <a
+                      class="calendar-feed-link"
+                      href="/events/calendar.ics"
+                      download="devcongress-events.ics"
+                    >
+                      <svg class="calendar-download-icon" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 2.5v8m0 0 3-3m-3 3-3-3M3 12v1.5h10V12" /></svg>
+                      <span>Download .ics file</span>
+                    </a>
+                    <span>One-time import · won’t update automatically</span>
+                  </div>
+                </div>
+              </div>
               {EVENT_SUBMISSIONS_ENABLED && (
                 <a class="btn btn-yellow event-submit-button" href="/events/submit/">
                   Submit an event <span aria-hidden="true">→</span>
                 </a>
               )}
             </div>
-            {hasSubscribableEvents && (
-              <a
-                class="calendar-feed-link"
-                href="/events/calendar.ics"
-                download="devcongress-events.ics"
-              >
-                Download .ics file
-              </a>
-            )}
             <p id="calendar-subscribe-note">
               {hasSubscribableEvents
                 ? 'Current and upcoming published events. Updates automatically. Download the .ics file if needed.'
@@ -341,6 +413,14 @@ const calendarEvents = events.map((event) => {
   const eventsListTitle = eventsPageTitle?.textContent?.trim() || 'Where we show up';
   const eventsListDocumentTitle = document.title;
   const calendarSubscribe = document.querySelector('#calendar-subscribe');
+  const calendarSubscribeButton = document.querySelector('#calendar-subscribe-button');
+  const calendarSubscribePanel = document.querySelector('#calendar-subscribe-panel');
+  const calendarSubscribeClose = document.querySelector('.calendar-subscribe-close');
+  const calendarCopyOption = document.querySelector('#calendar-copy-option');
+  const calendarCopyDetails = document.querySelector('#calendar-copy-details');
+  const calendarFeedInput = document.querySelector('#calendar-feed-url');
+  const calendarCopyButton = document.querySelector('#calendar-copy-button');
+  const calendarCopyStatus = document.querySelector('#calendar-copy-status');
   const detailPanel = document.querySelector('#event-detail-view');
   const detailBack = document.querySelector('.event-detail-back');
   const detailCover = document.querySelector('#event-detail-cover');
@@ -362,10 +442,12 @@ const calendarEvents = events.map((event) => {
   const viewSwitcher = document.querySelector('.view-switcher');
   const viewButtons = [...document.querySelectorAll('[data-events-view]')];
   const calendarButtons = [...document.querySelectorAll('[data-calendar-action]')];
-  let subscribeButton = document.querySelector('.calendar-subscribe-button');
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+  const calendarFeedAddress = 'https://devcongress.org/events/calendar.ics';
   const monthPattern = /^\d{4}-(0[1-9]|1[0-2])$/;
   let activePopoverAnchor = null;
+  let calendarCopyStateTimer = null;
+  let calendarCopyRequestVersion = 0;
   let routeRequestVersion = 0;
   const liveEventDetails = new Map<string, WebsiteEvent>();
   const eventDetailRequests = new Map();
@@ -383,12 +465,6 @@ const calendarEvents = events.map((event) => {
   const fallbackMonth = firstUpcoming?.dateKey.slice(0, 7) ?? latestEvent?.dateKey.slice(0, 7) ?? currentMonthKey;
   const initialMonth = new URLSearchParams(window.location.search).get('month');
   let selectedMonth = monthPattern.test(initialMonth ?? '') ? initialMonth : fallbackMonth;
-
-  if (subscribeButton instanceof HTMLAnchorElement) {
-    const feedUrl = new URL('/events/calendar.ics', window.location.origin);
-    const webcalUrl = `webcal://${feedUrl.host}${feedUrl.pathname}`;
-    subscribeButton.href = `https://calendar.google.com/calendar/r?cid=${encodeURIComponent(webcalUrl)}`;
-  }
 
   function animatePanel(panel, direction = 0) {
     if (!panel || reduceMotion.matches) return;
@@ -564,63 +640,146 @@ const calendarEvents = events.map((event) => {
 
   function updateCalendarSubscription(events) {
     const hasUpcomingEvents = events.some((event) => new Date(event.endsAt).getTime() >= Date.now());
-    if (!calendarSubscribe) return;
+    if (!calendarSubscribe || !(calendarSubscribeButton instanceof HTMLButtonElement)) return;
 
-    if (!hasUpcomingEvents) {
-      if (subscribeButton instanceof HTMLAnchorElement) {
-        const button = document.createElement('button');
-        button.className = subscribeButton.className;
-        button.type = 'button';
-        button.disabled = true;
-        button.setAttribute('aria-describedby', 'calendar-subscribe-note');
-        button.replaceChildren(...[...subscribeButton.childNodes].map((node) => node.cloneNode(true)));
-        button.querySelector('.calendar-subscribe-arrow')?.remove();
-        subscribeButton.replaceWith(button);
-        subscribeButton = button;
-      } else if (subscribeButton instanceof HTMLButtonElement) {
-        subscribeButton.disabled = true;
-      }
-      calendarSubscribe.querySelector('.calendar-feed-link')?.remove();
-      const note = calendarSubscribe.querySelector('#calendar-subscribe-note');
-      if (note) note.textContent = 'No upcoming events yet. Subscriptions open when the next event is published.';
-      return;
-    }
-
-    if (subscribeButton instanceof HTMLButtonElement) {
-      const anchor = document.createElement('a');
-      anchor.className = subscribeButton.className;
-      anchor.setAttribute('aria-describedby', 'calendar-subscribe-note');
-      anchor.replaceChildren(...[...subscribeButton.childNodes].map((node) => node.cloneNode(true)));
-      const arrow = document.createElement('span');
-      arrow.className = 'calendar-subscribe-arrow';
-      arrow.setAttribute('aria-hidden', 'true');
-      arrow.textContent = '↗';
-      anchor.append(arrow);
-      subscribeButton.replaceWith(anchor);
-      subscribeButton = anchor;
-    }
-
-    if (subscribeButton instanceof HTMLAnchorElement) {
-      const feedUrl = new URL('/events/calendar.ics', window.location.origin);
-      subscribeButton.href = `https://calendar.google.com/calendar/r?cid=${encodeURIComponent(`webcal://${feedUrl.host}${feedUrl.pathname}`)}`;
-      subscribeButton.target = '_blank';
-      subscribeButton.rel = 'noopener noreferrer';
-      subscribeButton.removeAttribute('aria-disabled');
-    }
-
-    if (!calendarSubscribe.querySelector('.calendar-feed-link')) {
-      const link = document.createElement('a');
-      link.className = 'calendar-feed-link';
-      link.href = '/events/calendar.ics';
-      link.download = 'devcongress-events.ics';
-      link.textContent = 'Download .ics file';
-      calendarSubscribe.append(link);
-    }
+    calendarSubscribeButton.disabled = !hasUpcomingEvents;
+    if (!hasUpcomingEvents) closeCalendarSubscription();
     const note = calendarSubscribe.querySelector('#calendar-subscribe-note');
-    if (note) note.textContent = 'Current and upcoming published events. Updates automatically. Download the .ics file if needed.';
+    if (note) {
+      note.textContent = hasUpcomingEvents
+        ? 'Current and upcoming published events. Updates automatically.'
+        : 'No upcoming events yet. Subscriptions open when the next event is published.';
+    }
+  }
+
+  function closeCalendarSubscription(restoreFocus = false) {
+    if (!(calendarSubscribeButton instanceof HTMLButtonElement) || !(calendarSubscribePanel instanceof HTMLElement)) return;
+
+    resetCalendarCopyState();
+    calendarSubscribeButton.setAttribute('aria-expanded', 'false');
+    calendarSubscribePanel.hidden = true;
+    calendarSubscribePanel.classList.remove('opens-above');
+    calendarSubscribePanel.style.maxHeight = '';
+    if (calendarCopyOption instanceof HTMLButtonElement && calendarCopyDetails instanceof HTMLElement) {
+      calendarCopyOption.setAttribute('aria-expanded', 'false');
+      calendarCopyDetails.hidden = true;
+    }
+    if (restoreFocus && !calendarSubscribeButton.disabled) {
+      calendarSubscribeButton.focus({ preventScroll: true });
+    }
+  }
+
+  function fitCalendarSubscriptionPanel() {
+    if (
+      !(calendarSubscribeButton instanceof HTMLButtonElement)
+      || !(calendarSubscribePanel instanceof HTMLElement)
+      || calendarSubscribePanel.hidden
+    ) return;
+
+    const triggerBounds = calendarSubscribeButton.getBoundingClientRect();
+    const availableBelow = window.innerHeight - triggerBounds.bottom - 16;
+    const availableAbove = triggerBounds.top - 16;
+    const previousScrollTop = calendarSubscribePanel.scrollTop;
+    calendarSubscribePanel.style.maxHeight = '';
+    const desiredHeight = calendarSubscribePanel.scrollHeight;
+    const opensAbove = availableBelow < desiredHeight && availableAbove > availableBelow;
+    const availableHeight = opensAbove ? availableAbove : availableBelow;
+
+    calendarSubscribePanel.classList.toggle('opens-above', opensAbove);
+    calendarSubscribePanel.style.maxHeight = `${Math.max(80, availableHeight - 16)}px`;
+    calendarSubscribePanel.scrollTop = previousScrollTop;
+  }
+
+  function setCalendarSubscriptionOpen(open) {
+    if (!(calendarSubscribeButton instanceof HTMLButtonElement) || !(calendarSubscribePanel instanceof HTMLElement)) return;
+    if (calendarSubscribeButton.disabled && open) return;
+
+    calendarSubscribeButton.setAttribute('aria-expanded', String(open));
+    calendarSubscribePanel.hidden = !open;
+    if (open) fitCalendarSubscriptionPanel();
+    else closeCalendarSubscription();
+  }
+
+  function selectCalendarAddressForManualCopy() {
+    if (!(calendarFeedInput instanceof HTMLInputElement)) return;
+    calendarFeedInput.focus({ preventScroll: true });
+    calendarFeedInput.select();
+    calendarFeedInput.setSelectionRange(0, calendarFeedInput.value.length);
+  }
+
+  function setCalendarCopyState(state) {
+    if (!(calendarCopyButton instanceof HTMLButtonElement)) return;
+
+    const labels = {
+      idle: 'Copy calendar address',
+      copying: 'Copying calendar address',
+      copied: 'Calendar address copied',
+    };
+
+    calendarCopyButton.dataset.copyState = state;
+    calendarCopyButton.setAttribute('aria-label', labels[state]);
+    calendarCopyButton.setAttribute('aria-busy', String(state === 'copying'));
+    calendarCopyButton.setAttribute('aria-disabled', String(state !== 'idle'));
+    calendarCopyButton.querySelectorAll('[data-copy-label]').forEach((label) => {
+      label.classList.toggle('is-active', label.dataset.copyLabel === state);
+    });
+  }
+
+  function resetCalendarCopyState(clearMessage = true) {
+    calendarCopyRequestVersion += 1;
+    window.clearTimeout(calendarCopyStateTimer);
+    calendarCopyStateTimer = null;
+    setCalendarCopyState('idle');
+    if (clearMessage && calendarCopyStatus instanceof HTMLElement) calendarCopyStatus.textContent = '';
+  }
+
+  async function copyCalendarAddress() {
+    if (
+      !(calendarCopyButton instanceof HTMLButtonElement)
+      || !(calendarCopyStatus instanceof HTMLElement)
+      || calendarCopyButton.dataset.copyState !== 'idle'
+    ) return;
+
+    const requestVersion = ++calendarCopyRequestVersion;
+    window.clearTimeout(calendarCopyStateTimer);
+    calendarCopyStateTimer = null;
+    calendarCopyStatus.textContent = '';
+    setCalendarCopyState('copying');
+
+    let copyTimeout = null;
+
+    try {
+      if (!navigator.clipboard?.writeText) throw new Error('Clipboard API unavailable');
+      await Promise.race([
+        navigator.clipboard.writeText(calendarFeedAddress),
+        new Promise((_, reject) => {
+          copyTimeout = window.setTimeout(() => reject(new Error('Clipboard request timed out')), 5000);
+        }),
+      ]);
+    } catch {
+      if (requestVersion !== calendarCopyRequestVersion) return;
+
+      setCalendarCopyState('idle');
+      selectCalendarAddressForManualCopy();
+      calendarCopyStatus.textContent = 'Copy was unavailable. The address is selected so you can copy it manually.';
+      return;
+    } finally {
+      window.clearTimeout(copyTimeout);
+    }
+
+    if (requestVersion === calendarCopyRequestVersion) {
+      setCalendarCopyState('copied');
+      calendarCopyStatus.textContent = 'Calendar address copied.';
+      calendarCopyStateTimer = window.setTimeout(() => {
+        if (requestVersion !== calendarCopyRequestVersion) return;
+
+        closeCalendarSubscription(true);
+      }, 500);
+    }
   }
 
   function setDetailMode(active) {
+    if (active) closeCalendarSubscription();
     if (eventsPageHeader) eventsPageHeader.hidden = active;
     if (eventsBody) eventsBody.hidden = active;
     if (eventsViewBar) eventsViewBar.hidden = active;
@@ -1105,6 +1264,47 @@ const calendarEvents = events.map((event) => {
     animatePanel(calendarMonthSummary, direction);
   }
 
+  calendarSubscribeButton?.addEventListener('click', () => {
+    const isOpen = calendarSubscribeButton.getAttribute('aria-expanded') === 'true';
+    setCalendarSubscriptionOpen(!isOpen);
+  });
+  calendarSubscribeClose?.addEventListener('click', () => closeCalendarSubscription(true));
+  calendarCopyOption?.addEventListener('click', () => {
+    if (!(calendarCopyDetails instanceof HTMLElement)) return;
+    const isOpen = calendarCopyOption.getAttribute('aria-expanded') === 'true';
+    calendarCopyOption.setAttribute('aria-expanded', String(!isOpen));
+    calendarCopyDetails.hidden = isOpen;
+    if (isOpen) resetCalendarCopyState();
+    if (!isOpen) fitCalendarSubscriptionPanel();
+    if (!isOpen && calendarCopyStatus instanceof HTMLElement) calendarCopyStatus.textContent = '';
+  });
+  calendarCopyButton?.addEventListener('click', () => void copyCalendarAddress());
+  calendarSubscribe?.addEventListener('focusout', (event) => {
+    const nextTarget = event.relatedTarget;
+    if (!(nextTarget instanceof Node) || !calendarSubscribe.contains(nextTarget)) {
+      closeCalendarSubscription();
+    }
+  });
+  calendarSubscribe?.addEventListener('click', (event) => {
+    if (!(event.target instanceof Element)) return;
+    const providerLink = event.target.closest('.calendar-provider-links a');
+    if (providerLink) closeCalendarSubscription();
+  });
+  document.addEventListener('pointerdown', (event) => {
+    if (!(event.target instanceof Node) || calendarSubscribe?.contains(event.target)) return;
+    closeCalendarSubscription();
+  });
+  window.addEventListener('resize', fitCalendarSubscriptionPanel);
+  window.addEventListener('scroll', (event) => {
+    if (event.target instanceof Node && calendarSubscribePanel?.contains(event.target)) return;
+    fitCalendarSubscriptionPanel();
+  }, true);
+  document.addEventListener('keydown', (event) => {
+    if (event.key !== 'Escape' || calendarSubscribeButton?.getAttribute('aria-expanded') !== 'true') return;
+    event.preventDefault();
+    closeCalendarSubscription(true);
+  });
+
   viewButtons.forEach((button) => {
     button.addEventListener('click', () => setView(button.dataset.eventsView));
   });
@@ -1152,10 +1352,266 @@ const calendarEvents = events.map((event) => {
   }
   .events-page-actions { display: flex; flex-direction: column; align-items: flex-end; gap: var(--s2); }
   .events-page-buttons { display: flex; align-items: center; justify-content: flex-end; gap: var(--s3); flex-wrap: wrap; }
-  .events-page-actions p { color: var(--text-muted); font-size: var(--text-xs); }
-  .calendar-feed-link {
-    color: var(--text-mid); font-size: var(--text-xs); text-decoration: underline;
-    text-underline-offset: 3px;
+  .events-page-actions > p { color: var(--text-muted); font-size: var(--text-xs); }
+  .calendar-subscribe-control { position: relative; }
+  .calendar-subscribe-panel[hidden],
+  .calendar-copy-details[hidden] { display: none !important; }
+  .calendar-subscribe-panel {
+    position: absolute; top: calc(100% + var(--s2)); right: 0; z-index: 120;
+    width: min(336px, calc(100vw - 32px));
+    max-height: min(32rem, calc(100dvh - 32px));
+    overflow-y: auto; overscroll-behavior: contain;
+    padding: 14px 16px;
+    border: 2px solid var(--black);
+    border-radius: var(--r-md);
+    background: var(--bg-white);
+    box-shadow: var(--shadow-solid);
+    color: var(--black);
+  }
+  .calendar-subscribe-panel.opens-above { top: auto; bottom: calc(100% + var(--s2)); }
+  .calendar-subscribe-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--s3);
+  }
+  .calendar-subscribe-panel-title {
+    margin: 0 0 var(--s2);
+    font-size: 14px;
+    font-weight: 800;
+  }
+  .calendar-subscribe-close {
+    display: grid;
+    width: 32px;
+    height: 32px;
+    flex: none;
+    place-items: center;
+    margin: -5px -7px 0 0;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+  }
+  .calendar-subscribe-close svg { width: 16px; height: 16px; }
+  .calendar-subscribe-close path { stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; }
+  .calendar-provider-links { display: flex; flex-direction: column; }
+  .calendar-provider-links a,
+  .calendar-provider-links button {
+    display: flex;
+    min-height: 44px;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 0;
+    border: 0;
+    border-top: 1px solid #dedbd3;
+    background: transparent;
+    color: var(--text);
+    cursor: pointer;
+    font: inherit;
+    text-align: left;
+  }
+  .calendar-provider-links a *,
+  .calendar-provider-links button * {
+    cursor: pointer;
+  }
+
+  .calendar-provider-copy {
+    display: flex;
+    min-width: 0;
+    flex: 1;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .calendar-provider-copy > span {
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.2;
+  }
+  .calendar-provider-copy small {
+    color: var(--text-mid);
+    font-size: 12px;
+    line-height: 1.2;
+  }
+  .calendar-provider-icon {
+    display: grid;
+    width: 28px;
+    height: 28px;
+    flex: none;
+    place-items: center;
+    border-radius: 8px;
+    background: #fff;
+  }
+  .calendar-provider-icon svg { width: 20px; height: 20px; overflow: visible; }
+  .outlook-calendar-icon svg { width: 22px; height: 22px; }
+  .calendar-provider-external,
+  .calendar-copy-chevron {
+    width: 16px;
+    height: 16px;
+    flex: none;
+    color: var(--text-muted);
+  }
+  .calendar-provider-external path,
+  .calendar-copy-chevron path {
+    stroke: currentColor;
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .calendar-provider-links a:focus-visible,
+  .calendar-provider-links button:focus-visible,
+  .calendar-subscribe-close:focus-visible,
+  .calendar-copy-button:focus-visible,
+  .calendar-download-option a:focus-visible { outline: 3px solid var(--pink); outline-offset: 3px; }
+  .calendar-subscribe-chevron,
+  .calendar-copy-chevron {
+    display: block;
+    transition: transform 180ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .calendar-subscribe-button[aria-expanded="true"] .calendar-subscribe-chevron,
+  #calendar-copy-option[aria-expanded="true"] .calendar-copy-chevron {
+    transform: rotate(180deg);
+  }
+  .calendar-subscribe-chevron path {
+    stroke: currentColor;
+    stroke-width: 1.7;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .calendar-copy-details {
+    padding-top: var(--s3);
+    border-top: 1px solid #dedbd3;
+  }
+  .calendar-copy-details p {
+    color: var(--text-mid);
+    font-size: 12px;
+    line-height: 1.5;
+  }
+  .calendar-feed-label {
+    display: block;
+    margin-top: var(--s3);
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 700;
+  }
+  .calendar-copy-row {
+    display: flex;
+    min-width: 0;
+    gap: var(--s2);
+    margin-top: 6px;
+  }
+  .calendar-copy-row input {
+    width: 100%;
+    min-width: 0;
+    padding: 9px 10px;
+    border: 1.5px solid #b9b5ab;
+    border-radius: var(--r-sm);
+    background: #fff;
+    color: var(--text);
+    font: inherit;
+    font-size: 12px;
+  }
+  .calendar-copy-row input:focus-visible { outline: 3px solid var(--pink); outline-offset: 2px; }
+  .calendar-copy-button {
+    display: inline-grid;
+    flex: 0 0 auto;
+    width: max-content;
+    min-width: 0;
+    min-height: 40px;
+    place-items: center;
+    padding: 8px 10px;
+    border-radius: var(--r-sm);
+    font-size: 12px;
+  }
+  .calendar-copy-button-states { display: inline-grid; align-items: center; }
+  .calendar-copy-button-state {
+    grid-area: 1 / 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    opacity: 0;
+    transform: translateY(2px);
+    transition: opacity 120ms cubic-bezier(0.4, 0, 0.2, 1), transform 120ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .calendar-copy-button-state.is-active { opacity: 1; transform: translateY(0); }
+  .calendar-copy-button-state svg {
+    width: 16px;
+    height: 16px;
+    flex: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  #calendar-copy-button[data-copy-state="copying"] { cursor: progress; opacity: 0.72; }
+  #calendar-copy-button[data-copy-state="copied"] {
+    border-color: #15803d;
+    background: #dcfce7;
+    color: #166534;
+    box-shadow: 2px 2px 0 #166534;
+  }
+  .calendar-copy-status {
+    min-height: 1.5em;
+    margin-top: 6px;
+  }
+  .calendar-download-option {
+    display: flex;
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: var(--s3);
+    padding-top: var(--s3);
+    border-top: 2px solid var(--black);
+  }
+  .calendar-download-option a {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .calendar-download-option a {
+    color: var(--text-mid); font-size: var(--text-xs); text-decoration: underline; text-underline-offset: 3px;
+  }
+  .calendar-download-option a:hover { color: var(--text); }
+  .calendar-download-icon {
+    width: 16px;
+    height: 16px;
+    flex: none;
+  }
+  .calendar-download-icon path {
+    stroke: currentColor;
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .calendar-download-option > span {
+    color: var(--text-muted);
+    font-size: 12px;
+    text-align: left;
+  }
+  .calendar-provider-links a:active,
+  .calendar-provider-links button:active,
+  .calendar-subscribe-close:active {
+    transform: scale(0.97);
+  }
+  .calendar-provider-links a,
+  .calendar-provider-links button,
+  .calendar-subscribe-close {
+    transition: transform 100ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .calendar-provider-links a:hover,
+    .calendar-provider-links button:hover {
+      color: var(--pink);
+    }
+    .calendar-subscribe-close:hover {
+      color: var(--text);
+    }
+  }
+  .calendar-subscribe-button:active,
+  .calendar-copy-button:active { transform: scale(0.97); }
+  .calendar-subscribe-button[disabled] .calendar-subscribe-chevron {
+    transform: none;
   }
   .calendar-feed-link:hover { color: var(--text); }
   .event-submit-button,
@@ -1522,11 +1978,24 @@ const calendarEvents = events.map((event) => {
     .event-detail-body { padding-block: var(--s7); }
     .event-detail-layout { grid-template-columns: 1fr; gap: var(--s5); margin-top: var(--s6); }
     .event-detail-action { padding-top: 0; }
-    .events-page-actions { align-items: center; width: 100%; }
-    .events-page-buttons { width: 100%; flex-direction: column; align-items: center; }
+    .events-page-actions { align-items: flex-start; width: 100%; }
+    .events-page-buttons { width: 100%; flex-direction: column; align-items: stretch; }
+    .calendar-subscribe-control { width: 100%; }
+    .calendar-subscribe-panel { right: 0; left: 0; width: auto; transform: none; }
     .event-submit-button,
-    .calendar-subscribe-button { width: min(100%, 280px); }
-    .events-page-actions p { max-width: 310px; line-height: 1.45; text-align: center; }
+    .calendar-subscribe-button { width: 100%; }
+    .events-page-actions > p { max-width: 100%; line-height: 1.45; text-align: left; }
+    .calendar-copy-row input {
+      font-size: 16px;
+    }
+    .calendar-download-option {
+      align-items: flex-start;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .calendar-download-option > span {
+      text-align: left;
+    }
     .events-view-bar { justify-content: stretch; }
     .view-switcher { width: 100%; }
     .view-switcher-button { min-width: 0; }
@@ -1557,9 +2026,17 @@ const calendarEvents = events.map((event) => {
     :global(.agenda-event-meta) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-muted); font-size: 0.7rem; }
     :global(.agenda-arrow) { color: var(--pink); font-size: var(--text-base); font-weight: 800; }
   }
+  @media (max-width: 360px) {
+    .calendar-copy-row {
+      flex-direction: column;
+    }
+  }
   @media (prefers-reduced-motion: reduce) {
     .mnav-back, .event-detail-back, .event-cover-image, .view-switcher-highlight, .view-switcher-button, .calendar-nav-button, .calendar-today-button,
-    .calendar-day-popover-close, :global(.calendar-event), :global(.calendar-more-button),
+    .calendar-day-popover-close, .calendar-subscribe-chevron, .calendar-copy-chevron, .calendar-subscribe-close,
+    .calendar-provider-links a, .calendar-provider-links button, .calendar-copy-button-state,
+    :global(.calendar-event), :global(.calendar-more-button),
     :global(.day-popover-event), :global(.agenda-event) { transition: none; }
+    .calendar-copy-button-state { transform: none; }
   }
 </style>

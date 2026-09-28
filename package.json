@@ -15,12 +15,12 @@
     "astro": "astro"
   },
   "dependencies": {
-    "astro": "^7.3.2",
-    "zod": "^4.6.2"
+    "astro": "^7.3.5",
+    "zod": "^4.6.5"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "5.20260911.1",
-    "wrangler": "^4.131.0"
+    "@cloudflare/workers-types": "5.20260925.1",
+    "wrangler": "^4.139.0"
   },
   "pnpm": {
     "overrides": {

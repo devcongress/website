@@ -4,7 +4,7 @@ import Base from '../../layouts/Base.astro';
 const checkoutApiOrigin = import.meta.env.PUBLIC_DEVCON26_API_ORIGIN || 'https://em.devcongress.org';
 ---
 
-<Base title="Payment confirmation | DevCon26" description="Check your DevCon26 test payment and view its confirmation summary." noindex={true} showFooter={false}>
+<Base title="Payment confirmation | DevCon26" description="Your DevCon26 payment summary and event details." noindex={true} showFooter={false}>
   <div class="payment-page" data-payment-confirmation data-checkout-api-origin={checkoutApiOrigin} data-payment-state="loading">
     <a class="skip-link" href="#payment-main">Skip to payment confirmation</a>
     <header class="payment-header page-shell">
@@ -17,9 +17,18 @@ const checkoutApiOrigin = import.meta.env.PUBLIC_DEVCON26_API_ORIGIN || 'https:/
 
     <main class="page-shell" id="payment-main">
       <div class="payment-status" data-payment-status role="status" aria-live="polite" aria-busy="true">
-        <p class="test-label">Paystack test mode <span aria-hidden="true">↗</span></p>
-        <h1 data-payment-title>Checking your payment.</h1>
-        <p class="status-copy" data-payment-copy>We’re confirming the result with Paystack through EMS. Returning from checkout alone does not confirm a successful payment.</p>
+        <div class="status-intro">
+          <p class="confirmation-label">DevCon26 <span>Good company awaits.</span></p>
+          <h1 data-payment-title>Checking your payment.</h1>
+          <p class="status-copy" data-payment-copy>Just a moment while we confirm your payment with Paystack.</p>
+        </div>
+        <div class="confirmation-seal" aria-hidden="true">
+          <svg viewBox="0 0 100 100" fill="none" focusable="false">
+            <path d="m50 2 10 12 15-3 3 15 14 7-7 14 5 15-15 5-5 15-15-5-14 7-7-14-15-3 3-15L2 50l12-10-3-15 15-3 7-14 14 7Z" fill="currentColor" />
+            <path d="m32 49 12 12 24-25" stroke="var(--text)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+          <span>Payment received</span>
+        </div>
       </div>
       <noscript>
         <p class="no-script">JavaScript is required to verify this payment. Enable it and reload this page, or contact <a href="mailto:hello@devcongress.org">hello@devcongress.org</a> for help. No success is confirmed on this page without verification.</p>
@@ -32,9 +41,13 @@ const checkoutApiOrigin = import.meta.env.PUBLIC_DEVCON26_API_ORIGIN || 'https:/
           </div>
           <div class="receipt-heading">
             <h2 id="summary-title">Your payment summary</h2>
-            <span class="verified-label"><span aria-hidden="true">✓</span> Test verified</span>
+            <span class="verified-label"><span aria-hidden="true">✓</span> Confirmed</span>
           </div>
           <dl class="payment-details">
+            <div class="amount-detail">
+              <dt>Payment amount</dt>
+              <dd data-payment-amount></dd>
+            </div>
             <div class="ticket-detail">
               <dt>Ticket selection</dt>
               <dd data-payment-ticket></dd>
@@ -43,49 +56,52 @@ const checkoutApiOrigin = import.meta.env.PUBLIC_DEVCON26_API_ORIGIN || 'https:/
               <dt>Selected for</dt>
               <dd data-payment-quantity></dd>
             </div>
-            <div class="amount-detail">
-              <dt>Test payment amount</dt>
-              <dd data-payment-amount></dd>
-            </div>
             <div class="reference-detail">
               <dt>Payment reference</dt>
               <dd data-payment-reference></dd>
             </div>
             <div>
               <dt>Payment provider</dt>
-              <dd>Paystack · Test mode</dd>
+              <dd>Paystack</dd>
             </div>
           </dl>
-          <button class="print-button" data-payment-print type="button" hidden>Print or save summary <span aria-hidden="true">↗</span></button>
-          <p class="receipt-caption">Test confirmation only. Not an admission ticket.</p>
+          <div class="receipt-stub">
+            <button class="print-button" data-payment-print type="button" hidden>Save your payment summary <span aria-hidden="true">↗</span></button>
+            <p class="receipt-caption">Payment record only. Not an admission ticket.</p>
+          </div>
         </section>
 
         <section class="next-steps" aria-labelledby="next-title">
-          <h2 id="next-title">What happens next?</h2>
+          <h2 id="next-title">Next stop, <em>Accra.</em></h2>
+          <div class="venue-note">
+            <p class="venue-label">The place to meet</p>
+            <h3>Ghana Digital<br />Center<span aria-hidden="true">.</span></h3>
+            <p class="venue-address">Accra, Ghana</p>
+            <p class="venue-date">December 2026</p>
+            <a class="venue-directions" href="https://www.google.com/maps/search/?api=1&query=Accra%20Digital%20Centre%2C%20Accra%2C%20Ghana" target="_blank" rel="noopener noreferrer">Find the venue <span aria-hidden="true">↗</span><span class="sr-only"> (opens in a new tab)</span></a>
+          </div>
           <div class="next-step">
             <span class="step-number" aria-hidden="true">01</span>
             <div>
-              <h3>Your test is complete.</h3>
-              <p>There’s nothing else to do for this sandbox payment. Keep the reference if you need help checking your test run.</p>
+              <h3>Keep this handy.</h3>
+              <p>Save your summary and payment reference. They make it easy for us to help with any payment questions.</p>
             </div>
           </div>
           <div class="next-step">
             <span class="step-number" aria-hidden="true">02</span>
             <div>
-              <h3>No ticket or email yet.</h3>
-              <p>No real money was charged, no seat was reserved, and no admission ticket or ticket email was created. You’ll need a separate purchase when live sales open.</p>
+              <h3>Stay close to the programme.</h3>
+              <p>The exact date, speakers, and schedule will be shared on the event page. Attendee and admission details are separate from this payment record.</p>
             </div>
           </div>
-          <p class="event-note"><strong>DevCon26 · Accra, Ghana</strong><br />December 2026. The exact date and venue will be announced on the event page.</p>
         </section>
       </div>
 
       <div class="payment-actions">
         <button class="action-button retry-button" data-payment-retry type="button" hidden>Check payment status <span aria-hidden="true">↗</span></button>
         <a class="action-button event-button" href="/devcon26/">Back to DevCon26 <span aria-hidden="true">↗</span></a>
-        <a class="support-link" href="mailto:hello@devcongress.org?subject=DevCon26%20test%20payment">Need a hand? Contact us <span aria-hidden="true">↗</span></a>
+        <a class="support-link" href="mailto:hello@devcongress.org?subject=DevCon26%20payment">Need a hand? Contact us <span aria-hidden="true">↗</span></a>
       </div>
-      <p class="test-disclaimer">Test mode only. No real money or admission ticket.</p>
     </main>
   </div>
 </Base>
@@ -104,6 +120,7 @@ const checkoutApiOrigin = import.meta.env.PUBLIC_DEVCON26_API_ORIGIN || 'https:/
     --payment-outline: hsl(38, 12%, 46%);
     --payment-ease: cubic-bezier(0.16, 1, 0.3, 1);
     padding-bottom: 56px;
+    background: radial-gradient(ellipse at 90% 20%, oklch(0.94 0.06 99 / 0.22), transparent 45%);
   }
 
   [hidden] {
@@ -155,19 +172,50 @@ const checkoutApiOrigin = import.meta.env.PUBLIC_DEVCON26_API_ORIGIN || 'https:/
   }
 
   .payment-status {
-    max-width: 720px;
-    padding-block: 44px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 32px;
+    padding-block: 40px 44px;
   }
 
-  .test-label {
+  .confirmation-label {
     display: inline-flex;
     align-items: center;
-    gap: 24px;
-    margin-bottom: 24px;
-    padding: 6px 12px;
-    border-radius: 6px;
-    background: var(--yellow);
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 18px;
     font-size: var(--text-sm);
+    font-weight: 600;
+  }
+
+  .confirmation-label span {
+    padding-left: 12px;
+    border-left: 1px solid var(--border-light);
+    color: var(--text-mid);
+    font-weight: 400;
+  }
+
+  .confirmation-seal {
+    display: none;
+    flex: 0 0 140px;
+    text-align: center;
+    transform: rotate(7deg);
+  }
+
+  [data-payment-state='verified'] .confirmation-seal {
+    display: block;
+  }
+
+  .confirmation-seal svg {
+    display: block;
+    width: 104px;
+    margin: 0 auto 12px;
+    color: var(--yellow);
+  }
+
+  .confirmation-seal span {
+    font-size: var(--text-xs);
     font-weight: 600;
   }
 
@@ -181,8 +229,8 @@ const checkoutApiOrigin = import.meta.env.PUBLIC_DEVCON26_API_ORIGIN || 'https:/
   }
 
   .status-copy {
-    max-width: 58ch;
-    margin-top: 20px;
+    max-width: 52ch;
+    margin-top: 16px;
     color: var(--text-mid);
     font-size: var(--text-lg);
     line-height: var(--leading-body);
@@ -190,7 +238,7 @@ const checkoutApiOrigin = import.meta.env.PUBLIC_DEVCON26_API_ORIGIN || 'https:/
 
   .confirmation-content {
     display: grid;
-    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr) minmax(0, 0.95fr);
     align-items: start;
     gap: clamp(32px, 5vw, 64px);
   }
@@ -199,10 +247,11 @@ const checkoutApiOrigin = import.meta.env.PUBLIC_DEVCON26_API_ORIGIN || 'https:/
     position: relative;
     isolation: isolate;
     overflow: hidden;
-    padding: 28px;
-    border: 1px solid var(--border-light);
+    padding: 28px 28px 0;
+    border: 1px solid oklch(0.84 0.016 91);
     border-radius: 12px;
     background: var(--payment-paper);
+    box-shadow: 0 8px 0 -3px oklch(0.96 0.016 91), 0 9px 0 -3px oklch(0.84 0.016 91);
   }
 
   .payment-receipt > :not(.receipt-photo) {
@@ -212,10 +261,10 @@ const checkoutApiOrigin = import.meta.env.PUBLIC_DEVCON26_API_ORIGIN || 'https:/
 
   .receipt-photo {
     position: absolute;
-    inset: 10% -10% auto 15%;
+    inset: 6% -15% auto 8%;
     z-index: 0;
     aspect-ratio: 5 / 4;
-    opacity: 0.08;
+    opacity: 0.09;
     mix-blend-mode: multiply;
     mask-image: radial-gradient(ellipse at 60% 52%, #000 24%, transparent 72%);
     pointer-events: none;
@@ -234,7 +283,7 @@ const checkoutApiOrigin = import.meta.env.PUBLIC_DEVCON26_API_ORIGIN || 'https:/
     flex-wrap: wrap;
     gap: 12px;
     justify-content: space-between;
-    margin-bottom: 24px;
+    margin-bottom: 12px;
   }
 
   h2 {
@@ -282,7 +331,7 @@ const checkoutApiOrigin = import.meta.env.PUBLIC_DEVCON26_API_ORIGIN || 'https:/
     font-variant-numeric: tabular-nums;
   }
 
-  .payment-details .ticket-detail, .payment-details .reference-detail {
+  .payment-details .ticket-detail, .payment-details .reference-detail, .payment-details .amount-detail {
     display: block;
   }
 
@@ -295,13 +344,30 @@ const checkoutApiOrigin = import.meta.env.PUBLIC_DEVCON26_API_ORIGIN || 'https:/
   }
 
   .amount-detail dd {
-    font-size: var(--text-xl);
+    margin-top: 5px;
+    font-size: clamp(32px, 3.5vw, 44px);
+    text-align: left;
+    line-height: 1.2;
+    letter-spacing: -0.035em;
+  }
+
+  .payment-details .amount-detail {
+    padding-block: 18px 24px;
   }
 
   .reference-detail dd {
     margin-top: 6px;
     text-align: left;
     overflow-wrap: anywhere;
+    font-size: var(--text-xs);
+    letter-spacing: 0.035em;
+  }
+
+  .receipt-stub {
+    margin: 20px -28px 0;
+    padding: 18px 28px 22px;
+    border-top: 1px dashed var(--payment-outline);
+    background: oklch(0.964 0.02 98 / 0.6);
   }
 
   .print-button {
@@ -309,12 +375,11 @@ const checkoutApiOrigin = import.meta.env.PUBLIC_DEVCON26_API_ORIGIN || 'https:/
     min-height: 44px;
     align-items: center;
     gap: 12px;
-    margin-top: 16px;
     font-size: var(--text-sm);
     font-weight: 600;
   }
 
-  .receipt-caption, .test-disclaimer {
+  .receipt-caption {
     color: var(--text-mid);
     font-size: var(--text-xs);
   }
@@ -324,17 +389,75 @@ const checkoutApiOrigin = import.meta.env.PUBLIC_DEVCON26_API_ORIGIN || 'https:/
   }
 
   .next-steps h2 {
-    margin-bottom: 24px;
-    font-size: var(--text-2xl);
+    margin-bottom: 12px;
+    font-family: var(--font-serif);
+    font-size: clamp(28px, 3vw, 38px);
+    font-weight: 400;
     line-height: var(--leading-tight);
     letter-spacing: -0.025em;
+  }
+
+  .next-steps h2 em {
+    color: var(--pink);
+    font-style: normal;
+  }
+
+  .venue-note {
+    padding: 26px 0 24px;
+  }
+
+  .venue-label {
+    margin-bottom: 12px;
+    color: var(--text-mid);
+    font-size: var(--text-xs);
+  }
+
+  .venue-note h3 {
+    font-size: clamp(28px, 3vw, 38px);
+    font-weight: 700;
+    letter-spacing: -0.035em;
+    line-height: 1.08;
+  }
+
+  .venue-note h3 span, .venue-directions span[aria-hidden] {
+    color: var(--pink);
+  }
+
+  .venue-address, .venue-date {
+    font-size: var(--text-sm);
+    line-height: 1.7;
+  }
+
+  .venue-date {
+    margin-top: 12px;
+    font-weight: 600;
+  }
+
+  .venue-directions {
+    display: inline-flex;
+    min-height: 44px;
+    align-items: center;
+    gap: 20px;
+    font-size: var(--text-sm);
+    font-weight: 600;
+  }
+
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
   }
 
   .next-step {
     display: grid;
     grid-template-columns: 24px minmax(0, 1fr);
     gap: 16px;
-    margin-top: 24px;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-light);
   }
 
   .step-number {
@@ -350,21 +473,10 @@ const checkoutApiOrigin = import.meta.env.PUBLIC_DEVCON26_API_ORIGIN || 'https:/
     line-height: var(--leading-snug);
   }
 
-  .next-step p, .event-note {
+  .next-step p {
     color: var(--text-mid);
     font-size: var(--text-sm);
     line-height: var(--leading-body);
-  }
-
-  .event-note {
-    margin-top: 28px;
-    padding-top: 20px;
-    border-top: 1px solid var(--border-light);
-  }
-
-  .event-note strong {
-    color: var(--text);
-    font-weight: 600;
   }
 
   .payment-actions {
@@ -408,10 +520,6 @@ const checkoutApiOrigin = import.meta.env.PUBLIC_DEVCON26_API_ORIGIN || 'https:/
     gap: 12px;
     font-size: var(--text-sm);
     color: var(--text-mid);
-  }
-
-  .test-disclaimer {
-    margin-top: 20px;
   }
 
   .no-script {
@@ -483,6 +591,19 @@ const checkoutApiOrigin = import.meta.env.PUBLIC_DEVCON26_API_ORIGIN || 'https:/
 
     .payment-status {
       padding-block: 28px 28px;
+      gap: 16px;
+    }
+
+    .confirmation-seal {
+      flex-basis: 70px;
+    }
+
+    .confirmation-seal svg {
+      width: 64px;
+    }
+
+    .confirmation-seal span {
+      display: none;
     }
 
     .status-copy {
@@ -495,7 +616,12 @@ const checkoutApiOrigin = import.meta.env.PUBLIC_DEVCON26_API_ORIGIN || 'https:/
     }
 
     .payment-receipt {
-      padding: 22px;
+      padding: 22px 22px 0;
+    }
+
+    .receipt-stub {
+      margin-inline: -22px;
+      padding-inline: 22px;
     }
 
     .payment-details > div {
@@ -525,7 +651,7 @@ const checkoutApiOrigin = import.meta.env.PUBLIC_DEVCON26_API_ORIGIN || 'https:/
   }
 
   @media print {
-    .payment-header, .payment-actions, .print-button, .skip-link, .receipt-photo {
+    .payment-header, .payment-actions, .print-button, .skip-link, .receipt-photo, .venue-directions, .confirmation-seal {
       display: none !important;
     }
 
@@ -543,6 +669,7 @@ const checkoutApiOrigin = import.meta.env.PUBLIC_DEVCON26_API_ORIGIN || 'https:/
 
     .payment-receipt {
       break-inside: avoid;
+      box-shadow: none;
     }
 
     .next-steps {

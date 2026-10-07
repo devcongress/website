@@ -43,9 +43,9 @@ const checkoutApiOrigin = import.meta.env.PUBLIC_DEVCON26_API_ORIGIN || 'https:/
 
 const faqs = [
   ['Who is DevCon26 for?', 'For the people building technology across Africa: developers, designers, founders, product people, researchers, and students.'],
-  ['When and where is it?', 'DevCon26 takes place in Accra in December 2026. The venue will be announced here once it is confirmed.'],
-  ['Can I come with my team?', 'Yes. Team tickets cover three or five attendees, with an individual ticket issued to each person after purchase.'],
-  ['Are tickets on sale now?', 'Not yet. The prices are published, and ticket sales will open here on DevCongress when the event is ready to sell.'],
+  ['When and where is it?', 'Meet us at Ghana Digital Center, Accra, Ghana in December 2026. The exact date and programme will be announced here.'],
+  ['Can I come with my team?', 'Yes. Choose a team of three or five, and bring your closest collaborators. Attendee and admission details are handled separately from the payment summary.'],
+  ['How do I buy a ticket?', 'Choose a ticket below and continue to secure checkout with Paystack. You do not need a DevCongress or EMS account.'],
 ];
 
 const sponsorIds = new Set(['fido', 'kweku_tech', 'mest']);
@@ -89,7 +89,7 @@ const sponsors = (await getCollection('partners')).filter((partner) => sponsorId
           <p class="hero-summary">Get out from behind the screen. DevCon26 brings Ghana’s technology community together to share the hard parts, trade ideas, and find its next collaborators.</p>
           <div class="hero-actions">
             <a class="button button-primary" href="#tickets">Buy your tickets <span aria-hidden="true">↗</span></a>
-            <p>December 2026<br /><strong>Accra, Ghana</strong></p>
+            <p>December 2026<br /><strong>Ghana Digital Center, Accra</strong></p>
           </div>
         </div>
 
@@ -179,11 +179,12 @@ const sponsors = (await getCollection('partners')).filter((partner) => sponsorId
         <div class="location-place" aria-label="Accra, Ghana">
           <span>Meet us in</span>
           <strong>Accra<span aria-hidden="true">.</span></strong>
-          <span class="location-country">Ghana / December 2026</span>
+          <span class="location-country">Ghana Digital Center / December 2026</span>
         </div>
         <div class="location-copy">
           <h2 id="location-title">Built here.<br />Open to everyone.</h2>
-          <p>Close to the people and communities making the city’s technology scene what it is. The venue will be shared here when confirmed.</p>
+          <p>Ghana Digital Center, Accra, Ghana. A place for the people and communities moving the city’s technology scene forward.</p>
+          <a class="location-directions" href="https://www.google.com/maps/search/?api=1&query=Accra%20Digital%20Centre%2C%20Accra%2C%20Ghana" target="_blank" rel="noopener noreferrer">Find the venue <span aria-hidden="true">↗</span><span class="sr-only"> (opens in a new tab)</span></a>
         </div>
       </section>
 
@@ -193,7 +194,7 @@ const sponsors = (await getCollection('partners')).filter((partner) => sponsorId
             <p class="section-caption">Your place in the room</p>
             <h2 id="tickets-title">Buy your <em>tickets.</em></h2>
           </div>
-          <p>Come on your own or bring your team. These are the ticket prices for DevCon26. Sales haven’t opened yet.</p>
+          <p>Come on your own or bring your team. Choose your place in the room.</p>
         </div>
         <div class="ticket-grid">
           {tickets.map((ticket) => (
@@ -225,8 +226,8 @@ const sponsors = (await getCollection('partners')).filter((partner) => sponsorId
             </article>
           ))}
         </div>
-        <noscript><p class="ticket-fallback">Ticket sales have not opened yet. Enable JavaScript to preview your ticket selection.</p></noscript>
-        <p class="ticket-sales-note">When sales open, you’ll check out right here on DevCongress.</p>
+        <noscript><p class="ticket-fallback">Enable JavaScript to choose a ticket and continue to checkout.</p></noscript>
+        <p class="ticket-sales-note">Secure checkout with Paystack. No account needed.</p>
       </section>
 
       <section id="sponsors" class="sponsors-section page-shell" aria-labelledby="sponsors-title">
@@ -295,11 +296,11 @@ const sponsors = (await getCollection('partners')).filter((partner) => sponsorId
           <p class="checkout-ticket-price" data-checkout-ticket-price>GHS 199.99</p>
         </div>
         <div class="checkout-notice" role="status" aria-live="polite">
-          <p data-checkout-notice-title>Ticket sales haven’t opened yet.</p>
-          <span data-checkout-notice-copy>Checking whether test checkout is available.</span>
+          <p data-checkout-notice-title>Getting your checkout ready.</p>
+          <span data-checkout-notice-copy>Checking availability for your ticket choice.</span>
         </div>
         <button class="checkout-payment-button" data-checkout-payment type="button" disabled aria-describedby="checkout-payment-note">Checking checkout…</button>
-        <p id="checkout-payment-note" class="checkout-payment-note">Test mode only. No real money or admission ticket.</p>
+        <p id="checkout-payment-note" class="checkout-payment-note">Secure checkout powered by Paystack.</p>
       </section>
     </dialog>
   </div>
@@ -371,7 +372,7 @@ const sponsors = (await getCollection('partners')).filter((partner) => sponsorId
   async function checkCheckoutAvailability() {
     const operation = beginCheckoutOperation();
 
-    checkoutMessage('Checking test checkout.', 'Live ticket sales remain closed.', 'Checking checkout…', true);
+    checkoutMessage('Getting your checkout ready.', 'Checking availability for your ticket choice.', 'Checking checkout…', true);
 
     try {
       const result = await checkoutApi();
@@ -383,12 +384,12 @@ const sponsors = (await getCollection('partners')).filter((partner) => sponsorId
 
       if (result.mode !== 'test' || !tier || tier.currency !== 'GHS' || !Number.isSafeInteger(tier.amount_minor) || tier.amount_minor <= 0) {
         checkoutAction = 'availability';
-        checkoutMessage('Test checkout isn’t enabled yet.', 'EMS needs the sandbox configuration and migration. Live ticket sales are still closed.', 'Check again');
+        checkoutMessage('Checkout isn’t available right now.', 'Please check again in a moment. No payment has been started.', 'Check again');
 
         return;
       }
       checkoutTicketPrice.textContent = 'GHS ' + (tier.amount_minor / 100).toFixed(2);
-      checkoutMessage('Paystack test checkout.', 'Try the payment flow using Paystack test details. This will not charge real money, reserve seats, or send a ticket.', 'Continue to test payment');
+      checkoutMessage('Ready when you are.', 'Continue to Paystack to complete your payment securely.', 'Continue to payment');
     } catch {
       if (operation !== checkoutOperation) return;
       checkoutBusy = false;
@@ -419,7 +420,7 @@ const sponsors = (await getCollection('partners')).filter((partner) => sponsorId
     const operation = beginCheckoutOperation();
 
     checkoutReference = reference;
-    checkoutMessage('Verifying your test payment.', 'EMS is checking the result directly with Paystack.', 'Verifying…', true);
+    checkoutMessage('Confirming your payment.', 'Checking the result directly with Paystack.', 'Confirming…', true);
 
     try {
       const result = await checkoutApi('/verify', { reference });
@@ -438,9 +439,9 @@ const sponsors = (await getCollection('partners')).filter((partner) => sponsorId
       if (result.status === 'verified') {
         window.location.replace(devcon26ConfirmationUrl(reference));
       } else if (result.status === 'pending') {
-        checkoutMessage('Your test payment is still pending.', 'Paystack hasn’t confirmed success yet. You can check the result again.', 'Check payment status');
+        checkoutMessage('Your payment is still pending.', 'Paystack hasn’t confirmed success yet. You can check the result again.', 'Check payment status');
       } else if (result.status === 'failed') {
-        checkoutMessage('Test payment wasn’t successful.', 'No successful payment was confirmed. Close this window to start a fresh test.', 'Check payment status');
+        checkoutMessage('Payment wasn’t successful.', 'No successful payment was confirmed. Close this window when you’re ready to try again.', 'Check payment status');
       } else {
         throw new Error('Invalid checkout status.');
       }
@@ -448,7 +449,7 @@ const sponsors = (await getCollection('partners')).filter((partner) => sponsorId
       if (operation !== checkoutOperation) return;
       checkoutBusy = false;
       checkoutAction = 'verify';
-      checkoutMessage('We couldn’t verify the test payment yet.', 'A return from Paystack alone doesn’t confirm success. Please check again.', 'Check payment status');
+      checkoutMessage('We couldn’t confirm your payment yet.', 'Please check the status again before starting another payment.', 'Check payment status');
     }
   }
 
@@ -459,7 +460,7 @@ const sponsors = (await getCollection('partners')).filter((partner) => sponsorId
     if (checkoutAction === 'verify') return verifyCheckoutReturn(checkoutReference);
     const operation = beginCheckoutOperation();
 
-    checkoutMessage('Opening Paystack test checkout.', 'Use only Paystack test details on the next screen.', 'Opening Paystack…', true);
+    checkoutMessage('Taking you to Paystack.', 'Complete your payment on Paystack’s secure checkout.', 'Opening Paystack…', true);
 
     try {
       checkoutRequestKey ||= crypto.randomUUID();
@@ -474,7 +475,7 @@ const sponsors = (await getCollection('partners')).filter((partner) => sponsorId
     } catch {
       if (operation !== checkoutOperation) return;
       checkoutBusy = false;
-      checkoutMessage('Test checkout couldn’t start.', 'No payment was confirmed. Please try again shortly.', 'Try again');
+      checkoutMessage('Checkout couldn’t start.', 'No payment was confirmed. Please try again shortly.', 'Try again');
     }
   });
 
@@ -1198,6 +1199,29 @@ const sponsors = (await getCollection('partners')).filter((partner) => sponsorId
     align-items: center;
     gap: 60px;
     padding-block: 40px 98px;
+  }
+
+  .location-directions {
+    display: inline-flex;
+    min-height: 44px;
+    align-items: center;
+    gap: 16px;
+    margin-top: 12px;
+    font-size: var(--dc-text-small);
+    font-weight: 600;
+  }
+
+  .location-directions span[aria-hidden] {
+    color: var(--dc-pink);
+  }
+
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
   }
 
   .location-place > span {

@@ -76,9 +76,12 @@ Use the existing Arc session for any browser verification.
 
 After EMS verifies a successful test payment on the existing Paystack return,
 the website replaces that return entry with `/devcon26/payment-confirmation/`.
-The strictly validated test reference travels in `#reference=...`, not a query
-parameter on the new page request. A reference identifies a sandbox session;
-it is not proof of payment.
+The strictly validated reference travels in `#reference=...`, not a query
+parameter on the new page request. New links display a neutral `DC26-` prefix
+and the full 32-character session identifier in uppercase. The client reverses
+that presentation to the original `devcon26-test-` reference for EMS verification.
+Legacy raw fragments remain accepted and are replaced in place with the neutral
+format. A reference identifies a sandbox session; it is not proof of payment.
 
 The confirmation page re-verifies with the existing public EMS POST `/verify`
 endpoint on load, refresh, fragment changes, and back-forward cache restores.
@@ -88,7 +91,7 @@ the ticket tier, quantity, GHS amount, and payment status; local tier metadata
 supplies only the matching label and photo.
 
 Only a valid `mode: "test"`, `status: "verified"` response reveals the payment
-summary, full test reference, optional print/save action, and next steps.
+summary, full neutral reference, optional print/save action, and next steps.
 Pending, failed, missing/unknown reference, invalid response, timeout, and
 connection-error states never display successful payment or a usable ticket.
 Retries only check the existing payment. No JavaScript means no verified
@@ -97,8 +100,33 @@ receipt; the page provides a plain-language fallback and support link.
 The page is excluded from search indexing and retains the website's restrictive
 built-script CSP. Its warm-paper summary, quiet selected photo, yellow accents,
 and restrained controls use the existing website design tokens. Mobile uses a
-single-column page, not another modal. Print output includes the test disclaimer
-and payment details, not an admission QR code or ticket.
+single-column page, not another modal. Print output includes the payment record
+and its non-admission caption, not an admission QR code or ticket.
+
+### 2026-10-07: Buyer-facing presentation and confirmed venue
+
+Removed buyer-visible test/sandbox labels from the landing page checkout and
+confirmation states, at the user's request, to preview the intended customer
+experience. Technical documentation, endpoint names, exact-origin allowlists,
+test-key checks, and `mode: "test"` response guards remain explicit and unchanged.
+This is presentation only: it does not enable live payments or fulfillment.
+Replacing the provider key alone does not make this test-only flow production-ready.
+
+The confirmation now pairs a stronger amount-first receipt with a confirmation
+seal, confirmed venue details, and concise save/support/programme guidance.
+It does not claim an admission ticket, seat reservation, or email was issued.
+Support can reconstruct the raw EMS reference by replacing `DC26-` with
+`devcon26-test-` and lowercasing the full identifier. No identifier is truncated.
+
+The user confirmed **Ghana Digital Center, Accra, Ghana** as the venue. The hero,
+location section, confirmation, and FAQ reflect it. December 2026 remains the
+published month; no exact date, room, or admission instructions are invented.
+
+The proposed venue photo was omitted before commit/push because its source
+did not provide an explicit reuse license. No unlicensed photo or broken asset
+reference is published. Add an owned or explicitly licensed venue image in a
+separate update. Official venue sites were unavailable during asset research;
+no TLS or browser safety barrier was bypassed.
 
 ### 2026-10-07: Confirmation page
 

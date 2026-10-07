@@ -1,4 +1,5 @@
 const TEST_REFERENCE = /^devcon26-test-[a-f0-9]{32}$/;
+const BUYER_REFERENCE = /^DC26-[A-F0-9]{32}$/;
 const VERIFY_PATH = '/api/public/annual-conference/2026/test-checkout/verify';
 
 const TICKET_PRESENTATION = {
@@ -31,15 +32,23 @@ export interface TestPaymentSummary {
 }
 
 export function devcon26ConfirmationUrl(reference: string): string {
-  if (!TEST_REFERENCE.test(reference)) throw new Error('Invalid test payment reference.');
+  return '/devcon26/payment-confirmation/#reference=' + devcon26BuyerReference(reference);
+}
 
-  return '/devcon26/payment-confirmation/#reference=' + encodeURIComponent(reference);
+export function devcon26BuyerReference(reference: string): string {
+  if (!TEST_REFERENCE.test(reference)) throw new Error('Invalid payment reference.');
+
+  return 'DC26-' + reference.slice('devcon26-test-'.length).toUpperCase();
 }
 
 export function devcon26ConfirmationReference(hash: string): string | null {
   const values = new URLSearchParams(hash.replace(/^#/, '')).getAll('reference');
 
-  return values.length === 1 && TEST_REFERENCE.test(values[0]) ? values[0] : null;
+  if (values.length !== 1) return null;
+  if (TEST_REFERENCE.test(values[0])) return values[0];
+  if (BUYER_REFERENCE.test(values[0])) return 'devcon26-test-' + values[0].slice('DC26-'.length).toLowerCase();
+
+  return null;
 }
 
 export function devcon26VerificationUrl(origin: string): string {
@@ -113,12 +122,19 @@ export function initializeDevcon26PaymentConfirmation(root: HTMLElement): void {
     const reference = devcon26ConfirmationReference(window.location.hash);
 
     if (!reference) {
-      showState('invalid', 'No checkout to confirm.', 'Open this page from your Paystack return to check a payment. This link does not contain a valid test payment reference.');
+      showState('invalid', 'No checkout to confirm.', 'Open the confirmation link from your checkout, or contact us with your payment reference.');
 
       return;
     }
 
-    showState('loading', 'Checking your payment.', 'We’re confirming the result with Paystack through EMS. Returning from checkout alone does not confirm a successful payment.');
+    const buyerUrl = devcon26ConfirmationUrl(reference);
+    const buyerHash = buyerUrl.slice(buyerUrl.indexOf('#'));
+
+    if (window.location.hash !== buyerHash) {
+      window.history.replaceState(null, '', window.location.pathname + window.location.search + buyerHash);
+    }
+
+    showState('loading', 'Checking your payment.', 'Just a moment while we confirm your payment with Paystack.');
     const timeout = window.setTimeout(() => controller.abort(), 15000);
 
     try {
@@ -133,7 +149,7 @@ export function initializeDevcon26PaymentConfirmation(root: HTMLElement): void {
 
       if (current !== operation) return;
       if (response.status === 404) {
-        showState('invalid', 'Checkout not found.', 'We couldn’t find a test checkout for this reference. Return to DevCon26 or contact us if you need help with your test.');
+        showState('invalid', 'Checkout not found.', 'We couldn’t find a payment for this reference. Return to DevCon26 or contact us for help.');
 
         return;
       }
@@ -148,13 +164,13 @@ export function initializeDevcon26PaymentConfirmation(root: HTMLElement): void {
         root.querySelector<HTMLElement>('[data-payment-ticket]')!.textContent = summary.ticketName;
         root.querySelector<HTMLElement>('[data-payment-quantity]')!.textContent = summary.quantity + (summary.quantity === 1 ? ' person' : ' people');
         root.querySelector<HTMLElement>('[data-payment-amount]')!.textContent = summary.amount;
-        root.querySelector<HTMLElement>('[data-payment-reference]')!.textContent = reference;
+        root.querySelector<HTMLElement>('[data-payment-reference]')!.textContent = devcon26BuyerReference(reference);
         root.querySelector<HTMLImageElement>('[data-payment-photo]')!.src = summary.photo;
-        showState('verified', 'Payment confirmed.', 'Your Paystack test payment was successful. Here’s your summary and what to know next.');
+        showState('verified', 'Payment confirmed.', 'All done. Your payment was successful, and the details are right here whenever you need them.');
       } else if (summary.status === 'pending') {
         showState('pending', 'Your payment is still pending.', 'Paystack hasn’t confirmed success yet. Check the status again; there’s no need to start another payment.', true);
       } else {
-        showState('failed', 'Test payment wasn’t successful.', 'No successful test payment was confirmed. You can return to DevCon26 if you’d like to try the sandbox again.');
+        showState('failed', 'Payment wasn’t successful.', 'No successful payment was confirmed. Return to DevCon26 when you’re ready to try again.');
       }
     } catch {
       if (current !== operation) return;

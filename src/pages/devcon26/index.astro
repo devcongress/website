@@ -306,6 +306,8 @@ const sponsors = (await getCollection('partners')).filter((partner) => sponsorId
 </Base>
 
 <script>
+  import { devcon26ConfirmationUrl } from '../../lib/devcon26-payment-confirmation';
+
   const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
   const page = document.querySelector('.devcon-page');
   const checkoutDialog = document.querySelector('#ticket-checkout-dialog');
@@ -434,7 +436,7 @@ const sponsors = (await getCollection('partners')).filter((partner) => sponsorId
       checkoutAction = result.status === 'verified' ? 'done' : 'verify';
 
       if (result.status === 'verified') {
-        checkoutMessage('Test checkout verified.', 'The test payment was confirmed by Paystack. No real money, admission ticket, seat reservation, or ticket email was created.', 'Done');
+        window.location.replace(devcon26ConfirmationUrl(reference));
       } else if (result.status === 'pending') {
         checkoutMessage('Your test payment is still pending.', 'Paystack hasn’t confirmed success yet. You can check the result again.', 'Check payment status');
       } else if (result.status === 'failed') {

@@ -45,22 +45,21 @@ Use the exact deployed website commit/version URL plus `/devcon26/` to review
 the page before merging. Uploading a Worker version for a preview must not move
 production traffic; do not use `wrangler deploy` for this purpose.
 
-A preview URL alone does **not** enable end-to-end checkout. EMS currently:
-
-- Allows public API CORS only for explicitly configured origins.
-- Requires initialization/verification requests to match its single
-  `PUBLIC_WEBSITE_ORIGIN` exactly.
-- Builds the Paystack return URL from that same website origin.
+A preview URL alone does **not** enable end-to-end checkout. EMS uses a
+separate, exact-origin `DEVCON26_TEST_CHECKOUT_ORIGINS` allowlist for the
+sandbox. It reflects approved origins only on the sandbox catalog,
+initialization, and verification endpoints, without credentials. Paystack
+returns to the initiating approved website origin. The default main website
+origin remains allowed; general public/organizer CORS is unchanged.
 
 Do not repoint the shared production `PUBLIC_WEBSITE_ORIGIN` to a PR preview:
-other website links and email flows also depend on it. End-to-end preview tests
-need a separately approved, exact-origin sandbox arrangement, such as a
-dedicated EMS test deployment or a reviewed test-only origin/callback setting.
+other website links and email flows also depend on it. New preview origins
+need explicit approval and the test-only allowlist setting in EMS.
 Do not use wildcard CORS or production `NODE_ENV=development` as a workaround.
 
-Until that arrangement is ready, a preview can verify the layout, navigation,
-single-open FAQs, selected ticket image, mobile bottom drawer, and unavailable
-checkout/retry states, but not a successful hosted Paystack round trip.
+Unapproved preview origins can review the layout, navigation, single-open FAQs,
+selected ticket image, mobile bottom drawer, and unavailable checkout/retry
+states, but cannot complete a hosted Paystack round trip.
 
 The website defaults to the production EMS hostname. Its existing CSP permits
 connections to that hostname; selecting a different API hostname also requires
@@ -72,6 +71,42 @@ The Astro build and focused source/VM checks cover client checkout states,
 safe redirect validation, cancellation, navigation, and drawer contracts. They
 are not browser-rendering tests or evidence of a successful provider payment.
 Use the existing Arc session for any browser verification.
+
+## Dedicated payment confirmation
+
+After EMS verifies a successful test payment on the existing Paystack return,
+the website replaces that return entry with `/devcon26/payment-confirmation/`.
+The strictly validated test reference travels in `#reference=...`, not a query
+parameter on the new page request. A reference identifies a sandbox session;
+it is not proof of payment.
+
+The confirmation page re-verifies with the existing public EMS POST `/verify`
+endpoint on load, refresh, fragment changes, and back-forward cache restores.
+It never calls `/initialize`, starts another payment, trusts URL success flags,
+or caches a verified receipt in browser storage. The server response supplies
+the ticket tier, quantity, GHS amount, and payment status; local tier metadata
+supplies only the matching label and photo.
+
+Only a valid `mode: "test"`, `status: "verified"` response reveals the payment
+summary, full test reference, optional print/save action, and next steps.
+Pending, failed, missing/unknown reference, invalid response, timeout, and
+connection-error states never display successful payment or a usable ticket.
+Retries only check the existing payment. No JavaScript means no verified
+receipt; the page provides a plain-language fallback and support link.
+
+The page is excluded from search indexing and retains the website's restrictive
+built-script CSP. Its warm-paper summary, quiet selected photo, yellow accents,
+and restrained controls use the existing website design tokens. Mobile uses a
+single-column page, not another modal. Print output includes the test disclaimer
+and payment details, not an admission QR code or ticket.
+
+### 2026-10-07: Confirmation page
+
+Added the dedicated confirmation destination and server-verified receipt
+states. The earlier preview sandbox fix completed a real Paystack **test**
+payment/return round trip in the user's Arc session. This new page still needs
+its own browser verification after a website preview is published; that earlier
+test is not evidence of the new page being deployed or visually checked.
 
 ### 2026-10-07: Built-script CSP regression
 

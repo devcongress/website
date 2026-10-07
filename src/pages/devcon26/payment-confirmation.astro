@@ -1,0 +1,552 @@
+---
+import Base from '../../layouts/Base.astro';
+
+const checkoutApiOrigin = import.meta.env.PUBLIC_DEVCON26_API_ORIGIN || 'https://em.devcongress.org';
+---
+
+<Base title="Payment confirmation | DevCon26" description="Check your DevCon26 test payment and view its confirmation summary." noindex={true} showFooter={false}>
+  <div class="payment-page" data-payment-confirmation data-checkout-api-origin={checkoutApiOrigin} data-payment-state="loading">
+    <a class="skip-link" href="#payment-main">Skip to payment confirmation</a>
+    <header class="payment-header page-shell">
+      <a class="brand" href="/" aria-label="DevCongress home">
+        <img src="/images/logo.png" alt="dev:congress{};" width="154" height="36" />
+        <span>DevCon26</span>
+      </a>
+      <a class="header-return" href="/devcon26/">Back to the event <span aria-hidden="true">↗</span></a>
+    </header>
+
+    <main class="page-shell" id="payment-main">
+      <div class="payment-status" data-payment-status role="status" aria-live="polite" aria-busy="true">
+        <p class="test-label">Paystack test mode <span aria-hidden="true">↗</span></p>
+        <h1 data-payment-title>Checking your payment.</h1>
+        <p class="status-copy" data-payment-copy>We’re confirming the result with Paystack through EMS. Returning from checkout alone does not confirm a successful payment.</p>
+      </div>
+      <noscript>
+        <p class="no-script">JavaScript is required to verify this payment. Enable it and reload this page, or contact <a href="mailto:hello@devcongress.org">hello@devcongress.org</a> for help. No success is confirmed on this page without verification.</p>
+      </noscript>
+
+      <div class="confirmation-content" data-payment-receipt hidden>
+        <section class="payment-receipt" aria-labelledby="summary-title">
+          <div class="receipt-photo" aria-hidden="true">
+            <img src="/images/devcon26/ticket-solo.webp" data-payment-photo alt="" width="640" height="512" decoding="async" />
+          </div>
+          <div class="receipt-heading">
+            <h2 id="summary-title">Your payment summary</h2>
+            <span class="verified-label"><span aria-hidden="true">✓</span> Test verified</span>
+          </div>
+          <dl class="payment-details">
+            <div class="ticket-detail">
+              <dt>Ticket selection</dt>
+              <dd data-payment-ticket></dd>
+            </div>
+            <div>
+              <dt>Selected for</dt>
+              <dd data-payment-quantity></dd>
+            </div>
+            <div class="amount-detail">
+              <dt>Test payment amount</dt>
+              <dd data-payment-amount></dd>
+            </div>
+            <div class="reference-detail">
+              <dt>Payment reference</dt>
+              <dd data-payment-reference></dd>
+            </div>
+            <div>
+              <dt>Payment provider</dt>
+              <dd>Paystack · Test mode</dd>
+            </div>
+          </dl>
+          <button class="print-button" data-payment-print type="button" hidden>Print or save summary <span aria-hidden="true">↗</span></button>
+          <p class="receipt-caption">Test confirmation only. Not an admission ticket.</p>
+        </section>
+
+        <section class="next-steps" aria-labelledby="next-title">
+          <h2 id="next-title">What happens next?</h2>
+          <div class="next-step">
+            <span class="step-number" aria-hidden="true">01</span>
+            <div>
+              <h3>Your test is complete.</h3>
+              <p>There’s nothing else to do for this sandbox payment. Keep the reference if you need help checking your test run.</p>
+            </div>
+          </div>
+          <div class="next-step">
+            <span class="step-number" aria-hidden="true">02</span>
+            <div>
+              <h3>No ticket or email yet.</h3>
+              <p>No real money was charged, no seat was reserved, and no admission ticket or ticket email was created. You’ll need a separate purchase when live sales open.</p>
+            </div>
+          </div>
+          <p class="event-note"><strong>DevCon26 · Accra, Ghana</strong><br />December 2026. The exact date and venue will be announced on the event page.</p>
+        </section>
+      </div>
+
+      <div class="payment-actions">
+        <button class="action-button retry-button" data-payment-retry type="button" hidden>Check payment status <span aria-hidden="true">↗</span></button>
+        <a class="action-button event-button" href="/devcon26/">Back to DevCon26 <span aria-hidden="true">↗</span></a>
+        <a class="support-link" href="mailto:hello@devcongress.org?subject=DevCon26%20test%20payment">Need a hand? Contact us <span aria-hidden="true">↗</span></a>
+      </div>
+      <p class="test-disclaimer">Test mode only. No real money or admission ticket.</p>
+    </main>
+  </div>
+</Base>
+
+<script>
+  import { initializeDevcon26PaymentConfirmation } from '../../lib/devcon26-payment-confirmation';
+
+  const page = document.querySelector('[data-payment-confirmation]');
+
+  if (page instanceof HTMLElement) initializeDevcon26PaymentConfirmation(page);
+</script>
+
+<style>
+  .payment-page {
+    --payment-paper: oklch(0.982 0.008 91);
+    --payment-outline: hsl(38, 12%, 46%);
+    --payment-ease: cubic-bezier(0.16, 1, 0.3, 1);
+    padding-bottom: 56px;
+  }
+
+  [hidden] {
+    display: none !important;
+  }
+
+  .page-shell {
+    width: min(100% - 64px, 1100px);
+    margin-inline: auto;
+  }
+
+  .payment-header {
+    display: flex;
+    min-height: 90px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+  }
+
+  .brand {
+    display: inline-flex;
+    min-height: 44px;
+    align-items: center;
+    gap: 15px;
+  }
+
+  .brand img {
+    width: 136px;
+    height: auto;
+  }
+
+  .brand span {
+    padding-left: 15px;
+    border-left: 1px solid var(--border-light);
+    font-size: var(--text-sm);
+    font-weight: 700;
+  }
+
+  .header-return {
+    display: inline-flex;
+    min-height: 44px;
+    align-items: center;
+    gap: 12px;
+    font-size: var(--text-sm);
+  }
+
+  .header-return span, .action-button span, .support-link span, .print-button span {
+    color: var(--pink);
+  }
+
+  .payment-status {
+    max-width: 720px;
+    padding-block: 44px 40px;
+  }
+
+  .test-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 24px;
+    margin-bottom: 24px;
+    padding: 6px 12px;
+    border-radius: 6px;
+    background: var(--yellow);
+    font-size: var(--text-sm);
+    font-weight: 600;
+  }
+
+  h1 {
+    font-family: var(--font-serif);
+    font-size: clamp(36px, 5vw, 58px);
+    font-weight: 400;
+    line-height: var(--leading-tight);
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+  }
+
+  .status-copy {
+    max-width: 58ch;
+    margin-top: 20px;
+    color: var(--text-mid);
+    font-size: var(--text-lg);
+    line-height: var(--leading-body);
+  }
+
+  .confirmation-content {
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+    align-items: start;
+    gap: clamp(32px, 5vw, 64px);
+  }
+
+  .payment-receipt {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    padding: 28px;
+    border: 1px solid var(--border-light);
+    border-radius: 12px;
+    background: var(--payment-paper);
+  }
+
+  .payment-receipt > :not(.receipt-photo) {
+    position: relative;
+    z-index: 1;
+  }
+
+  .receipt-photo {
+    position: absolute;
+    inset: 10% -10% auto 15%;
+    z-index: 0;
+    aspect-ratio: 5 / 4;
+    opacity: 0.08;
+    mix-blend-mode: multiply;
+    mask-image: radial-gradient(ellipse at 60% 52%, #000 24%, transparent 72%);
+    pointer-events: none;
+  }
+
+  .receipt-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: grayscale(0.75);
+  }
+
+  .receipt-heading {
+    display: flex;
+    align-items: start;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: space-between;
+    margin-bottom: 24px;
+  }
+
+  h2 {
+    font-size: var(--text-lg);
+    font-weight: 700;
+    line-height: var(--leading-snug);
+  }
+
+  .verified-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: var(--text-xs);
+    font-weight: 600;
+  }
+
+  .verified-label span {
+    display: grid;
+    width: 20px;
+    height: 20px;
+    place-items: center;
+    border-radius: 50%;
+    background: var(--yellow);
+    font-size: var(--text-sm);
+  }
+
+  .payment-details > div {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 24px;
+    padding-block: 12px;
+    border-bottom: 1px solid var(--border-light);
+  }
+
+  .payment-details dt {
+    color: var(--text-mid);
+    font-size: var(--text-sm);
+  }
+
+  .payment-details dd {
+    text-align: right;
+    font-size: var(--text-sm);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .payment-details .ticket-detail, .payment-details .reference-detail {
+    display: block;
+  }
+
+  .ticket-detail dd {
+    margin-top: 4px;
+    font-size: var(--text-2xl);
+    text-align: left;
+    line-height: var(--leading-snug);
+    letter-spacing: -0.025em;
+  }
+
+  .amount-detail dd {
+    font-size: var(--text-xl);
+  }
+
+  .reference-detail dd {
+    margin-top: 6px;
+    text-align: left;
+    overflow-wrap: anywhere;
+  }
+
+  .print-button {
+    display: inline-flex;
+    min-height: 44px;
+    align-items: center;
+    gap: 12px;
+    margin-top: 16px;
+    font-size: var(--text-sm);
+    font-weight: 600;
+  }
+
+  .receipt-caption, .test-disclaimer {
+    color: var(--text-mid);
+    font-size: var(--text-xs);
+  }
+
+  .next-steps {
+    padding-top: 4px;
+  }
+
+  .next-steps h2 {
+    margin-bottom: 24px;
+    font-size: var(--text-2xl);
+    line-height: var(--leading-tight);
+    letter-spacing: -0.025em;
+  }
+
+  .next-step {
+    display: grid;
+    grid-template-columns: 24px minmax(0, 1fr);
+    gap: 16px;
+    margin-top: 24px;
+  }
+
+  .step-number {
+    padding-top: 2px;
+    color: var(--text-mid);
+    font-size: var(--text-xs);
+    font-weight: 600;
+  }
+
+  h3 {
+    margin-bottom: 6px;
+    font-size: var(--text-base);
+    line-height: var(--leading-snug);
+  }
+
+  .next-step p, .event-note {
+    color: var(--text-mid);
+    font-size: var(--text-sm);
+    line-height: var(--leading-body);
+  }
+
+  .event-note {
+    margin-top: 28px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-light);
+  }
+
+  .event-note strong {
+    color: var(--text);
+    font-weight: 600;
+  }
+
+  .payment-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px 24px;
+    margin-top: 36px;
+  }
+
+  .action-button {
+    display: inline-flex;
+    min-height: 48px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 28px;
+    padding: 12px 20px;
+    border: 1px solid var(--payment-outline);
+    border-radius: 8px;
+    background: var(--payment-paper);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    line-height: 1.4;
+    transition: transform 120ms var(--payment-ease);
+  }
+
+  .event-button, .retry-button {
+    background: var(--yellow);
+    border-color: transparent;
+  }
+
+  .payment-page:is([data-payment-state='pending'], [data-payment-state='error']) .event-button {
+    background: transparent;
+    border-color: var(--payment-outline);
+  }
+
+  .support-link {
+    display: inline-flex;
+    min-height: 44px;
+    align-items: center;
+    gap: 12px;
+    font-size: var(--text-sm);
+    color: var(--text-mid);
+  }
+
+  .test-disclaimer {
+    margin-top: 20px;
+  }
+
+  .no-script {
+    max-width: 65ch;
+    margin-bottom: 24px;
+  }
+
+  .no-script a {
+    text-decoration: underline;
+  }
+
+  .skip-link {
+    position: fixed;
+    top: 12px;
+    left: 12px;
+    z-index: 10;
+    padding: 12px;
+    background: var(--yellow);
+    transform: translateY(-150%);
+  }
+
+  .skip-link:focus {
+    transform: none;
+  }
+
+  a:focus-visible, button:focus-visible {
+    outline: 3px solid var(--payment-outline);
+    outline-offset: 4px;
+  }
+
+  .action-button:active {
+    transform: scale(0.97);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .action-button:hover {
+      transform: translateY(-2px);
+    }
+
+    .support-link:hover, .print-button:hover, .header-return:hover {
+      text-decoration: underline;
+      text-underline-offset: 4px;
+    }
+  }
+
+  @media (max-width: 760px) {
+    .page-shell {
+      width: min(100% - 40px, 580px);
+    }
+
+    .payment-header {
+      min-height: 72px;
+      flex-wrap: wrap;
+      gap: 0 20px;
+      padding-block: 12px;
+    }
+
+    .brand {
+      gap: 12px;
+    }
+
+    .brand img {
+      width: 116px;
+    }
+
+    .brand span {
+      padding-left: 12px;
+    }
+
+    .payment-status {
+      padding-block: 28px 28px;
+    }
+
+    .status-copy {
+      font-size: var(--text-base);
+    }
+
+    .confirmation-content {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 32px;
+    }
+
+    .payment-receipt {
+      padding: 22px;
+    }
+
+    .payment-details > div {
+      flex-wrap: wrap;
+      gap: 4px 16px;
+    }
+
+    .payment-actions {
+      align-items: stretch;
+      flex-direction: column;
+      margin-top: 28px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :global(html) {
+      scroll-behavior: auto;
+    }
+
+    .action-button {
+      transition: none;
+    }
+
+    .action-button:hover, .action-button:active {
+      transform: none;
+    }
+  }
+
+  @media print {
+    .payment-header, .payment-actions, .print-button, .skip-link, .receipt-photo {
+      display: none !important;
+    }
+
+    .page-shell {
+      width: 100%;
+    }
+
+    .payment-status {
+      padding-top: 0;
+    }
+
+    .confirmation-content {
+      display: block;
+    }
+
+    .payment-receipt {
+      break-inside: avoid;
+    }
+
+    .next-steps {
+      margin-top: 24px;
+    }
+  }
+</style>

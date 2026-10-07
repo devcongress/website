@@ -72,3 +72,16 @@ The Astro build and focused source/VM checks cover client checkout states,
 safe redirect validation, cancellation, navigation, and drawer contracts. They
 are not browser-rendering tests or evidence of a successful provider payment.
 Use the existing Arc session for any browser verification.
+
+### 2026-10-07: Built-script CSP regression
+
+The checkout and FAQ client must use an Astro-processed `<script>` rather than
+`is:inline`. The card buttons start disabled and are enabled by that client;
+an unprocessed inline script without an allowed hash is blocked in production.
+
+After building, inspect `dist/devcon26/index.html`: every executable inline
+script must have its exact hash in the script CSP, and any external client
+module must be a served, same-origin asset. Verify the output includes checkout,
+FAQ, and mobile-menu initialization, then confirm card selection in Arc.
+Source/VM checks alone do not catch a blocked production script. Keep the CSP
+intact; do not add `unsafe-inline` or bypass the sandbox's origin restrictions.

@@ -305,7 +305,7 @@ const sponsors = (await getCollection('partners')).filter((partner) => sponsorId
   </div>
 </Base>
 
-<script is:inline>
+<script>
   const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
   const page = document.querySelector('.devcon-page');
   const checkoutDialog = document.querySelector('#ticket-checkout-dialog');

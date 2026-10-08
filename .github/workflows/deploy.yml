@@ -44,7 +44,12 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build
-        run: pnpm build
+        run: |
+          if ! pnpm build > "$RUNNER_TEMP/astro-build.log" 2>&1; then
+            cat "$RUNNER_TEMP/astro-build.log"
+            exit 1
+          fi
+          echo "Static site build passed."
 
       - name: Upload GitHub Pages artifact
         if: github.repository == 'devcongress/website' && github.event_name != 'pull_request' && github.ref == 'refs/heads/main'

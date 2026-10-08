@@ -128,6 +128,20 @@ reference is published. Add an owned or explicitly licensed venue image in a
 separate update. Official venue sites were unavailable during asset research;
 no TLS or browser safety barrier was bypassed.
 
+### 2026-10-08: User-supplied venue photograph
+
+Added the hall photograph supplied by the user as `ADC.jpg`, with Ghana Digital
+Center as the primary venue name and "formerly Accra Digital Center" in supporting
+venue copy and the FAQ. The original upload remains unchanged. The website serves
+one optimized 1200 × 1594 WebP (239,078 bytes) with image metadata removed.
+
+Both the event location section and verified confirmation venue details use the
+photo as a lazy-loaded, decorative background. Absolute positioning avoids adding
+an image row or changing the content layout; low opacity and soft edge masks keep
+the copy readable. The image is hidden from assistive technology and print output
+on the confirmation page. Checkout scripts, verification, payment mode, dates,
+and admission behavior are unchanged.
+
 ### 2026-10-07: Confirmation page
 
 Added the dedicated confirmation destination and server-verified receipt

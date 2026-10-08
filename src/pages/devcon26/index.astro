@@ -43,7 +43,7 @@ const checkoutApiOrigin = import.meta.env.PUBLIC_DEVCON26_API_ORIGIN || 'https:/
 
 const faqs = [
   ['Who is DevCon26 for?', 'For the people building technology across Africa: developers, designers, founders, product people, researchers, and students.'],
-  ['When and where is it?', 'Meet us at Ghana Digital Center, Accra, Ghana in December 2026. The exact date and programme will be announced here.'],
+  ['When and where is it?', 'Meet us at Ghana Digital Center (formerly Accra Digital Center), Accra, Ghana in December 2026. The exact date and programme will be announced here.'],
   ['Can I come with my team?', 'Yes. Choose a team of three or five, and bring your closest collaborators. Attendee and admission details are handled separately from the payment summary.'],
   ['How do I buy a ticket?', 'Choose a ticket below and continue to secure checkout with Paystack. You do not need a DevCongress or EMS account.'],
 ];
@@ -176,6 +176,9 @@ const sponsors = (await getCollection('partners')).filter((partner) => sponsorId
       </section>
 
       <section class="location-section page-shell" aria-labelledby="location-title">
+        <div class="location-photo" aria-hidden="true">
+          <img src="/images/devcon26/ghana-digital-center.webp" alt="" width="1200" height="1594" loading="lazy" decoding="async" />
+        </div>
         <div class="location-place" aria-label="Accra, Ghana">
           <span>Meet us in</span>
           <strong>Accra<span aria-hidden="true">.</span></strong>
@@ -184,6 +187,7 @@ const sponsors = (await getCollection('partners')).filter((partner) => sponsorId
         <div class="location-copy">
           <h2 id="location-title">Built here.<br />Open to everyone.</h2>
           <p>Ghana Digital Center, Accra, Ghana. A place for the people and communities moving the city’s technology scene forward.</p>
+          <p class="location-former-name">Formerly Accra Digital Center</p>
           <a class="location-directions" href="https://www.google.com/maps/search/?api=1&query=Accra%20Digital%20Centre%2C%20Accra%2C%20Ghana" target="_blank" rel="noopener noreferrer">Find the venue <span aria-hidden="true">↗</span><span class="sr-only"> (opens in a new tab)</span></a>
         </div>
       </section>
@@ -1194,11 +1198,32 @@ const sponsors = (await getCollection('partners')).filter((partner) => sponsorId
   }
 
   .location-section {
+    position: relative;
+    isolation: isolate;
     display: grid;
     grid-template-columns: 1.2fr 0.8fr;
     align-items: center;
     gap: 60px;
     padding-block: 40px 98px;
+  }
+
+  .location-photo {
+    position: absolute;
+    inset: 0 0 62px 20%;
+    z-index: -1;
+    overflow: hidden;
+    opacity: 0.24;
+    pointer-events: none;
+    mask-image: radial-gradient(ellipse at 62% 54%, black 24%, rgb(0 0 0 / 70%) 48%, transparent 74%);
+  }
+
+  .location-photo img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 65%;
+    filter: saturate(0.65);
   }
 
   .location-directions {
@@ -1258,6 +1283,11 @@ const sponsors = (await getCollection('partners')).filter((partner) => sponsorId
     color: var(--dc-muted);
     font-size: var(--dc-text-body);
     line-height: 1.65;
+  }
+
+  .location-copy .location-former-name {
+    margin-top: 8px;
+    font-size: var(--dc-text-small);
   }
 
   .tickets-section {
@@ -2039,6 +2069,11 @@ const sponsors = (await getCollection('partners')).filter((partner) => sponsorId
 
     .location-place strong {
       font-size: clamp(104px, 27vw, 162px);
+    }
+
+    .location-photo {
+      inset: 64px 0 42px 8%;
+      opacity: 0.2;
     }
 
     .location-copy {

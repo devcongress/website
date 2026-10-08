@@ -74,9 +74,13 @@ const checkoutApiOrigin = import.meta.env.PUBLIC_DEVCON26_API_ORIGIN || 'https:/
         <section class="next-steps" aria-labelledby="next-title">
           <h2 id="next-title">Next stop, <em>Accra.</em></h2>
           <div class="venue-note">
+            <div class="venue-photo" aria-hidden="true">
+              <img src="/images/devcon26/ghana-digital-center.webp" alt="" width="1200" height="1594" loading="lazy" decoding="async" />
+            </div>
             <p class="venue-label">The place to meet</p>
             <h3>Ghana Digital<br />Center<span aria-hidden="true">.</span></h3>
             <p class="venue-address">Accra, Ghana</p>
+            <p class="venue-former-name">Formerly Accra Digital Center</p>
             <p class="venue-date">December 2026</p>
             <a class="venue-directions" href="https://www.google.com/maps/search/?api=1&query=Accra%20Digital%20Centre%2C%20Accra%2C%20Ghana" target="_blank" rel="noopener noreferrer">Find the venue <span aria-hidden="true">↗</span><span class="sr-only"> (opens in a new tab)</span></a>
           </div>
@@ -403,7 +407,28 @@ const checkoutApiOrigin = import.meta.env.PUBLIC_DEVCON26_API_ORIGIN || 'https:/
   }
 
   .venue-note {
+    position: relative;
+    isolation: isolate;
     padding: 26px 0 24px;
+  }
+
+  .venue-photo {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    overflow: hidden;
+    opacity: 0.22;
+    pointer-events: none;
+    mask-image: radial-gradient(ellipse at 66% 52%, black 24%, rgb(0 0 0 / 65%) 48%, transparent 74%);
+  }
+
+  .venue-photo img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 65%;
+    filter: saturate(0.65);
   }
 
   .venue-label {
@@ -431,6 +456,12 @@ const checkoutApiOrigin = import.meta.env.PUBLIC_DEVCON26_API_ORIGIN || 'https:/
   .venue-date {
     margin-top: 12px;
     font-weight: 600;
+  }
+
+  .venue-former-name {
+    color: var(--text-mid);
+    font-size: var(--text-xs);
+    line-height: 1.7;
   }
 
   .venue-directions {
@@ -651,7 +682,7 @@ const checkoutApiOrigin = import.meta.env.PUBLIC_DEVCON26_API_ORIGIN || 'https:/
   }
 
   @media print {
-    .payment-header, .payment-actions, .print-button, .skip-link, .receipt-photo, .venue-directions, .confirmation-seal {
+    .payment-header, .payment-actions, .print-button, .skip-link, .receipt-photo, .venue-photo, .venue-directions, .confirmation-seal {
       display: none !important;
     }
 

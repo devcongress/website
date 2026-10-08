@@ -142,6 +142,15 @@ the copy readable. The image is hidden from assistive technology and print outpu
 on the confirmation page. Checkout scripts, verification, payment mode, dates,
 and admission behavior are unchanged.
 
+### 2026-10-08: Left-column venue photo refinement
+
+The event-page venue photograph now belongs only to the left-hand Accra block,
+including on the stacked mobile layout. A centered, closest-side mask fades all
+four edges to transparent so the photo has no rectangular section boundary and
+cannot extend behind the right-hand copy. Its opacity and the confirmation photo
+treatment are unchanged. Venue details consistently use "Ghana Digital Center
+(formerly Accra Digital Center)"; checkout behavior remains unchanged.
+
 ### 2026-10-07: Confirmation page
 
 Added the dedicated confirmation destination and server-verified receipt

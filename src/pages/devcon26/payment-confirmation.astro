@@ -78,9 +78,8 @@ const checkoutApiOrigin = import.meta.env.PUBLIC_DEVCON26_API_ORIGIN || 'https:/
               <img src="/images/devcon26/ghana-digital-center.webp" alt="" width="1200" height="1594" loading="lazy" decoding="async" />
             </div>
             <p class="venue-label">The place to meet</p>
-            <h3>Ghana Digital<br />Center<span aria-hidden="true">.</span></h3>
+            <h3>Ghana Digital<br />Center<span aria-hidden="true">.</span><span class="venue-former-name">(formerly Accra Digital Center)</span></h3>
             <p class="venue-address">Accra, Ghana</p>
-            <p class="venue-former-name">Formerly Accra Digital Center</p>
             <p class="venue-date">December 2026</p>
             <a class="venue-directions" href="https://www.google.com/maps/search/?api=1&query=Accra%20Digital%20Centre%2C%20Accra%2C%20Ghana" target="_blank" rel="noopener noreferrer">Find the venue <span aria-hidden="true">↗</span><span class="sr-only"> (opens in a new tab)</span></a>
           </div>
@@ -444,7 +443,7 @@ const checkoutApiOrigin = import.meta.env.PUBLIC_DEVCON26_API_ORIGIN || 'https:/
     line-height: 1.08;
   }
 
-  .venue-note h3 span, .venue-directions span[aria-hidden] {
+  .venue-note h3 span[aria-hidden], .venue-directions span[aria-hidden] {
     color: var(--pink);
   }
 
@@ -459,8 +458,12 @@ const checkoutApiOrigin = import.meta.env.PUBLIC_DEVCON26_API_ORIGIN || 'https:/
   }
 
   .venue-former-name {
+    display: block;
+    margin-top: 8px;
     color: var(--text-mid);
     font-size: var(--text-xs);
+    font-weight: 400;
+    letter-spacing: 0;
     line-height: 1.7;
   }
 

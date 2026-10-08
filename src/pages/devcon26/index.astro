@@ -89,7 +89,7 @@ const sponsors = (await getCollection('partners')).filter((partner) => sponsorId
           <p class="hero-summary">Get out from behind the screen. DevCon26 brings Ghana’s technology community together to share the hard parts, trade ideas, and find its next collaborators.</p>
           <div class="hero-actions">
             <a class="button button-primary" href="#tickets">Buy your tickets <span aria-hidden="true">↗</span></a>
-            <p>December 2026<br /><strong>Ghana Digital Center, Accra</strong></p>
+            <p>December 2026<br /><strong>Ghana Digital Center (formerly Accra Digital Center), Accra</strong></p>
           </div>
         </div>
 
@@ -176,18 +176,17 @@ const sponsors = (await getCollection('partners')).filter((partner) => sponsorId
       </section>
 
       <section class="location-section page-shell" aria-labelledby="location-title">
-        <div class="location-photo" aria-hidden="true">
-          <img src="/images/devcon26/ghana-digital-center.webp" alt="" width="1200" height="1594" loading="lazy" decoding="async" />
-        </div>
         <div class="location-place" aria-label="Accra, Ghana">
+          <div class="location-photo" aria-hidden="true">
+            <img src="/images/devcon26/ghana-digital-center.webp" alt="" width="1200" height="1594" loading="lazy" decoding="async" />
+          </div>
           <span>Meet us in</span>
           <strong>Accra<span aria-hidden="true">.</span></strong>
-          <span class="location-country">Ghana Digital Center / December 2026</span>
+          <span class="location-country">Ghana Digital Center (formerly Accra Digital Center) / December 2026</span>
         </div>
         <div class="location-copy">
           <h2 id="location-title">Built here.<br />Open to everyone.</h2>
-          <p>Ghana Digital Center, Accra, Ghana. A place for the people and communities moving the city’s technology scene forward.</p>
-          <p class="location-former-name">Formerly Accra Digital Center</p>
+          <p>Ghana Digital Center (formerly Accra Digital Center), Accra, Ghana. A place for the people and communities moving the city’s technology scene forward.</p>
           <a class="location-directions" href="https://www.google.com/maps/search/?api=1&query=Accra%20Digital%20Centre%2C%20Accra%2C%20Ghana" target="_blank" rel="noopener noreferrer">Find the venue <span aria-hidden="true">↗</span><span class="sr-only"> (opens in a new tab)</span></a>
         </div>
       </section>
@@ -1198,8 +1197,6 @@ const sponsors = (await getCollection('partners')).filter((partner) => sponsorId
   }
 
   .location-section {
-    position: relative;
-    isolation: isolate;
     display: grid;
     grid-template-columns: 1.2fr 0.8fr;
     align-items: center;
@@ -1207,14 +1204,20 @@ const sponsors = (await getCollection('partners')).filter((partner) => sponsorId
     padding-block: 40px 98px;
   }
 
+  .location-place {
+    position: relative;
+    isolation: isolate;
+  }
+
   .location-photo {
     position: absolute;
-    inset: 0 0 62px 20%;
+    inset: 0;
     z-index: -1;
     overflow: hidden;
     opacity: 0.24;
     pointer-events: none;
-    mask-image: radial-gradient(ellipse at 62% 54%, black 24%, rgb(0 0 0 / 70%) 48%, transparent 74%);
+    -webkit-mask-image: radial-gradient(ellipse closest-side at 50% 50%, black 24%, rgb(0 0 0 / 70%) 52%, transparent 100%);
+    mask-image: radial-gradient(ellipse closest-side at 50% 50%, black 24%, rgb(0 0 0 / 70%) 52%, transparent 100%);
   }
 
   .location-photo img {
@@ -1271,6 +1274,7 @@ const sponsors = (await getCollection('partners')).filter((partner) => sponsorId
   .location-place .location-country {
     margin-top: 10px;
     font-weight: 600;
+    line-height: 1.5;
   }
 
   .location-copy h2 {
@@ -1283,11 +1287,6 @@ const sponsors = (await getCollection('partners')).filter((partner) => sponsorId
     color: var(--dc-muted);
     font-size: var(--dc-text-body);
     line-height: 1.65;
-  }
-
-  .location-copy .location-former-name {
-    margin-top: 8px;
-    font-size: var(--dc-text-small);
   }
 
   .tickets-section {
@@ -2072,7 +2071,6 @@ const sponsors = (await getCollection('partners')).filter((partner) => sponsorId
     }
 
     .location-photo {
-      inset: 64px 0 42px 8%;
       opacity: 0.2;
     }
 

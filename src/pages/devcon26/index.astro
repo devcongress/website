@@ -84,7 +84,10 @@ const sponsors = (await getCollection('partners')).filter((partner) => sponsorId
     <main id="main-content">
       <section class="hero page-shell" aria-labelledby="event-title">
         <div class="hero-copy">
-          <p class="event-label">DevCongress annual conference <span>2026</span></p>
+          <p class="event-label">
+            <span class="event-label-copy">DevCongress annual conference</span>
+            <span class="event-year">2026</span>
+          </p>
           <h1 id="event-title">Good things<br />happen <em>in<br />good company.</em></h1>
           <p class="hero-summary">Get out from behind the screen. DevCon26 brings Ghana’s technology community together to share the hard parts, trade ideas, and find its next collaborators.</p>
           <div class="hero-actions">
@@ -177,12 +180,12 @@ const sponsors = (await getCollection('partners')).filter((partner) => sponsorId
 
       <section class="location-section page-shell" aria-labelledby="location-title">
         <div class="location-place" aria-label="Accra, Ghana">
-          <div class="location-photo" aria-hidden="true">
-            <img src="/images/devcon26/ghana-digital-center.webp" alt="" width="1200" height="1594" loading="lazy" decoding="async" />
-          </div>
           <span>Meet us in</span>
           <strong>Accra<span aria-hidden="true">.</span></strong>
-          <span class="location-country">Ghana Digital Center (formerly Accra Digital Center) / December 2026</span>
+          <span class="location-country">
+            Ghana Digital Center
+            <span class="location-former-name">(formerly Accra Digital Center)</span>
+          </span>
         </div>
         <div class="location-copy">
           <h2 id="location-title">Built here.<br />Open to everyone.</h2>
@@ -823,18 +826,31 @@ const sponsors = (await getCollection('partners')).filter((partner) => sponsorId
   }
 
   .event-label {
-    display: flex;
+    display: inline-flex;
+    max-width: 100%;
     align-items: center;
-    gap: 14px;
-    margin-bottom: 26px;
-    font-size: 12px;
+    gap: 12px;
+    margin-bottom: 24px;
+    color: var(--dc-muted);
+    font-size: var(--dc-text-meta);
     font-weight: 600;
+    line-height: 1.5;
   }
 
-  .event-label span {
-    padding: 2px 8px;
+  .event-label-copy {
+    min-width: 0;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    text-wrap: balance;
+  }
+
+  .event-year {
+    flex-shrink: 0;
+    padding: 3px 8px;
     border-radius: 6px;
-    background: var(--dc-yellow);
+    background: var(--yellow-bg);
+    color: var(--dc-ink);
+    font-weight: 700;
   }
 
   h1 {
@@ -1204,31 +1220,6 @@ const sponsors = (await getCollection('partners')).filter((partner) => sponsorId
     padding-block: 40px 98px;
   }
 
-  .location-place {
-    position: relative;
-    isolation: isolate;
-  }
-
-  .location-photo {
-    position: absolute;
-    inset: 0;
-    z-index: -1;
-    overflow: hidden;
-    opacity: 0.24;
-    pointer-events: none;
-    -webkit-mask-image: radial-gradient(ellipse closest-side at 50% 50%, black 24%, rgb(0 0 0 / 70%) 52%, transparent 100%);
-    mask-image: radial-gradient(ellipse closest-side at 50% 50%, black 24%, rgb(0 0 0 / 70%) 52%, transparent 100%);
-  }
-
-  .location-photo img {
-    display: block;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: center 65%;
-    filter: saturate(0.65);
-  }
-
   .location-directions {
     display: inline-flex;
     min-height: 44px;
@@ -1275,6 +1266,14 @@ const sponsors = (await getCollection('partners')).filter((partner) => sponsorId
     margin-top: 10px;
     font-weight: 600;
     line-height: 1.5;
+    text-wrap: pretty;
+  }
+
+  .location-former-name {
+    display: block;
+    margin-top: 4px;
+    color: var(--dc-muted);
+    font-weight: 400;
   }
 
   .location-copy h2 {
@@ -2068,10 +2067,6 @@ const sponsors = (await getCollection('partners')).filter((partner) => sponsorId
 
     .location-place strong {
       font-size: clamp(104px, 27vw, 162px);
-    }
-
-    .location-photo {
-      opacity: 0.2;
     }
 
     .location-copy {

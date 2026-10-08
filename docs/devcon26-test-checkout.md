@@ -151,6 +151,24 @@ cannot extend behind the right-hand copy. Its opacity and the confirmation photo
 treatment are unchanged. Venue details consistently use "Ghana Digital Center
 (formerly Accra Digital Center)"; checkout behavior remains unchanged.
 
+### 2026-10-08: Location image removed
+
+Removed the venue photo and its mask from the event-page location section.
+The existing Accra typography, venue name, and directions link remain;
+the proposed standalone photograph layout was reverted. The payment confirmation
+image, checkout scripts, and verification behavior are unchanged.
+The location section no longer includes the event month. Its venue caption puts
+the current name first and the former name on a quieter second line, with pretty
+text wrapping for narrow screens. Event dates elsewhere remain unchanged.
+
+### 2026-10-08: Conference label polish
+
+The hero conference label uses the shared metadata type size, muted uppercase
+text, balanced wrapping, and a compact pale-yellow year badge. The descriptor
+can wrap on narrow screens while the year stays intact. This is a static
+typography refinement: the hero heading, event information, images, and checkout
+behavior are unchanged.
+
 ### 2026-10-07: Confirmation page
 
 Added the dedicated confirmation destination and server-verified receipt

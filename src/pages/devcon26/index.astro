@@ -39,6 +39,49 @@ const tickets = [
 ];
 
 const speakerSlots = ['01', '02', '03'];
+const heroScenes = [
+  {
+    label: 'The April community gathered together',
+    main: { src: '/images/devcon26/hero-april-community.webp', alt: 'DevCongress members gathered outside for an April meetup group photo', width: 1000, height: 634 },
+    secondary: { src: '/images/devcon26/hero-april-participant.webp', alt: 'A community member contributing to the April meetup discussion', width: 720, height: 779 },
+  },
+  {
+    label: 'Community discussion and a speaker in the room',
+    main: { src: '/images/devcon26/community-discussion.jpg', alt: 'People taking part in a DevCongress community discussion', width: 1000, height: 672 },
+    secondary: { src: '/images/devcon26/speaker-in-room.jpg', alt: 'A speaker presenting to an audience at a past DevCongress event', width: 741, height: 1000 },
+  },
+  {
+    label: 'The meetup community and a speaker sharing ideas',
+    main: { src: '/images/devcon26/hero-community-group.webp', alt: 'DevCongress attendees gathered for a group photo after a meetup', width: 1100, height: 734 },
+    secondary: { src: '/images/devcon26/hero-meetup-speaker.webp', alt: 'A DevCongress meetup speaker talking into a handheld microphone', width: 720, height: 480 },
+  },
+  {
+    label: 'The April audience and a presenter',
+    main: { src: '/images/devcon26/hero-april-audience.webp', alt: 'Community members listening together during the April DevCongress meetup', width: 1000, height: 633 },
+    secondary: { src: '/images/devcon26/hero-april-presenter.webp', alt: 'A presenter standing beside a laptop and display at the April meetup', width: 720, height: 951 },
+  },
+  {
+    label: 'A panel conversation and the people listening',
+    main: { src: '/images/devcon26/hero-panel-discussion.webp', alt: 'Three panelists taking part in a DevCongress discussion', width: 1100, height: 734 },
+    secondary: { src: '/images/devcon26/hero-meetup-audience.webp', alt: 'Attendees listening together during a DevCongress meetup', width: 720, height: 480 },
+  },
+  {
+    label: 'Questions and conversations at the April meetup',
+    main: { src: '/images/devcon26/hero-april-questions.webp', alt: 'An attendee raising a hand to contribute during the April meetup', width: 1000, height: 822 },
+    secondary: { src: '/images/devcon26/hero-april-conversation.webp', alt: 'Two community members talking beside one another at the April meetup', width: 640, height: 925 },
+  },
+  {
+    label: 'The May speakers and a host welcoming the community',
+    main: { src: '/images/devcon26/hero-may-speakers.webp', alt: 'Four DevCongress speakers smiling together at the May meetup', width: 1100, height: 734 },
+    secondary: { src: '/images/devcon26/hero-may-host.webp', alt: 'A meetup host speaking into a microphone in front of community photographs', width: 720, height: 480 },
+  },
+  {
+    label: 'Connections and familiar faces at the May meetup',
+    main: { src: '/images/devcon26/hero-may-connections.webp', alt: 'May meetup panelists chatting together before a session', width: 1100, height: 734 },
+    secondary: { src: '/images/devcon26/hero-may-attendee.webp', alt: 'A smiling community member seated with the May meetup audience', width: 720, height: 480 },
+  },
+];
+
 const checkoutApiOrigin = import.meta.env.PUBLIC_DEVCON26_API_ORIGIN || 'https://em.devcongress.org';
 
 const faqs = [
@@ -88,22 +131,25 @@ const sponsors = (await getCollection('partners')).filter((partner) => sponsorId
             <span class="event-label-copy">DevCongress annual conference</span>
             <span class="event-year">2026</span>
           </p>
-          <h1 id="event-title">Good things<br />happen <em>in<br />good company.</em></h1>
-          <p class="hero-summary">Get out from behind the screen. DevCon26 brings Ghana’s technology community together to share the hard parts, trade ideas, and find its next collaborators.</p>
+          <h1 id="event-title">A year together.<br /><em>One big gathering.</em></h1>
+          <p class="hero-summary">Meetups, ideas, and new connections all year. Join the community at DevCon26.</p>
           <div class="hero-actions">
             <a class="button button-primary" href="#tickets">Buy your tickets <span aria-hidden="true">↗</span></a>
             <p>December 2026<br /><strong>Ghana Digital Center (formerly Accra Digital Center), Accra</strong></p>
           </div>
         </div>
 
-        <div class="hero-images" aria-label="Moments from the DevCongress community">
-          <figure class="hero-photo hero-photo-main">
-            <img src="/images/devcon26/community-discussion.jpg" alt="People taking part in a DevCongress community discussion" width="1000" height="672" fetchpriority="high" />
-          </figure>
-          <figure class="hero-photo hero-photo-secondary">
-            <img src="/images/devcon26/speaker-in-room.jpg" alt="A speaker presenting to an audience at a past DevCongress event" width="741" height="1000" />
-          </figure>
-          <span class="photo-note">Less scrolling.<br />More showing up.</span>
+        <div class="hero-images" data-hero-slideshow role="group" aria-label="DevCongress gatherings throughout the year">
+          {heroScenes.map((scene, index) => (
+            <div class:list={['hero-scene', { 'is-active': index === 0 }]} data-hero-slide role="group" aria-label={scene.label} aria-hidden={index !== 0 ? 'true' : undefined}>
+              <figure class="hero-photo hero-photo-main">
+                <img src={index === 0 ? scene.main.src : undefined} data-hero-src={scene.main.src} alt={scene.main.alt} width={scene.main.width} height={scene.main.height} loading={index === 0 ? 'eager' : 'lazy'} fetchpriority={index === 0 ? 'high' : 'auto'} decoding="async" />
+              </figure>
+              <figure class="hero-photo hero-photo-secondary">
+                <img src={index === 0 ? scene.secondary.src : undefined} data-hero-src={scene.secondary.src} alt={scene.secondary.alt} width={scene.secondary.width} height={scene.secondary.height} loading="lazy" decoding="async" />
+              </figure>
+            </div>
+          ))}
         </div>
       </section>
 
@@ -586,6 +632,14 @@ const sponsors = (await getCollection('partners')).filter((partner) => sponsorId
 </script>
 
 <script>
+  import { initDevcon26HeroSlideshow } from '../../lib/devcon26-hero-slideshow';
+
+  const slideshow = document.querySelector<HTMLElement>('[data-hero-slideshow]');
+
+  if (slideshow) initDevcon26HeroSlideshow(slideshow);
+</script>
+
+<script>
   const header = document.querySelector('[data-devcon-header]');
   const toggle = header?.querySelector('.section-menu-toggle');
   const menu = header?.querySelector('.mobile-section-nav');
@@ -857,16 +911,17 @@ const sponsors = (await getCollection('partners')).filter((partner) => sponsorId
     position: relative;
     z-index: 2;
     max-width: 660px;
-    font-size: clamp(56px, 6.5vw, 88px);
-    line-height: 0.98;
+    font-size: clamp(48px, 4.8vw, 68px);
+    line-height: 1.04;
   }
 
   .hero-summary {
     max-width: 28rem;
-    margin-top: 26px;
+    margin-top: 22px;
     color: var(--dc-muted);
     font-size: var(--dc-text-body);
     line-height: 1.65;
+    text-wrap: pretty;
   }
 
   .hero-actions {
@@ -923,6 +978,18 @@ const sponsors = (await getCollection('partners')).filter((partner) => sponsorId
     margin-top: 15px;
   }
 
+  .hero-scene {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 250ms var(--dc-ease);
+  }
+
+  .hero-scene.is-active {
+    opacity: 1;
+  }
+
   .hero-photo img, .programme-photo img {
     width: 100%;
     height: 100%;
@@ -962,17 +1029,6 @@ const sponsors = (await getCollection('partners')).filter((partner) => sponsorId
     aspect-ratio: 0.83;
     border-radius: 6px;
     object-position: center 30%;
-  }
-
-  .photo-note {
-    position: absolute;
-    right: 22px;
-    bottom: -32px;
-    font-size: var(--dc-text-body);
-    font-weight: 700;
-    letter-spacing: -0.045em;
-    line-height: 1.15;
-    transform: rotate(4deg);
   }
 
   .story-section {
@@ -1787,11 +1843,6 @@ const sponsors = (await getCollection('partners')).filter((partner) => sponsorId
       width: 48%;
     }
 
-    .photo-note {
-      right: 0;
-      bottom: 0;
-    }
-
     .story-section, .speakers-header, .section-intro, .location-section, .faq-section {
       gap: 38px;
     }
@@ -1917,7 +1968,7 @@ const sponsors = (await getCollection('partners')).filter((partner) => sponsorId
     }
 
     h1 {
-      font-size: clamp(49px, 11.7vw, 76px);
+      font-size: clamp(42px, 10.8vw, 60px);
     }
 
     .hero-summary {
@@ -1950,12 +2001,6 @@ const sponsors = (await getCollection('partners')).filter((partner) => sponsorId
       width: 35%;
       padding: 5px;
       border-radius: 11px;
-    }
-
-    .photo-note {
-      right: 10px;
-      bottom: 3px;
-      font-size: var(--dc-text-small);
     }
 
     .story-section {

@@ -326,7 +326,7 @@ if (!EVENT_SUBMISSIONS_ENABLED) {
         <div id="success-panel" class="success-panel" tabindex="-1" hidden>
           <span class="success-mark" aria-hidden="true">✓</span>
           <span class="eyebrow">Submitted for review</span>
-          <h2 class="heading-serif">Thank you for sharing.</h2>
+          <h2 class="heading-display">Thank you for sharing.</h2>
           <p>
             Your event is now with the DevCongress organizers. We’ll use the email you provided if
             we need anything else.
@@ -1839,7 +1839,15 @@ if (!EVENT_SUBMISSIONS_ENABLED) {
   }
   .form-hero-inner { position: relative; z-index: 1; max-width: 900px; }
   .hero-kicker { display: block; color: color-mix(in oklch, var(--black) 72%, var(--yellow)); font-size: 0.75rem; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; }
-  .form-hero h1 { margin-top: var(--s5); font-family: var(--font-body); font-size: clamp(3.25rem, 6vw, 5.75rem); font-weight: 600; letter-spacing: -0.045em; line-height: 0.95; text-wrap: balance; }
+  .form-hero h1 {
+    margin-top: var(--s5);
+    font-family: var(--font-display);
+    font-size: clamp(3.25rem, 6vw, 5.75rem);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 1.08;
+    text-wrap: balance;
+  }
   .form-hero h1::after { content: ''; display: block; width: clamp(76px, 13vw, 142px); height: 10px; margin-top: var(--s5); background: var(--pink); }
   .form-hero p { color: var(--text); font-size: var(--text-base); font-weight: 550; max-width: 46ch; margin-top: var(--s5); text-wrap: pretty; }
   .form-layout { max-width: 900px; padding-block: var(--s9); }
@@ -1903,7 +1911,17 @@ if (!EVENT_SUBMISSIONS_ENABLED) {
   .cover-remove { margin-left: auto; min-height: 36px; color: #b42318; font-size: var(--text-xs); font-weight: 750; text-decoration: underline; text-underline-offset: 3px; }
   .cover-preview { width: 100%; max-height: 220px; margin-top: var(--s3); border: 2px solid var(--black); border-radius: var(--r-md); object-fit: cover; }
   .cover-upload-progress { margin-top: var(--s3); padding: var(--s3); border: 1px solid var(--border-light); border-radius: var(--r-sm); background: var(--yellow-bg); }
-  .cover-upload-progress-copy { display: flex; align-items: baseline; justify-content: space-between; gap: var(--s3); color: var(--text-muted); font-family: var(--font-mono); font-size: var(--text-xs); letter-spacing: 0.08em; text-transform: uppercase; }
+  .cover-upload-progress-copy {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--s3);
+    color: var(--text-muted);
+    font-family: var(--font-body);
+    font-size: var(--text-xs);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
   .cover-upload-progress-copy strong { color: var(--pink); font: inherit; }
   .cover-upload-progress-track { height: 6px; margin-top: var(--s2); overflow: hidden; border-radius: 999px; background: rgba(0, 0, 0, 0.12); }
   .cover-upload-progress-track span { display: block; width: 100%; height: 100%; transform: scaleX(0.04); transform-origin: left; border-radius: inherit; background: var(--pink); transition: transform 160ms cubic-bezier(0.16, 1, 0.3, 1); }

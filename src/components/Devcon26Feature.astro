@@ -1,0 +1,116 @@
+<section class="devcon-feature container" id="devcon26-feature" aria-labelledby="devcon26-feature-title">
+  <div class="devcon-feature-inner">
+    <div class="devcon-feature-copy">
+      <span class="devcon-feature-label">DevCon26</span>
+      <h2 class="heading-display" id="devcon26-feature-title">See you at our big gathering.</h2>
+      <p class="devcon-feature-meta">
+        <time datetime="2026-12">December 2026</time> · Ghana Digital Center, Accra
+      </p>
+    </div>
+    <a class="devcon-feature-cta" href="/devcon26/#tickets">Get tickets <span aria-hidden="true">↗</span></a>
+  </div>
+</section>
+
+<style>
+  .devcon-feature-inner {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: var(--s5);
+    padding: var(--s5) var(--s6);
+    border: 2px solid var(--black);
+    border-radius: var(--r-md);
+    background: var(--yellow-bg);
+  }
+
+  .devcon-feature-copy {
+    min-width: 0;
+  }
+
+  .devcon-feature-label {
+    display: inline-block;
+    margin-bottom: var(--s2);
+    padding: var(--s1) var(--s2);
+    border-radius: var(--r-sm);
+    background: var(--yellow);
+    font-size: var(--text-sm);
+    font-weight: 700;
+    line-height: 1.4;
+  }
+
+  h2 {
+    font-size: var(--text-2xl);
+    text-wrap: balance;
+  }
+
+  .devcon-feature-meta {
+    margin-top: var(--s2);
+    color: var(--text-mid);
+    font-size: var(--text-sm);
+    line-height: var(--leading-body);
+  }
+
+  .devcon-feature-meta time {
+    color: var(--text);
+    font-weight: 600;
+  }
+
+  .devcon-feature-cta {
+    display: inline-flex;
+    min-height: 48px;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--s6);
+    padding: var(--s3) var(--s5);
+    border: 2px solid var(--black);
+    border-radius: var(--r-md);
+    background: var(--yellow);
+    color: var(--text);
+    font-weight: 700;
+    line-height: 1.2;
+    transition: transform 120ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .devcon-feature-cta > span {
+    display: inline-block;
+    transition: transform 160ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .devcon-feature-cta:focus-visible {
+    outline: 3px solid var(--pink);
+    outline-offset: 4px;
+  }
+
+  .devcon-feature-cta:active {
+    transform: scale(0.97);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .devcon-feature-cta:hover > span {
+      transform: translate(2px, -2px);
+    }
+
+    .devcon-feature-cta:hover {
+      text-decoration: underline;
+      text-underline-offset: 4px;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .devcon-feature-inner {
+      grid-template-columns: minmax(0, 1fr);
+      padding: var(--s5);
+    }
+
+    .devcon-feature-cta {
+      width: 100%;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .devcon-feature-cta, .devcon-feature-cta > span {
+      transition: none;
+      transform: none !important;
+    }
+  }
+</style>

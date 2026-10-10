@@ -22,7 +22,7 @@ const { paystackUrl, donate } = Astro.props;
 
       <div class="donate-copy">
         <span class="eyebrow">{donate.eyebrow}</span>
-        <h2 class="heading-serif donate-heading">
+        <h2 class="heading-display donate-heading">
           {donate.heading}
         </h2>
         <p class="donate-body">
@@ -154,7 +154,8 @@ const { paystackUrl, donate } = Astro.props;
   }
 
   .donate-num {
-    font-family: var(--font-serif);
+    font-family: var(--font-display);
+    font-weight: 700;
     font-size: var(--text-xl);
     color: var(--pink);
     flex-shrink: 0;

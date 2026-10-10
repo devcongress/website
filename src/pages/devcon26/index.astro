@@ -1,0 +1,2355 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+
+const sectionLinks = [
+  { href: '#about', label: 'About' },
+  { href: '#the-day', label: 'The day' },
+  { href: '#speakers', label: 'Speakers' },
+  { href: '#tickets', label: 'Tickets' },
+  { href: '#faqs', label: 'FAQs' },
+];
+
+const tickets = [
+  {
+    id: 'regular',
+    name: 'Regular ticket',
+    price: 'GHS 199.99',
+    detail: 'One ticket for the day.',
+    people: 'Just you. A whole community.',
+    photo: '/images/devcon26/ticket-solo.webp',
+  },
+  {
+    id: 'team-3',
+    name: 'Team of 3',
+    price: 'GHS 549.99',
+    detail: 'Save GHS 49.98 together.',
+    people: 'Bring your closest collaborators.',
+    photo: '/images/devcon26/ticket-small-group.webp',
+    featured: true,
+  },
+  {
+    id: 'team-5',
+    name: 'Team of 5',
+    price: 'GHS 849.99',
+    detail: 'Save GHS 149.96 together.',
+    people: 'Make it a day for the team.',
+    photo: '/images/devcon26/ticket-community.webp',
+  },
+];
+
+const speakerSlots = ['01', '02', '03'];
+const heroScenes = [
+  {
+    label: 'The April community gathered together',
+    main: { src: '/images/devcon26/hero-april-community.webp', alt: 'DevCongress members gathered outside for an April meetup group photo', width: 1000, height: 634 },
+    secondary: { src: '/images/devcon26/hero-april-participant.webp', alt: 'A community member contributing to the April meetup discussion', width: 720, height: 779 },
+  },
+  {
+    label: 'Community discussion and a speaker in the room',
+    main: { src: '/images/devcon26/community-discussion.jpg', alt: 'People taking part in a DevCongress community discussion', width: 1000, height: 672 },
+    secondary: { src: '/images/devcon26/speaker-in-room.jpg', alt: 'A speaker presenting to an audience at a past DevCongress event', width: 741, height: 1000 },
+  },
+  {
+    label: 'The meetup community and a speaker sharing ideas',
+    main: { src: '/images/devcon26/hero-community-group.webp', alt: 'DevCongress attendees gathered for a group photo after a meetup', width: 1100, height: 734 },
+    secondary: { src: '/images/devcon26/hero-meetup-speaker.webp', alt: 'A DevCongress meetup speaker talking into a handheld microphone', width: 720, height: 480 },
+  },
+  {
+    label: 'The April audience and a presenter',
+    main: { src: '/images/devcon26/hero-april-audience.webp', alt: 'Community members listening together during the April DevCongress meetup', width: 1000, height: 633 },
+    secondary: { src: '/images/devcon26/hero-april-presenter.webp', alt: 'A presenter standing beside a laptop and display at the April meetup', width: 720, height: 951 },
+  },
+  {
+    label: 'A panel conversation and the people listening',
+    main: { src: '/images/devcon26/hero-panel-discussion.webp', alt: 'Three panelists taking part in a DevCongress discussion', width: 1100, height: 734 },
+    secondary: { src: '/images/devcon26/hero-meetup-audience.webp', alt: 'Attendees listening together during a DevCongress meetup', width: 720, height: 480 },
+  },
+  {
+    label: 'Questions and conversations at the April meetup',
+    main: { src: '/images/devcon26/hero-april-questions.webp', alt: 'An attendee raising a hand to contribute during the April meetup', width: 1000, height: 822 },
+    secondary: { src: '/images/devcon26/hero-april-conversation.webp', alt: 'Two community members talking beside one another at the April meetup', width: 640, height: 925 },
+  },
+  {
+    label: 'The May speakers and a host welcoming the community',
+    main: { src: '/images/devcon26/hero-may-speakers.webp', alt: 'Four DevCongress speakers smiling together at the May meetup', width: 1100, height: 734 },
+    secondary: { src: '/images/devcon26/hero-may-host.webp', alt: 'A meetup host speaking into a microphone in front of community photographs', width: 720, height: 480 },
+  },
+  {
+    label: 'Connections and familiar faces at the May meetup',
+    main: { src: '/images/devcon26/hero-may-connections.webp', alt: 'May meetup panelists chatting together before a session', width: 1100, height: 734 },
+    secondary: { src: '/images/devcon26/hero-may-attendee.webp', alt: 'A smiling community member seated with the May meetup audience', width: 720, height: 480 },
+  },
+];
+
+const heroSlots = [
+  {
+    name: 'gatherings',
+    photos: heroScenes.map((scene, index) => ({
+      ...scene.main,
+      position: index === 0 ? '50% 80%' : '50% 55%',
+    })),
+  },
+  {
+    name: 'conversations',
+    photos: [6, 0, 2, 4].map((index) => ({
+      ...heroScenes[index].secondary,
+      position: '50% 30%',
+    })),
+  },
+  {
+    name: 'ideas',
+    photos: [1, 3, 5, 7].map((index) => ({
+      ...heroScenes[index].secondary,
+      position: '50% 30%',
+    })),
+  },
+];
+
+const faqs = [
+  ['Who is DevCon26 for?', 'For the people building technology across Africa: developers, designers, founders, product people, researchers, and students.'],
+  ['When and where is it?', 'Meet us at Ghana Digital Center (formerly Accra Digital Center), Accra, Ghana in December 2026. The exact date and programme will be announced here.'],
+  ['Can I come with my team?', 'Yes. Choose a team of three or five, and bring your closest collaborators. Attendee and admission details are handled separately from the payment summary.'],
+  ['How do I buy a ticket?', 'Choose a ticket below and continue to secure checkout with Paystack. You do not need a DevCongress or EMS account.'],
+];
+
+const sponsorIds = new Set(['kweku_tech']);
+const partners = await getCollection('partners');
+const sponsors = partners.filter((partner) => sponsorIds.has(partner.id));
+const pastSponsors = [...partners].sort((left, right) => left.data.name.localeCompare(right.data.name, 'en', { sensitivity: 'base' }));
+
+const sponsorshipPackages = [
+  {
+    id: 'contributor',
+    name: 'Community Contributor',
+    price: 'GHS 5,000',
+    description: 'A little backing. A lasting connection.',
+    highlights: ['Logo and company profile', 'Event and social recognition', 'Community job sharing'],
+    qualification: 'No exhibition, speaking, or dedicated activations.',
+    passes: '2 conference passes',
+  },
+  {
+    id: 'collaborator',
+    name: 'Community Collaborator',
+    price: 'GHS 10,000',
+    description: 'Get closer to the people making things happen.',
+    highlights: ['Enhanced logo and screen placement', 'Jobs and graduate opportunities', 'Career connections with attendees'],
+    qualification: 'No exhibition or stage opportunities.',
+    passes: '4 conference passes',
+  },
+  {
+    id: 'builder',
+    name: 'Community Builder',
+    price: 'GHS 20,000',
+    description: 'Bring something useful into the room.',
+    highlights: ['Standard exhibition and recruitment', '5-minute Speaker Spotlight', 'Workshop and demo opportunities'],
+    qualification: 'Speaking and programme opportunities require DevCongress approval.',
+    passes: '6 conference passes',
+  },
+  {
+    id: 'catalyst',
+    name: 'Community Catalyst',
+    price: 'GHS 30,000',
+    description: 'Make your presence part of the experience.',
+    highlights: ['Premium exhibition and activation', '5-minute spotlight and stage opportunities', 'Sponsor interview and enhanced visibility'],
+    qualification: 'Programme opportunities require DevCongress approval. Exhibition space and passes replace the previous tier’s allocation.',
+    passes: '8 conference passes',
+  },
+  {
+    id: 'champion',
+    name: 'Community Champion',
+    price: 'GHS 50,000',
+    description: 'A major presence. A deeper community investment.',
+    highlights: ['Premier branding and category exclusivity', '10-minute spotlight and stage opportunities', 'Premium exhibition and talent engagement'],
+    qualification: 'Programme opportunities require DevCongress approval. Exclusivity is limited to the agreed category at this sponsorship level.',
+    passes: '10 conference passes',
+  },
+  {
+    id: 'title',
+    name: 'Title Partner',
+    price: 'GHS 70,000+',
+    description: 'A partnership shaped around your ambition.',
+    highlights: ['Potential title recognition', 'Tailored exhibition and activations', 'Proposed 15-minute featured spotlight'],
+    qualification: 'Benefits are agreed individually. Programme opportunities require DevCongress approval.',
+    passes: 'Conference passes tailored to your partnership',
+  },
+] as const;
+
+function packageEnquiryLink(sponsorship: (typeof sponsorshipPackages)[number]) {
+  const subject = 'DevCon26 ' + sponsorship.name + ' sponsorship enquiry';
+  const body = [
+    'Hi DevCongress team,',
+    '',
+    'We would like to proceed with the ' + sponsorship.name + ' sponsorship package at ' + sponsorship.price + '.',
+    '',
+    'Organisation: [Organisation name]',
+    'Contact name: [Your name]',
+    '',
+    'Please share the next steps to confirm our sponsorship.',
+  ].join('\r\n');
+
+  return 'mailto:events@devcongress.org?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
+}
+
+---
+
+<Base title="DevCon26 | DevCongress" description="DevCon26 brings Africa’s builders together in Accra, Ghana in December 2026.">
+  <div class="devcon-page">
+    <a class="skip-link" href="#main-content">Skip to content</a>
+
+    <header class="site-header page-shell" data-devcon-header>
+      <a href="/" class="brand" aria-label="DevCongress home">
+        <img src="/images/logo.png" alt="dev:congress{};" width="154" height="36" />
+      </a>
+      <nav class="section-nav" aria-label="DevCon26 sections">
+        {sectionLinks.map((link) => (
+          <a href={link.href}>
+            {link.label}
+            {link.href === '#tickets' && <span aria-hidden="true">↗</span>}
+          </a>
+        ))}
+      </nav>
+      <button class="section-menu-toggle" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="devcon-section-menu">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+      <nav class="mobile-section-nav" id="devcon-section-menu" aria-label="DevCon26 mobile sections" aria-hidden="true" inert>
+        {sectionLinks.map((link) => (
+          <a href={link.href}>{link.label}<span aria-hidden="true">→</span></a>
+        ))}
+      </nav>
+    </header>
+
+    <main id="main-content">
+      <section class="hero page-shell" aria-labelledby="event-title">
+        <div class="hero-copy">
+          <p class="event-label">
+            <span class="event-label-copy">DevCongress annual conference</span>
+            <span class="event-year">2026</span>
+          </p>
+          <h1 id="event-title">A year together.<br /><em>One big gathering.</em></h1>
+          <p class="hero-summary">Meetups, ideas, and new connections all year. Join the community at DevCon26.</p>
+          <div class="hero-actions">
+            <a class="button button-primary" href="#tickets">Buy your tickets <span aria-hidden="true">↗</span></a>
+            <p>December 2026<br /><strong>Ghana Digital Center (formerly Accra Digital Center), Accra</strong></p>
+          </div>
+        </div>
+
+        <div class="hero-images" data-hero-slideshow role="group" aria-label="DevCongress gatherings throughout the year">
+          {heroSlots.map((slot, slotIndex) => (
+            <figure class:list={['hero-photo', { 'hero-photo-main': slotIndex === 0 }]} data-hero-slot={slot.name}>
+              {slot.photos.map((photo, photoIndex) => (
+                <img
+                  class:list={{ 'is-active': photoIndex === 0 }}
+                  src={photoIndex === 0 ? photo.src : undefined}
+                  data-hero-src={photo.src}
+                  alt={photo.alt}
+                  aria-hidden={photoIndex !== 0 ? 'true' : undefined}
+                  width={photo.width}
+                  height={photo.height}
+                  style={'object-position: ' + photo.position}
+                  loading={photoIndex === 0 ? 'eager' : 'lazy'}
+                  fetchpriority={slotIndex === 0 && photoIndex === 0 ? 'high' : 'auto'}
+                  decoding="async"
+                />
+              ))}
+            </figure>
+          ))}
+        </div>
+      </section>
+
+      <section id="about" class="story-section page-shell" aria-labelledby="story-title">
+        <div class="story-heading">
+          <span class="conversation-symbol" aria-hidden="true">↳</span>
+          <h2 id="story-title">Come for the ideas.<br /><em>Stay for your people.</em></h2>
+        </div>
+        <div class="story-copy">
+          <p>DevCongress has always been about what happens when people making things in the same city finally sit next to one another. DevCon26 makes more room for that, across disciplines, companies, and experience levels.</p>
+          <p class="invitation">Whatever you’re building, there’s room for you.</p>
+        </div>
+        <div class="people-line" aria-label="Who DevCon26 is for">
+          <span>Developers</span><span>Designers</span><span>Founders</span><span>Students</span><span class="people-you">& you.</span>
+        </div>
+      </section>
+
+      <section id="the-day" class="day-section page-shell" aria-labelledby="day-title">
+        <figure class="programme-photo">
+          <img src="/images/devcon26/community-exchange.webp" alt="Two DevCongress attendees exchanging ideas during a community session" width="844" height="1000" loading="lazy" decoding="async" />
+          <figcaption>Ideas land differently when you’re in the room.</figcaption>
+        </figure>
+        <div class="day-content">
+          <p class="section-caption">Inside the day</p>
+          <h2 id="day-title">The work<br />behind <em>the work.</em></h2>
+          <p class="day-description">The honest question after a talk. The story you needed to hear. The person who’s been figuring out the same thing as you.</p>
+          <p class="day-description">We’re shaping DevCon26 around useful stories and enough time to talk to the people in the room.</p>
+          <aside class="programme-note">
+            <span class="note-fold" aria-hidden="true">↗</span>
+            <p class="section-caption">A note on the programme</p>
+            <h3>Still taking shape.<br />Worth the wait.</h3>
+            <p>Speakers, workshops, and sessions will be announced here as they are confirmed.</p>
+          </aside>
+        </div>
+      </section>
+
+      <section id="speakers" class="speakers-section page-shell" aria-labelledby="speakers-title">
+        <div class="speakers-header">
+          <h2 id="speakers-title">Fresh perspectives.<br /><em>Familiar challenges.</em></h2>
+          <p>People with something useful to say. We’re putting the programme together with care; meet the speakers here as they are confirmed.</p>
+        </div>
+        <div class="speaker-grid">
+          {speakerSlots.map((slot) => (
+            <article class="speaker-card">
+              <div class="speaker-placeholder" aria-hidden="true">
+                <span class="speaker-number">{slot}</span>
+                <svg class="speaker-art" viewBox="0 0 160 160" fill="none" stroke="currentColor" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                  {slot === '01' ? (
+                    <>
+                      <rect x="56" y="20" width="48" height="80" rx="24" />
+                      <path d="M40 74v6a40 40 0 0 0 80 0v-6M80 120v20M60 140h40" />
+                      <path d="M72 40h16M72 54h16" stroke-width="5" />
+                    </>
+                  ) : slot === '02' ? (
+                    <>
+                      <path d="M32 28h62a18 18 0 0 1 18 18v30a18 18 0 0 1-18 18H58l-26 22V94a18 18 0 0 1-18-18V46a18 18 0 0 1 18-18Z" />
+                      <path d="M112 60h16a18 18 0 0 1 18 18v30a18 18 0 0 1-18 18v18l-24-18H82a18 18 0 0 1-18-18v-6" />
+                      <path d="M40 60h44" stroke-width="5" />
+                    </>
+                  ) : (
+                    <>
+                      <path d="M20 70v20M40 52v56M60 32v96M80 20v120M100 42v76M120 58v44M140 72v16" />
+                    </>
+                  )}
+                </svg>
+                <small>Next voice, coming soon.</small>
+              </div>
+              <p class="speaker-status">Speaker announcement</p>
+              <h3>To be announced</h3>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section class="location-section page-shell" aria-labelledby="location-title">
+        <div class="location-place" aria-label="Accra, Ghana">
+          <span>Meet us in</span>
+          <strong>Accra<span aria-hidden="true">.</span></strong>
+          <span class="location-country">
+            Ghana Digital Center
+            <span class="location-former-name">(formerly Accra Digital Center)</span>
+          </span>
+        </div>
+        <div class="location-copy">
+          <h2 id="location-title">Built here.<br />Open to everyone.</h2>
+          <p>Ghana Digital Center (formerly Accra Digital Center), Accra, Ghana. A place for the people and communities moving the city’s technology scene forward.</p>
+          <a class="location-directions" href="https://www.google.com/maps/search/?api=1&query=Accra%20Digital%20Centre%2C%20Accra%2C%20Ghana" target="_blank" rel="noopener noreferrer">Find the venue <span aria-hidden="true">↗</span><span class="sr-only"> (opens in a new tab)</span></a>
+        </div>
+      </section>
+
+      <section id="tickets" class="tickets-section page-shell" aria-labelledby="tickets-title">
+        <div class="section-intro">
+          <div>
+            <p class="section-caption">Your place in the room</p>
+            <h2 id="tickets-title">Buy your <em>tickets.</em></h2>
+          </div>
+          <p>Come on your own or bring your team. Choose your place in the room.</p>
+        </div>
+        <div class="ticket-grid">
+          {tickets.map((ticket) => (
+            <article class:list={['ticket-card', { 'ticket-card-featured': ticket.featured }]}>
+              <div class="ticket-illustration" aria-hidden="true">
+                <img src={ticket.photo} alt="" width="640" height="512" loading="lazy" decoding="async" />
+              </div>
+              <div class="ticket-heading">
+                <h3>{ticket.name}</h3>
+                {ticket.featured && <span class="ticket-tag">Better together</span>}
+              </div>
+              <p class="ticket-people">{ticket.people}</p>
+              <p class="ticket-price">{ticket.price}</p>
+              <p class="ticket-detail">{ticket.detail}</p>
+              <a
+                class="ticket-buy-button"
+                href={'/devcon26/checkout/?tier=' + ticket.id.replaceAll('-', '_')}
+              >
+                Buy ticket <span aria-hidden="true">↗</span>
+              </a>
+            </article>
+          ))}
+        </div>
+        <p class="ticket-sales-note">Secure checkout with Paystack. No account needed.</p>
+      </section>
+
+      <section id="sponsors" class="sponsors-section page-shell" aria-labelledby="sponsors-title">
+        <div class="sponsors-story">
+          <p class="section-caption">The people behind the gathering</p>
+          <h2 id="sponsors-title">Good company<br />needs <em>good backing.</em></h2>
+          <p>Partners help keep this space open: a place for Ghana’s technology community to meet collaborators, exchange ideas, and take their work further.</p>
+        </div>
+        <div class="sponsors-community">
+          <p>With the support of</p>
+          <ul class="sponsor-list" aria-label="DevCon26 partners">
+            {sponsors.map((sponsor) => (
+              <li class="sponsor-item">
+                <a href={sponsor.data.url} target="_blank" rel="noopener noreferrer" aria-label={'Visit ' + sponsor.data.name}>
+                  <span class="sponsor-name">{sponsor.data.name}</span>
+                  <img
+                    src={sponsor.data.logo}
+                    alt=""
+                    loading="lazy"
+                    style={sponsor.data.backgroundColor ? 'background-color:' + sponsor.data.backgroundColor : undefined}
+                  />
+                  <span class="sponsor-visit" aria-hidden="true">↗</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div class="sponsorship-packages" aria-labelledby="packages-title">
+          <div class="packages-intro">
+            <div>
+              <p class="section-caption">Sponsorship packages</p>
+              <h3 id="packages-title">Find your way to <em>get involved.</em></h3>
+            </div>
+            <a class="sponsorship-download" href="/downloads/devcon26-sponsorship-packages.pdf" download="DevCon26 Sponsorship Packages.pdf">
+              Download sponsorship packages <span aria-hidden="true">↗</span>
+              <small>PDF · Full benefits and terms</small>
+            </a>
+          </div>
+          <div class="package-grid">
+            {sponsorshipPackages.map((sponsorship) => (
+              <article class="package-plan" aria-labelledby={'package-' + sponsorship.id}>
+                <div class="package-heading">
+                  <h4 id={'package-' + sponsorship.id}>
+                    <span class="package-family">{sponsorship.id === 'title' ? 'Title' : 'Community'}</span>{' '}
+                    <span class="package-tier">{sponsorship.name.replace(/^(Community|Title) /, '')}</span>
+                  </h4>
+                </div>
+                <p class="package-price">
+                  <span class="package-currency">GHS</span>{' '}
+                  <span>{sponsorship.price.replace('GHS ', '')}</span>
+                </p>
+                <p class="package-description">{sponsorship.description}</p>
+                <ul class="package-highlights">
+                  {sponsorship.highlights.map((highlight) => <li>{highlight}</li>)}
+                </ul>
+                <div class="package-allocation">
+                  <p class="package-passes">{sponsorship.passes}</p>
+                  <p class="package-qualification">{sponsorship.qualification}</p>
+                </div>
+                <a class="package-enquiry" href={packageEnquiryLink(sponsorship)}>
+                  Choose this package <span aria-hidden="true">↗</span><span class="sr-only">: {sponsorship.name}</span>
+                </a>
+              </article>
+            ))}
+          </div>
+          <div class="custom-sponsorship">
+            <div>
+              <p class="section-caption">Something more specific?</p>
+              <h3>Let’s build a partnership <em>around your ideas.</em></h3>
+              <p>Back a workshop, networking, recruitment, student access, refreshments, swag, or another part of the day. We prioritise cash sponsorships and consider selected in-kind contributions that support the event.</p>
+            </div>
+            <a class="button sponsor-button" href="mailto:events@devcongress.org?subject=DevCon26%20custom%20sponsorship%20enquiry">Discuss a custom partnership <span aria-hidden="true">↗</span></a>
+          </div>
+        </div>
+      </section>
+
+      <section id="faqs" class="faq-section page-shell" aria-labelledby="faq-title">
+        <div class="faq-intro">
+          <h2 id="faq-title">Before you<br /><em>show up.</em></h2>
+          <p>A few things worth knowing.</p>
+        </div>
+        <div class="faq-list">
+          {faqs.map(([question, answer]) => (
+            <details class="faq-item" name="devcon26-faq">
+              <summary>{question}<span aria-hidden="true">+</span></summary>
+              <div class="faq-answer"><p>{answer}</p></div>
+            </details>
+          ))}
+        </div>
+      </section>
+      <section class="past-sponsors-section page-shell" aria-labelledby="past-sponsors-title">
+        <div class="past-sponsors-intro">
+          <p class="section-caption">A history of good company</p>
+          <h2 id="past-sponsors-title">Past <em>sponsors.</em></h2>
+          <p>The organisations that have backed the DevCongress community along the way.</p>
+        </div>
+        <ul class="past-sponsors-list">
+          {pastSponsors.map((partner) => (
+            <li>
+              <a href={partner.data.url} target="_blank" rel="noopener noreferrer" aria-label={'Visit ' + partner.data.name + ' (opens in a new tab)'}>
+                <span class="past-sponsor-logo" style={partner.data.backgroundColor ? 'background-color:' + partner.data.backgroundColor : undefined}>
+                  <img src={partner.data.logo} alt="" width="180" height="70" loading="lazy" decoding="async" />
+                </span>
+                <span>{partner.data.name}</span>
+                <span class="past-sponsor-arrow" aria-hidden="true">↗</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </section>
+    </main>
+  </div>
+</Base>
+
+<script>
+  import { redirectDevcon26PaymentReturn } from '../../lib/devcon26-checkout-navigation';
+
+  const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+  const page = document.querySelector<HTMLElement>('.devcon-page');
+
+  redirectDevcon26PaymentReturn();
+
+  const faqItems = Array.from(document.querySelectorAll('.faq-item'));
+  const faqTimers = new WeakMap();
+  let requestedFaq = null;
+  let faqRequest = 0;
+
+  page?.classList.add('has-faq-motion');
+
+  function closeFaqItem(item) {
+    window.clearTimeout(faqTimers.get(item));
+    item.classList.remove('is-open');
+
+    if (!item.open) return;
+
+    faqTimers.set(item, window.setTimeout(() => {
+      if (requestedFaq !== item) item.open = false;
+    }, mediaQuery.matches ? 0 : 180));
+  }
+
+  faqItems.forEach((item) => {
+    const summary = item.querySelector('summary');
+
+    summary?.addEventListener('click', (event) => {
+      event.preventDefault();
+
+      requestedFaq = requestedFaq === item ? null : item;
+      const currentRequest = ++faqRequest;
+
+      faqItems.forEach((otherItem) => {
+        if (otherItem !== requestedFaq) closeFaqItem(otherItem);
+      });
+
+      if (!requestedFaq) return;
+
+      const selectedItem = requestedFaq;
+      const anotherIsOpen = faqItems.some((otherItem) => otherItem !== selectedItem && otherItem.open);
+
+      window.setTimeout(() => {
+        if (currentRequest !== faqRequest) return;
+
+        window.clearTimeout(faqTimers.get(selectedItem));
+        selectedItem.open = true;
+        window.requestAnimationFrame(() => {
+          if (requestedFaq === selectedItem) selectedItem.classList.add('is-open');
+        });
+      }, anotherIsOpen && !mediaQuery.matches ? 180 : 0);
+    });
+  });
+</script>
+
+<script>
+  import { initDevcon26HeroSlideshow } from '../../lib/devcon26-hero-slideshow';
+
+  const slideshow = document.querySelector<HTMLElement>('[data-hero-slideshow]');
+
+  if (slideshow) initDevcon26HeroSlideshow(slideshow);
+</script>
+
+<script>
+  const header = document.querySelector('[data-devcon-header]');
+  const toggle = header?.querySelector('.section-menu-toggle');
+  const menu = header?.querySelector('.mobile-section-nav');
+
+  if (header instanceof HTMLElement && toggle instanceof HTMLButtonElement && menu instanceof HTMLElement) {
+    const mobileNavigation = window.matchMedia('(max-width: 960px)');
+
+    const setMenuOpen = (requestedOpen: boolean) => {
+      const open = requestedOpen && mobileNavigation.matches;
+
+      header.dataset.menuOpen = String(open);
+      toggle.setAttribute('aria-expanded', String(open));
+      toggle.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+      menu.setAttribute('aria-hidden', String(!open));
+      menu.inert = !open;
+    };
+
+    setMenuOpen(false);
+    header.dataset.menuReady = 'true';
+
+    toggle.addEventListener('click', () => {
+      setMenuOpen(toggle.getAttribute('aria-expanded') !== 'true');
+    });
+
+    menu.querySelectorAll('a').forEach((link) => {
+      link.addEventListener('click', () => {
+        setMenuOpen(false);
+        toggle.focus({ preventScroll: true });
+      });
+    });
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key !== 'Escape' || toggle.getAttribute('aria-expanded') !== 'true') return;
+
+      setMenuOpen(false);
+      toggle.focus({ preventScroll: true });
+    });
+
+    document.addEventListener('click', (event) => {
+      if (event.target instanceof Node && !header.contains(event.target)) setMenuOpen(false);
+    });
+
+    mobileNavigation.addEventListener('change', () => {
+      const desktopNavigation = header.querySelector('.section-nav');
+      const navigationHadFocus = menu.contains(document.activeElement)
+        || document.activeElement === toggle
+        || desktopNavigation?.contains(document.activeElement);
+
+      setMenuOpen(false);
+
+      if (navigationHadFocus) {
+        const focusTarget = mobileNavigation.matches ? toggle : header.querySelector('.section-nav a');
+
+        if (focusTarget instanceof HTMLElement) focusTarget.focus({ preventScroll: true });
+      }
+    });
+  }
+</script>
+
+<style>
+  .devcon-page {
+    /* Inherit the site's brand; keep the ticket's softer ivory surface. */
+    --dc-paper: var(--bg);
+    --dc-paper-light: oklch(0.982 0.008 91);
+    --dc-ink: var(--text);
+    --dc-muted: var(--text-mid);
+    --dc-pink: var(--pink);
+    --dc-yellow: var(--yellow);
+    --dc-rule: var(--border-light);
+    --dc-ticket-action-outline: hsl(38, 12%, 46%);
+    --dc-ease: cubic-bezier(0.16, 1, 0.3, 1);
+    --dc-text-meta: var(--text-xs);
+    --dc-text-small: var(--text-sm);
+    --dc-text-body: var(--text-base);
+    --dc-text-subtitle: 20px;
+    --dc-text-card: 24px;
+    --dc-control-height: 48px;
+    color: var(--dc-ink);
+    background: var(--dc-paper);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  .page-shell {
+    width: min(100% - 64px, 1200px);
+    margin-inline: auto;
+  }
+
+  section[id] {
+    scroll-margin-top: 28px;
+  }
+
+  h1, h2, h3, p, figure {
+    margin: 0;
+  }
+
+  h1, h2, h3 {
+    color: inherit;
+    font-family: var(--font-display);
+    font-weight: 600;
+    letter-spacing: var(--tracking-heading);
+    line-height: var(--leading-tight);
+    text-wrap: balance;
+  }
+
+  main h1, main h2 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    letter-spacing: var(--tracking-display);
+  }
+
+  main h2 {
+    line-height: var(--leading-tight);
+  }
+
+  h2 {
+    font-size: clamp(36px, 4.15vw, 58px);
+  }
+
+  h1 em, h2 em {
+    color: var(--dc-pink);
+    font-style: normal;
+  }
+
+  p, figcaption {
+    max-width: 70ch;
+    text-wrap: pretty;
+  }
+
+  .skip-link {
+    position: fixed;
+    z-index: 30;
+    top: 12px;
+    left: 12px;
+    padding: 12px 16px;
+    background: var(--dc-yellow);
+    font-weight: 700;
+    transform: translateY(-150%);
+  }
+
+  .skip-link:focus {
+    transform: translateY(0);
+  }
+
+  .site-header {
+    position: relative;
+    z-index: 20;
+    display: flex;
+    min-height: 90px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+  }
+
+  .brand {
+    display: inline-flex;
+    min-height: 44px;
+    align-items: center;
+  }
+
+  .brand img {
+    width: 136px;
+    height: auto;
+  }
+
+  .section-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 24px;
+  }
+
+  .section-nav a {
+    display: inline-flex;
+    min-height: 44px;
+    align-items: center;
+    gap: 6px;
+    font-size: var(--dc-text-small);
+    font-weight: 500;
+    color: var(--dc-muted);
+  }
+
+  .section-menu-toggle {
+    display: none;
+    width: 44px;
+    height: 44px;
+    flex-shrink: 0;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    margin-left: auto;
+    border-radius: 8px;
+    transition: transform 120ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .section-menu-toggle span {
+    width: 22px;
+    height: 2px;
+    border-radius: 2px;
+    background: var(--dc-ink);
+    transition: opacity 120ms cubic-bezier(0.4, 0, 0.2, 1), transform 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .section-menu-toggle[aria-expanded='true'] span:nth-child(1) {
+    transform: translateY(7px) rotate(45deg);
+  }
+
+  .section-menu-toggle[aria-expanded='true'] span:nth-child(2) {
+    opacity: 0;
+  }
+
+  .section-menu-toggle[aria-expanded='true'] span:nth-child(3) {
+    transform: translateY(-7px) rotate(-45deg);
+  }
+
+  .section-menu-toggle:active {
+    transform: scale(0.97);
+  }
+
+  .mobile-section-nav {
+    display: none;
+  }
+
+  .hero {
+    display: grid;
+    grid-template-columns: 1.05fr 1fr;
+    align-items: center;
+    gap: 32px;
+    padding-block: 42px 74px;
+  }
+
+  .event-label {
+    display: inline-flex;
+    max-width: 100%;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+    color: var(--dc-muted);
+    font-size: var(--dc-text-meta);
+    font-weight: 600;
+    line-height: 1.5;
+  }
+
+  .event-label-copy {
+    min-width: 0;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    text-wrap: balance;
+  }
+
+  .event-year {
+    flex-shrink: 0;
+    padding: 3px 8px;
+    border-radius: 6px;
+    background: var(--yellow-bg);
+    color: var(--dc-ink);
+    font-weight: 700;
+  }
+
+  h1 {
+    position: relative;
+    z-index: 2;
+    max-width: 660px;
+    font-size: clamp(48px, 4.8vw, 68px);
+    line-height: 1.08;
+  }
+
+  .hero h1 {
+    font-weight: 700;
+    letter-spacing: -0.03em;
+  }
+
+  .hero-summary {
+    max-width: 28rem;
+    margin-top: 22px;
+    color: var(--dc-muted);
+    font-size: var(--dc-text-body);
+    line-height: 1.65;
+    text-wrap: pretty;
+  }
+
+  .hero-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 24px;
+    margin-top: 30px;
+  }
+
+  .hero-actions p {
+    font-size: 12px;
+    line-height: 1.6;
+  }
+
+  .button, .ticket-buy-button {
+    display: inline-flex;
+    min-height: var(--dc-control-height);
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 18px 12px 20px;
+    border: 0;
+    border-radius: 8px;
+    font-size: var(--dc-text-body);
+    font-weight: 600;
+    line-height: 24px;
+  }
+
+  .button, .ticket-buy-button {
+    transition: transform 140ms var(--dc-ease);
+  }
+
+  .button span, .ticket-buy-button span {
+    display: inline-grid;
+    width: 20px;
+    height: 20px;
+    flex: 0 0 20px;
+    place-items: center;
+    font-size: var(--dc-text-subtitle);
+    line-height: 1;
+  }
+
+  .button-primary {
+    color: var(--dc-ink);
+    background: var(--dc-yellow);
+  }
+
+  .hero-images {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-self: center;
+    gap: 12px;
+    min-width: 0;
+  }
+
+  .hero-photo {
+    position: relative;
+    overflow: hidden;
+    min-width: 0;
+    aspect-ratio: 1.42;
+    border-radius: 8px;
+    background: var(--dc-paper-light);
+  }
+
+  .hero-photo-main {
+    grid-column: 1 / -1;
+    aspect-ratio: 1.9;
+  }
+
+  .hero-photo img, .programme-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    outline: 1px solid rgba(0, 0, 0, 0.1);
+    outline-offset: -1px;
+  }
+
+  .hero-photo img {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    pointer-events: none;
+    border-radius: inherit;
+    transition: opacity 250ms var(--dc-ease);
+  }
+
+  .hero-photo img.is-active {
+    opacity: 1;
+  }
+
+  .story-section {
+    display: grid;
+    grid-template-columns: 1.1fr 1fr;
+    column-gap: 75px;
+    padding-block: 34px 80px;
+  }
+
+  .story-heading {
+    display: flex;
+    align-items: flex-start;
+    gap: 18px;
+  }
+
+  .conversation-symbol {
+    margin-top: -9px;
+    color: var(--dc-pink);
+    font-size: 70px;
+    line-height: 1;
+  }
+
+  .story-heading h2 {
+    font-size: clamp(32px, 3.1vw, 43px);
+  }
+
+  .story-copy {
+    padding-top: 4px;
+    color: var(--dc-muted);
+    font-size: var(--dc-text-body);
+    line-height: 1.65;
+  }
+
+  .story-copy .invitation {
+    margin-top: 15px;
+    color: var(--dc-ink);
+    font-weight: 600;
+  }
+
+  .people-line {
+    display: flex;
+    grid-column: 1 / -1;
+    align-items: baseline;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 12px 32px;
+    margin-top: 52px;
+    font-size: clamp(19px, 2.3vw, 31px);
+    font-weight: 600;
+    letter-spacing: var(--tracking-heading);
+  }
+
+  .people-line span:nth-child(even) {
+    color: var(--dc-muted);
+  }
+
+  .people-line .people-you {
+    color: var(--dc-pink);
+    transform: rotate(-7deg);
+  }
+
+  .day-section {
+    display: grid;
+    grid-template-columns: 0.85fr 1fr;
+    align-items: start;
+    gap: clamp(50px, 9vw, 128px);
+    padding-block: 26px 60px;
+  }
+
+  .programme-photo {
+    position: sticky;
+    top: 28px;
+    margin-top: 35px;
+    transform: rotate(-2deg);
+  }
+
+  .programme-photo img {
+    max-height: 580px;
+    aspect-ratio: 0.81;
+    border-radius: 8px;
+    object-position: center 28%;
+  }
+
+  .programme-photo figcaption {
+    margin-top: 14px;
+    font-size: var(--dc-text-meta);
+  }
+
+  .section-caption {
+    margin-bottom: 16px;
+    color: var(--dc-muted);
+    font-size: var(--dc-text-meta);
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    line-height: 1.4;
+    text-transform: uppercase;
+  }
+
+  .day-description {
+    max-width: 29rem;
+    margin-top: 24px;
+    color: var(--dc-muted);
+    font-size: var(--dc-text-body);
+    line-height: 1.65;
+  }
+
+  .day-description + .day-description {
+    margin-top: 16px;
+  }
+
+  .programme-note {
+    position: relative;
+    max-width: 380px;
+    margin: 38px 0 0 34px;
+    padding: 30px;
+    border-radius: 6px;
+    background: var(--dc-yellow);
+    box-shadow: 0 3px 3px rgb(0 0 0 / 0.03), 0 13px 24px rgb(0 0 0 / 0.06);
+    transform: rotate(3deg);
+  }
+
+  .note-fold {
+    position: absolute;
+    top: 12px;
+    right: 20px;
+    font-size: 32px;
+  }
+
+  .programme-note .section-caption {
+    padding-right: 25px;
+    font-size: var(--dc-text-meta);
+  }
+
+  .programme-note h3 {
+    font-size: 32px;
+  }
+
+  .programme-note > p:last-child {
+    margin-top: 18px;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  .speakers-section {
+    padding-block: 82px 70px;
+  }
+
+  .speakers-header, .section-intro {
+    display: grid;
+    grid-template-columns: 1.2fr 0.8fr;
+    align-items: end;
+    gap: 60px;
+  }
+
+  .speakers-header > p, .section-intro > p {
+    max-width: 29rem;
+    color: var(--dc-muted);
+    font-size: var(--dc-text-body);
+    line-height: 1.65;
+  }
+
+  .speaker-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 36px;
+    margin: 50px 35px 0;
+    align-items: start;
+  }
+
+  .speaker-card:nth-child(2) {
+    margin-top: 62px;
+  }
+
+  .speaker-card:nth-child(3) {
+    margin-top: 20px;
+  }
+
+  .speaker-placeholder {
+    position: relative;
+    display: flex;
+    aspect-ratio: 1.08;
+    flex-direction: column;
+    justify-content: space-between;
+    overflow: hidden;
+    padding: 23px;
+    border-radius: 8px;
+    background: var(--dc-ink);
+    color: var(--dc-paper-light);
+  }
+
+  .speaker-number {
+    font-size: var(--dc-text-meta);
+    font-weight: 600;
+  }
+
+  .speaker-art {
+    position: absolute;
+    align-self: center;
+    top: 18%;
+    width: 58%;
+    max-width: 160px;
+    height: auto;
+    color: var(--dc-yellow);
+    pointer-events: none;
+    transform: rotate(-10deg);
+  }
+
+  .speaker-card:nth-child(2) .speaker-placeholder {
+    background: var(--dc-yellow);
+    color: var(--dc-ink);
+  }
+
+  .speaker-card:nth-child(2) .speaker-art {
+    color: var(--dc-ink);
+    transform: rotate(8deg);
+  }
+
+  .speaker-card:nth-child(3) .speaker-art {
+    color: oklch(0.76 0.14 354);
+    transform: rotate(-4deg);
+  }
+
+  .speaker-placeholder small {
+    position: relative;
+    font-size: var(--dc-text-meta);
+  }
+
+  .speaker-status {
+    margin-top: 18px;
+    color: var(--dc-muted);
+    font-size: var(--dc-text-meta);
+  }
+
+  .speaker-card h3 {
+    margin-top: 7px;
+    font-size: var(--dc-text-card);
+    letter-spacing: var(--tracking-heading);
+  }
+
+  .location-section {
+    display: grid;
+    grid-template-columns: 1.2fr 0.8fr;
+    align-items: center;
+    gap: 60px;
+    padding-block: 40px 98px;
+  }
+
+  .location-directions {
+    display: inline-flex;
+    min-height: 44px;
+    align-items: center;
+    gap: 16px;
+    margin-top: 12px;
+    font-size: var(--dc-text-small);
+    font-weight: 600;
+  }
+
+  .location-directions span[aria-hidden] {
+    color: var(--dc-pink);
+  }
+
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .location-place > span {
+    display: block;
+    margin-left: 10px;
+    font-size: var(--dc-text-small);
+  }
+
+  .location-place strong {
+    display: block;
+    margin-left: -8px;
+    font-family: var(--font-display);
+    font-size: clamp(96px, 14vw, 192px);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 1.05;
+  }
+
+  .location-place strong span {
+    color: var(--dc-pink);
+  }
+
+  .location-place .location-country {
+    margin-top: 10px;
+    font-weight: 600;
+    line-height: 1.5;
+    text-wrap: pretty;
+  }
+
+  .location-former-name {
+    display: block;
+    margin-top: 4px;
+    color: var(--dc-muted);
+    font-weight: 400;
+  }
+
+  .location-copy h2 {
+    font-size: clamp(30px, 3vw, 42px);
+  }
+
+  .location-copy p {
+    max-width: 24rem;
+    margin-top: 20px;
+    color: var(--dc-muted);
+    font-size: var(--dc-text-body);
+    line-height: 1.65;
+  }
+
+  .tickets-section {
+    padding-block: 24px 92px;
+  }
+
+  .ticket-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 18px;
+    margin-top: 36px;
+  }
+
+  .ticket-card {
+    position: relative;
+    display: flex;
+    isolation: isolate;
+    min-width: 0;
+    flex-direction: column;
+    padding: 24px;
+    border-radius: 12px;
+    background: var(--dc-paper-light);
+    box-shadow: 0 0 0 1px rgb(0 0 0 / 0.07), 0 2px 5px rgb(0 0 0 / 0.025);
+  }
+
+  .ticket-card-featured {
+    background: var(--dc-yellow);
+  }
+
+  .ticket-card > :not(.ticket-illustration) {
+    position: relative;
+    z-index: 1;
+  }
+
+  .ticket-illustration {
+    position: absolute;
+    right: 8px;
+    bottom: 78px;
+    z-index: 0;
+    width: 62%;
+    max-width: 240px;
+    aspect-ratio: 5 / 4;
+    overflow: hidden;
+    opacity: 0.2;
+    mix-blend-mode: multiply;
+    mask-image: radial-gradient(ellipse at 60% 52%, #000 24%, transparent 72%);
+    pointer-events: none;
+  }
+
+  .ticket-card-featured .ticket-illustration {
+    opacity: 0.16;
+  }
+
+  .ticket-illustration img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: grayscale(0.75);
+  }
+
+  .ticket-heading {
+    display: flex;
+    min-height: 47px;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .ticket-heading h3 {
+    flex: 1 0 auto;
+    font-size: var(--dc-text-card);
+    letter-spacing: var(--tracking-heading);
+  }
+
+  .ticket-tag {
+    padding: 3px 7px;
+    border: 1px solid var(--dc-ink);
+    border-radius: 6px;
+    font-size: var(--dc-text-meta);
+    font-weight: 600;
+    line-height: 1.2;
+  }
+
+  .ticket-people, .ticket-detail {
+    color: var(--dc-muted);
+    font-size: var(--dc-text-small);
+    line-height: 1.6;
+  }
+
+  .ticket-price {
+    margin-top: 26px;
+    font-size: clamp(30px, 2.9vw, 36px);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: var(--tracking-heading);
+    line-height: 1.2;
+  }
+
+  .ticket-detail {
+    margin-top: 8px;
+  }
+
+  .ticket-buy-button {
+    width: 100%;
+    margin-top: 28px;
+    background: var(--dc-paper-light);
+    color: var(--dc-ink);
+    box-shadow: inset 0 0 0 1px var(--dc-ticket-action-outline);
+    cursor: pointer;
+  }
+
+  .ticket-buy-button span {
+    color: var(--dc-pink);
+  }
+
+  .ticket-sales-note {
+    margin-top: 22px;
+    color: var(--dc-muted);
+    font-size: var(--dc-text-meta);
+  }
+
+  .sponsors-section {
+    display: grid;
+    grid-template-columns: 1.05fr 0.95fr;
+    column-gap: 70px;
+    row-gap: var(--s6);
+    padding-block: 12px 30px;
+  }
+
+  .sponsors-story .section-caption {
+    color: var(--dc-muted);
+    font-size: var(--dc-text-meta);
+  }
+
+  .sponsors-story h2 {
+    font-size: clamp(34px, 3.8vw, 50px);
+    line-height: 1.06;
+  }
+
+  .sponsors-story h2 em {
+    color: var(--dc-pink);
+  }
+
+  .sponsors-story > p:not(.section-caption) {
+    margin-top: 25px;
+    color: var(--dc-muted);
+    font-size: var(--dc-text-body);
+    line-height: 1.65;
+  }
+
+  .sponsor-button {
+    margin-top: 26px;
+    background: var(--dc-yellow);
+    color: var(--dc-ink);
+  }
+
+  .sponsors-community {
+    align-self: center;
+  }
+
+  .sponsors-community > p:first-child {
+    margin-bottom: 18px;
+    font-size: var(--dc-text-meta);
+  }
+
+  .sponsor-list {
+    list-style: none;
+  }
+
+  .sponsor-item:not(:last-child) {
+    border-bottom: 1px solid var(--dc-rule);
+  }
+
+  .sponsor-item a {
+    display: grid;
+    grid-template-columns: 1fr 110px 20px;
+    align-items: center;
+    gap: 18px;
+    min-height: 100px;
+  }
+
+  .sponsor-name {
+    font-size: clamp(20px, 2.1vw, 28px);
+    font-weight: 600;
+    letter-spacing: var(--tracking-heading);
+  }
+
+  .sponsor-item img {
+    width: 100%;
+    max-width: 110px;
+    max-height: 48px;
+    padding: 6px;
+    border-radius: 6px;
+    background: var(--dc-paper-light);
+    object-fit: contain;
+    outline: 1px solid rgba(0, 0, 0, 0.1);
+    outline-offset: -1px;
+  }
+
+  .sponsor-visit {
+    color: var(--dc-pink);
+    font-size: 22px;
+    transition: transform 160ms var(--dc-ease);
+  }
+
+  .sponsorship-packages {
+    grid-column: 1 / -1;
+    min-width: 0;
+    border-top: 1px solid var(--dc-rule);
+  }
+
+  .packages-intro {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--s6);
+    padding-block: var(--s6);
+  }
+
+  .packages-intro .section-caption {
+    margin-bottom: var(--s3);
+  }
+
+  .packages-intro h3 {
+    max-width: 22ch;
+    font-family: var(--font-display);
+    font-size: clamp(28px, 2.8vw, 36px);
+    font-weight: 600;
+    letter-spacing: var(--tracking-display);
+    line-height: 1.2;
+    text-wrap: balance;
+  }
+
+  .packages-intro h3 em, .custom-sponsorship h3 em, .past-sponsors-intro h2 em {
+    color: var(--dc-pink);
+  }
+
+  .sponsorship-download {
+    position: relative;
+    isolation: isolate;
+    display: inline-block;
+    min-height: 44px;
+    padding: var(--s4);
+    border: 1px solid var(--dc-rule);
+    border-radius: 8px;
+    font-size: var(--dc-text-small);
+    font-weight: 600;
+    line-height: 1.5;
+    transition: transform 160ms var(--dc-ease);
+  }
+
+  .sponsorship-download::before {
+    position: absolute;
+    inset: -1px;
+    z-index: -1;
+    border: 1px solid color-mix(in srgb, var(--dc-ink) 28%, transparent);
+    border-radius: inherit;
+    background: var(--dc-paper-light);
+    box-shadow: 0 3px 8px rgb(0 0 0 / 0.04);
+    opacity: 0;
+    pointer-events: none;
+    content: '';
+    transition: opacity 160ms var(--dc-ease);
+  }
+
+  .sponsorship-download:is(:focus-visible, :active)::before {
+    opacity: 1;
+  }
+
+  .sponsorship-download > span {
+    display: inline-block;
+    margin-left: var(--s2);
+    color: var(--dc-pink);
+    transition: transform 160ms var(--dc-ease);
+  }
+
+  .sponsorship-download:focus-visible > span {
+    transform: translate(2px, -2px);
+  }
+
+  .sponsorship-download small {
+    display: block;
+    margin-top: var(--s2);
+    color: var(--dc-muted);
+    font-size: var(--dc-text-meta);
+    font-weight: 400;
+  }
+
+  .package-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--s5);
+    padding-bottom: var(--s6);
+  }
+
+  .package-plan {
+    display: grid;
+    grid-template-rows: auto auto auto 1fr auto auto;
+    min-width: 0;
+    padding: var(--s5);
+    border: 1px solid color-mix(in oklch, var(--dc-ink) 16%, var(--dc-paper));
+    border-radius: 12px;
+    background: var(--dc-paper-light);
+  }
+
+  @supports (grid-template-rows: subgrid) {
+    .package-plan {
+      grid-template-rows: subgrid;
+      grid-row: span 6;
+      row-gap: 0;
+    }
+  }
+
+  .package-heading {
+    align-self: start;
+  }
+
+  .package-heading h4 {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--s3);
+    min-width: 0;
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: 32px;
+    font-weight: 600;
+    letter-spacing: var(--tracking-heading);
+    line-height: 1.15;
+    text-wrap: balance;
+    overflow-wrap: anywhere;
+  }
+
+  .package-family {
+    padding: 4px 9px;
+    border-radius: 6px;
+    background: var(--dc-yellow);
+    color: var(--dc-ink);
+    font-family: var(--font-body);
+    font-size: var(--dc-text-meta);
+    font-weight: 600;
+    letter-spacing: 0;
+    line-height: 1.4;
+  }
+
+  .package-tier {
+    max-width: 100%;
+  }
+
+  .package-price {
+    display: flex;
+    align-items: baseline;
+    gap: var(--s2);
+    margin-top: var(--s4);
+    font-size: clamp(36px, 3.2vw, 40px);
+    font-weight: 700;
+    letter-spacing: var(--tracking-heading);
+    line-height: 1.1;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .package-currency {
+    color: var(--dc-muted);
+    font-size: var(--dc-text-small);
+    font-weight: 500;
+    letter-spacing: 0;
+  }
+
+  .package-description {
+    margin-top: var(--s2);
+    color: var(--dc-muted);
+    font-size: var(--dc-text-small);
+    line-height: 1.5;
+    text-wrap: pretty;
+  }
+
+  .package-highlights {
+    display: grid;
+    align-content: start;
+    gap: var(--s3);
+    margin-block: var(--s5);
+    color: var(--dc-ink);
+    font-size: var(--dc-text-small);
+    line-height: 1.55;
+  }
+
+  .package-highlights li {
+    position: relative;
+    padding-left: 22px;
+  }
+
+  .package-highlights li::before {
+    position: absolute;
+    top: 0.5em;
+    left: 0;
+    width: 9px;
+    height: 5px;
+    color: var(--dc-pink);
+    border-bottom: 1.5px solid currentColor;
+    border-left: 1.5px solid currentColor;
+    transform: rotate(-45deg);
+    content: '';
+  }
+
+  .package-allocation {
+    padding-top: var(--s4);
+    border-top: 1px solid var(--dc-rule);
+  }
+
+  .package-passes {
+    font-size: var(--dc-text-small);
+    font-weight: 600;
+    line-height: 1.5;
+  }
+
+  .package-qualification {
+    margin-top: var(--s3);
+    color: var(--dc-muted);
+    font-size: var(--dc-text-meta);
+    line-height: 1.55;
+  }
+
+  .package-enquiry {
+    position: relative;
+    display: flex;
+    isolation: isolate;
+    min-height: var(--dc-control-height);
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--s3);
+    margin-top: var(--s5);
+    padding: var(--s2) var(--s3);
+    border: 1px solid var(--dc-ticket-action-outline);
+    border-radius: 6px;
+    background: var(--dc-paper-light);
+    color: var(--dc-ink);
+    font-size: var(--dc-text-small);
+    font-weight: 600;
+    transition: transform 140ms var(--dc-ease);
+  }
+
+  .package-enquiry::before {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    background: color-mix(in oklch, var(--dc-yellow) 26%, var(--dc-paper-light));
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 160ms var(--dc-ease);
+    content: '';
+  }
+
+  .package-enquiry:focus-visible::before,
+  .package-enquiry:active::before {
+    opacity: 1;
+  }
+
+  .package-enquiry > span:first-child {
+    color: var(--dc-pink);
+    transition: transform 160ms var(--dc-ease);
+  }
+
+  .custom-sponsorship {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: var(--s6);
+    padding-block: var(--s6);
+    border-block: 1px solid var(--dc-rule);
+  }
+
+  .custom-sponsorship > div {
+    max-width: 620px;
+  }
+
+  .custom-sponsorship .section-caption {
+    margin-bottom: var(--s2);
+  }
+
+  .custom-sponsorship h3 {
+    font-size: var(--dc-text-card);
+    letter-spacing: -0.025em;
+    line-height: 1.3;
+    text-wrap: balance;
+  }
+
+  .custom-sponsorship > div > p:last-child {
+    margin-top: var(--s4);
+    color: var(--dc-muted);
+    font-size: var(--dc-text-small);
+    line-height: 1.65;
+  }
+
+  .custom-sponsorship .sponsor-button {
+    margin-top: 0;
+    border: 1px solid var(--dc-rule);
+    background: var(--dc-paper-light);
+    font-size: var(--dc-text-small);
+  }
+
+  .custom-sponsorship .sponsor-button span {
+    color: var(--dc-pink);
+  }
+
+  .past-sponsors-section {
+    padding-block: 16px 88px;
+  }
+
+  .past-sponsors-intro {
+    max-width: 620px;
+    margin-bottom: 34px;
+  }
+
+  .past-sponsors-intro h2 {
+    font-size: clamp(34px, 4vw, 48px);
+  }
+
+  .past-sponsors-intro > p:last-child {
+    margin-top: 18px;
+    color: var(--dc-muted);
+    line-height: 1.65;
+  }
+
+  .past-sponsors-list {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 24px;
+  }
+
+  .past-sponsors-list a {
+    position: relative;
+    display: grid;
+    grid-template-rows: 88px auto;
+    gap: 16px;
+    height: 100%;
+    padding: 18px;
+    font-size: var(--dc-text-small);
+    font-weight: 600;
+  }
+
+  .past-sponsor-logo {
+    display: grid;
+    height: 88px;
+    padding: 12px 20px;
+    place-items: center;
+    border-radius: 6px;
+    background: var(--dc-paper-light);
+  }
+
+  .past-sponsor-logo img {
+    width: 100%;
+    height: 64px;
+    object-fit: contain;
+  }
+
+  .past-sponsor-arrow {
+    position: absolute;
+    right: 18px;
+    bottom: 18px;
+    color: var(--dc-pink);
+  }
+
+  .past-sponsor-logo + span {
+    padding-right: 24px;
+  }
+
+  .faq-section {
+    display: grid;
+    grid-template-columns: 0.75fr 1.25fr;
+    gap: 80px;
+    padding-block: 95px 100px;
+  }
+
+  .faq-intro p {
+    margin-top: 20px;
+    color: var(--dc-muted);
+    font-size: var(--dc-text-body);
+  }
+
+  .faq-item {
+    border-bottom: 1px solid var(--dc-rule);
+  }
+
+  summary {
+    display: flex;
+    min-height: 70px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    cursor: pointer;
+    font-size: var(--dc-text-body);
+    font-weight: 600;
+    line-height: 1.4;
+    list-style: none;
+  }
+
+  summary::-webkit-details-marker {
+    display: none;
+  }
+
+  summary span {
+    color: var(--dc-pink);
+    font-size: 27px;
+    font-weight: 400;
+    transition: transform 180ms var(--dc-ease);
+  }
+
+  details[open] summary span {
+    transform: rotate(45deg);
+  }
+
+  .faq-answer {
+    overflow: hidden;
+  }
+
+  .faq-answer p {
+    padding-bottom: 24px;
+    color: var(--dc-muted);
+    font-size: var(--dc-text-body);
+    line-height: 1.65;
+  }
+
+  .has-faq-motion .faq-answer p {
+    opacity: 0;
+    transform: translateY(-14px);
+    transition: transform 180ms var(--dc-ease), opacity 180ms var(--dc-ease);
+  }
+
+  .has-faq-motion .faq-item.is-open .faq-answer p {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .devcon-page [hidden] {
+    display: none !important;
+  }
+
+  a:focus-visible, button:focus-visible, summary:focus-visible {
+    outline: 3px solid var(--dc-pink);
+    outline-offset: 5px;
+  }
+
+  .ticket-buy-button:focus-visible {
+    outline-color: var(--dc-ticket-action-outline);
+  }
+
+  @media (forced-colors: active) {
+    .package-enquiry:focus-visible {
+      outline-color: Highlight;
+    }
+
+    .sponsorship-download::before {
+      border-color: Highlight;
+      background: Canvas;
+      box-shadow: none;
+    }
+
+    .sponsorship-download:focus-visible {
+      outline-color: Highlight;
+    }
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .package-enquiry:hover::before {
+      opacity: 1;
+    }
+
+    .package-enquiry:hover > span:first-child {
+      transform: translate(2px, -2px);
+    }
+
+    .sponsorship-download:hover {
+      transform: translateY(-1px);
+    }
+
+    .sponsorship-download:hover::before {
+      opacity: 1;
+    }
+
+    .sponsorship-download:hover > span {
+      transform: translate(2px, -2px);
+    }
+
+    .section-nav a:hover, .mobile-section-nav a:hover {
+      color: var(--dc-pink);
+    }
+
+    .button:hover, .ticket-buy-button:hover {
+      transform: translateY(-2px);
+    }
+
+    .ticket-buy-button:hover {
+      background: var(--dc-paper);
+    }
+
+    .sponsor-item a:hover .sponsor-visit {
+      transform: translate(2px, -2px);
+    }
+  }
+
+  .button:active, .ticket-buy-button:active {
+    transform: scale(0.96);
+  }
+
+  .sponsorship-download:active {
+    transform: scale(0.97);
+    transition: transform 100ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .package-enquiry:active {
+    transform: scale(0.97);
+    transition: transform 100ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  @media (max-width: 1000px) {
+    .hero {
+      gap: 22px;
+    }
+
+    .hero-images {
+      gap: 10px;
+    }
+
+    .story-section, .speakers-header, .section-intro, .location-section, .faq-section {
+      gap: 38px;
+    }
+
+    .speaker-grid {
+      gap: 25px;
+      margin-inline: 0;
+    }
+
+    .sponsors-section {
+      column-gap: 40px;
+    }
+
+    .ticket-card {
+      padding: 20px;
+    }
+
+    .ticket-heading {
+      min-height: 58px;
+    }
+
+    .sponsor-item a {
+      grid-template-columns: 1fr 85px 18px;
+      gap: 12px;
+    }
+  }
+
+  @media (max-width: 960px) {
+    .package-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .custom-sponsorship {
+      grid-template-columns: minmax(0, 1fr);
+      justify-items: start;
+    }
+
+    .past-sponsors-list {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .site-header {
+      min-height: 68px;
+      gap: 12px;
+    }
+
+    .site-header[data-menu-ready] .section-nav {
+      display: none;
+    }
+
+    .site-header[data-menu-ready] .section-menu-toggle {
+      display: flex;
+    }
+
+    .site-header[data-menu-ready] .mobile-section-nav {
+      position: absolute;
+      top: 100%;
+      right: 0;
+      left: 0;
+      display: flex;
+      flex-direction: column;
+      max-height: calc(100dvh - 84px);
+      overflow-y: auto;
+      padding: 16px 20px;
+      border-top: 2px solid var(--dc-ink);
+      border-radius: 0 0 8px 8px;
+      background: var(--dc-paper-light);
+      box-shadow: 0 14px 24px rgb(17 17 17 / 16%);
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(-8px);
+      transition: opacity 200ms var(--dc-ease), transform 200ms var(--dc-ease);
+    }
+
+    .site-header[data-menu-open='true'] .mobile-section-nav {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateY(0);
+    }
+
+    .mobile-section-nav a {
+      display: flex;
+      min-height: 44px;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      font-size: var(--dc-text-body);
+      font-weight: 600;
+      color: var(--dc-ink);
+    }
+
+    .mobile-section-nav a span {
+      color: var(--dc-pink);
+      font-size: 18px;
+      font-weight: 700;
+    }
+  }
+
+  @media (max-width: 760px) {
+    .past-sponsors-list {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .past-sponsors-list a {
+      grid-template-columns: minmax(0, 150px) minmax(0, 1fr);
+      grid-template-rows: auto;
+      align-items: center;
+      gap: 18px;
+      padding-inline: 0;
+    }
+
+    .past-sponsor-arrow {
+      right: 0;
+      bottom: auto;
+    }
+
+    .package-grid {
+      grid-template-columns: minmax(0, 1fr);
+      gap: var(--s4);
+    }
+
+    .package-plan {
+      padding: var(--s5);
+    }
+
+    .packages-intro {
+      grid-template-columns: minmax(0, 1fr);
+      justify-items: start;
+      gap: var(--s5);
+    }
+
+    .packages-intro h3 {
+      max-width: none;
+    }
+
+    .sponsorship-download {
+      max-width: 100%;
+    }
+
+    .page-shell {
+      width: min(100% - 40px, 580px);
+    }
+
+    .site-header:not([data-menu-ready]) {
+      flex-wrap: wrap;
+      padding-block: 12px;
+    }
+
+    .brand img {
+      width: clamp(100px, 28vw, 126px);
+    }
+
+    .section-nav {
+      width: 100%;
+      justify-content: space-between;
+      gap: 4px;
+    }
+
+    .hero {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 24px;
+      padding-block: 28px 48px;
+    }
+
+    .event-label {
+      margin-bottom: 20px;
+      font-size: var(--dc-text-meta);
+    }
+
+    h1 {
+      font-size: clamp(42px, 10.8vw, 60px);
+    }
+
+    .hero-summary {
+      margin-top: 22px;
+    }
+
+    .hero-actions {
+      gap: 18px;
+      margin-top: 24px;
+    }
+
+    .hero-images {
+      gap: 8px;
+    }
+
+    .hero-photo:not(.hero-photo-main) {
+      aspect-ratio: 1.35;
+    }
+
+    .story-section {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 24px;
+      padding-block: 20px 48px;
+    }
+
+    .story-heading {
+      gap: 10px;
+    }
+
+    .conversation-symbol {
+      font-size: 48px;
+    }
+
+    .story-heading h2 {
+      font-size: clamp(29px, 7vw, 39px);
+    }
+
+    .people-line {
+      justify-content: flex-start;
+      gap: 8px 20px;
+      margin-top: 8px;
+      font-size: 22px;
+    }
+
+    .day-section {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 30px;
+      padding-block: 15px 28px;
+    }
+
+    .programme-photo {
+      position: relative;
+      top: auto;
+      width: 78%;
+      margin: 0 0 0 5px;
+    }
+
+    .programme-photo img {
+      max-height: 410px;
+      aspect-ratio: 0.92;
+    }
+
+    .day-content {
+      padding-top: 5px;
+    }
+
+    .day-description {
+      margin-top: 20px;
+    }
+
+    .programme-note {
+      max-width: calc(100% - 20px);
+      margin: 30px 0 0 10px;
+      padding: 26px;
+    }
+
+    .speakers-section {
+      padding-block: 54px 38px;
+    }
+
+    .speakers-header, .section-intro {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 22px;
+    }
+
+    .speaker-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 28px 18px;
+      margin-top: 30px;
+    }
+
+    .speaker-card:nth-child(2) {
+      margin-top: 48px;
+    }
+
+    .speaker-card:nth-child(3) {
+      margin: -20px 0 0;
+    }
+
+    .speaker-placeholder {
+      aspect-ratio: 0.85;
+      padding: 16px;
+    }
+
+    .speaker-art {
+      top: 16%;
+      width: 44%;
+      max-width: 128px;
+    }
+
+    .speaker-placeholder small {
+      max-width: 10ch;
+      line-height: 1.4;
+    }
+
+    .speaker-card h3 {
+      font-size: var(--dc-text-subtitle);
+      line-height: 1.1;
+    }
+
+    .location-section {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 30px;
+      padding-block: 30px 62px;
+    }
+
+    .location-place strong {
+      font-size: clamp(104px, 27vw, 162px);
+    }
+
+    .location-copy {
+      max-width: 25rem;
+      margin-left: 15%;
+    }
+
+    .tickets-section {
+      padding-block: 12px 60px;
+    }
+
+    .ticket-grid {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 16px;
+      margin-top: 28px;
+    }
+
+    .ticket-card {
+      padding: 24px;
+    }
+
+    .ticket-heading {
+      min-height: 34px;
+    }
+
+    .ticket-price {
+      margin-top: 24px;
+      font-size: 36px;
+    }
+
+    .ticket-buy-button {
+      margin-top: 22px;
+    }
+
+    .sponsors-section {
+      grid-template-columns: minmax(0, 1fr);
+      gap: var(--s6);
+      padding-block: 12px 0;
+    }
+
+    .sponsors-story h2 {
+      font-size: clamp(30px, 7.8vw, 42px);
+    }
+
+    .sponsor-item a {
+      min-height: 85px;
+    }
+
+    .sponsor-name {
+      font-size: 22px;
+    }
+
+    .faq-section {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 30px;
+      padding-block: 60px 64px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :global(html) {
+      scroll-behavior: auto;
+    }
+
+    *, *::before, *::after {
+      transition: none !important;
+    }
+
+    .button:active, .ticket-buy-button:active,
+    .button:hover, .ticket-buy-button:hover, .sponsor-item a:hover .sponsor-visit {
+      transform: none;
+    }
+
+    .sponsorship-download:is(:hover, :active),
+    .sponsorship-download:is(:hover, :focus-visible) > span,
+    .package-enquiry:active, .package-enquiry:hover > span:first-child {
+      transform: none;
+    }
+
+    .has-faq-motion .faq-answer p {
+      transform: none;
+    }
+
+    .section-menu-toggle:active, .mobile-section-nav {
+      transform: none;
+    }
+  }
+</style>

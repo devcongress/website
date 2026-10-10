@@ -1,0 +1,613 @@
+---
+import Base from '../../layouts/Base.astro';
+import CheckoutIcon from '../../components/CheckoutIcon.astro';
+
+const checkoutApiOrigin = import.meta.env.PUBLIC_DEVCON26_API_ORIGIN || 'https://em.devcongress.org';
+---
+
+<Base
+  title="Checkout | DevCon26"
+  description="Review your DevCon26 ticket and continue to secure payment with Paystack."
+  showFooter={false}
+  noindex={true}
+>
+  <div class="checkout-page" data-checkout-page data-checkout-api-origin={checkoutApiOrigin}>
+    <div class="checkout-backdrop" aria-hidden="true">
+      <img data-checkout-photo alt="" decoding="async" hidden />
+    </div>
+    <header class="checkout-header">
+      <a href="/devcon26/" aria-label="DevCon26 home">
+        <img src="/images/logo.png" alt="DevCongress" width="154" height="36" />
+      </a>
+      <a class="back-link" href="/devcon26/#tickets"><CheckoutIcon name="arrow-left" /> Back to tickets</a>
+    </header>
+
+    <main class="checkout-main" aria-labelledby="checkout-title">
+      <div class="checkout-intro">
+        <p class="checkout-caption">DevCon26 · December 2026</p>
+        <h1 id="checkout-title">Complete your booking.</h1>
+        <p>Your details, your ticket, then secure payment with Paystack.</p>
+      </div>
+
+      <section class="invalid-selection" data-checkout-invalid hidden aria-labelledby="selection-title">
+        <h2 id="selection-title">Choose your ticket first.</h2>
+        <p>Head back to DevCon26 to select a Regular ticket, Team of 3, or Team of 5.</p>
+        <a class="back-link" href="/devcon26/#tickets">See tickets <CheckoutIcon name="arrow-up-right" /></a>
+      </section>
+
+      <form class="checkout-form" data-checkout-buyer-form method="post" novalidate>
+        <fieldset class="buyer-fields" data-checkout-fields disabled>
+          <legend>Your details</legend>
+          <div class="buyer-field">
+            <label for="purchaser-name">Your name</label>
+            <input id="purchaser-name" data-checkout-purchaser-name autocomplete="name" maxlength="160" required aria-describedby="checkout-privacy-note" />
+          </div>
+          <div class="buyer-field">
+            <label for="purchaser-email">Email address</label>
+            <input id="purchaser-email" data-checkout-purchaser-email type="email" autocomplete="email" maxlength="254" required aria-describedby="checkout-privacy-note" />
+          </div>
+          <p id="checkout-privacy-note" class="privacy-note">Your name and email are stored with your payment record to help with checkout questions. No account needed.</p>
+        </fieldset>
+
+        <aside class="order-summary" aria-labelledby="summary-title">
+          <h2 id="summary-title"><CheckoutIcon name="ticket" /> Your ticket</h2>
+          <div class="ticket-selection">
+            <p class="ticket-name" data-checkout-ticket-name>Choose a ticket</p>
+            <p class="ticket-quantity"><CheckoutIcon name="people" /><span data-checkout-ticket-quantity></span></p>
+            <p class="event-location"><CheckoutIcon name="pin" /><span>Ghana Digital Center, Accra</span></p>
+          </div>
+
+          <div class="coupon-row">
+            <details class="coupon" data-checkout-coupon>
+              <summary>
+                <span class="coupon-label"><CheckoutIcon name="tag" /><span data-checkout-coupon-label>Have a coupon?</span></span>
+                <span class="coupon-action" aria-hidden="true"><span data-checkout-coupon-action></span><span class="coupon-symbol"><CheckoutIcon name="plus" /></span></span>
+              </summary>
+              <div class="coupon-content" data-checkout-coupon-content>
+                <label for="coupon-code">Coupon code</label>
+                <div class="coupon-controls">
+                  <input id="coupon-code" data-checkout-coupon-code autocomplete="off" maxlength="48" spellcheck="false" aria-describedby="coupon-status" />
+                  <button class="subtle-button" data-checkout-coupon-apply type="button" disabled>Apply</button>
+                </div>
+              </div>
+            </details>
+            <button class="text-button" data-checkout-coupon-remove type="button" hidden>Remove</button>
+          </div>
+          <p id="coupon-status" class="coupon-status" data-checkout-coupon-status role="status" aria-live="polite"></p>
+
+          <dl class="checkout-quote" data-checkout-quote hidden aria-live="polite" aria-atomic="true">
+            <div><dt>Ticket total</dt><dd data-checkout-base></dd></div>
+            <div data-checkout-discount-row hidden><dt>Coupon discount</dt><dd data-checkout-discount></dd></div>
+            <div class="checkout-total"><dt>Total to pay</dt><dd data-checkout-final></dd></div>
+          </dl>
+
+          <div class="checkout-notice" data-checkout-notice role="status" aria-live="polite" aria-atomic="true">
+            <p data-checkout-notice-title>Getting your checkout ready.</p>
+            <span data-checkout-notice-copy>Checking availability for your ticket choice.</span>
+          </div>
+          <button class="payment-button" data-checkout-payment type="submit" disabled aria-describedby="payment-note"><span data-checkout-payment-label>Checking checkout…</span><CheckoutIcon name="arrow-right" /></button>
+          <p id="payment-note" class="payment-note"><CheckoutIcon name="lock" /><span>Secure checkout powered by Paystack.</span></p>
+        </aside>
+      </form>
+
+      <noscript>
+        <p class="no-script">Enable JavaScript to check ticket availability and continue to payment. You can also <a href="mailto:events@devcongress.org">contact the event team</a> for help.</p>
+      </noscript>
+    </main>
+  </div>
+</Base>
+
+<script>
+  import { initializeDevcon26Checkout } from '../../lib/devcon26-checkout';
+
+  const page = document.querySelector<HTMLElement>('[data-checkout-page]');
+
+  if (page) initializeDevcon26Checkout(page);
+</script>
+
+<style>
+  .checkout-page {
+    --checkout-paper: oklch(0.985 0.008 91);
+    --checkout-ink: var(--text);
+    --checkout-muted: var(--text-mid);
+    --checkout-rule: var(--border-light);
+    --checkout-focus: oklch(0.64 0.018 85);
+    --checkout-ease: cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative;
+    isolation: isolate;
+    min-height: 100dvh;
+  }
+
+  .checkout-page [hidden] {
+    display: none !important;
+  }
+
+  .checkout-header, .checkout-main {
+    position: relative;
+    z-index: 1;
+    width: min(100% - 48px, 1040px);
+    margin-inline: auto;
+  }
+
+  .checkout-backdrop {
+    position: absolute;
+    top: 160px;
+    right: 0;
+    left: 0;
+    z-index: 0;
+    height: 960px;
+    overflow: clip;
+    pointer-events: none;
+  }
+
+  .checkout-backdrop img {
+    display: block;
+    width: min(1100px, 100%);
+    aspect-ratio: 5 / 4;
+    margin-inline: auto;
+    object-fit: cover;
+    opacity: 0.14;
+    filter: grayscale(0.75);
+    mix-blend-mode: multiply;
+    mask-image: radial-gradient(
+      ellipse 50% 50% at 50% 50%,
+      #000 18%,
+      rgb(0 0 0 / 0.75) 42%,
+      rgb(0 0 0 / 0.25) 70%,
+      transparent 96%
+    );
+  }
+
+  .checkout-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    padding-block: 28px;
+  }
+
+  .checkout-header img {
+    width: 154px;
+    height: auto;
+  }
+
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    font-size: 16px;
+    font-weight: 600;
+  }
+
+  .checkout-main {
+    padding-block: 40px 80px;
+  }
+
+  .checkout-intro {
+    margin-bottom: 40px;
+  }
+
+  .checkout-caption {
+    margin-bottom: 12px;
+    color: var(--checkout-muted);
+    font-size: 15px;
+    font-weight: 600;
+  }
+
+  h1 {
+    font-size: 2.5rem;
+    line-height: 1.15;
+    text-wrap: balance;
+  }
+
+  .checkout-intro > p:last-child {
+    margin-top: 12px;
+    color: var(--checkout-muted);
+    font-size: 18px;
+    line-height: 1.5;
+  }
+
+  .checkout-form {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 0.9fr);
+    align-items: start;
+    gap: clamp(32px, 6vw, 72px);
+  }
+
+  .buyer-fields {
+    min-width: 0;
+    border: 0;
+  }
+
+  .buyer-fields legend {
+    margin-bottom: 24px;
+    font-family: var(--font-display);
+    font-size: 24px;
+    font-weight: 600;
+    line-height: 1.3;
+  }
+
+  .buyer-field {
+    display: grid;
+    gap: 8px;
+  }
+
+  .buyer-field + .buyer-field {
+    margin-top: 20px;
+  }
+
+  label {
+    font-size: 16px;
+    font-weight: 600;
+  }
+
+  input {
+    width: 100%;
+    min-width: 0;
+    min-height: 48px;
+    padding: 10px 14px;
+    border: 1px solid var(--checkout-rule);
+    border-radius: 8px;
+    background: var(--checkout-paper);
+    color: var(--checkout-ink);
+    font-size: 18px;
+    line-height: 1.4;
+    caret-color: var(--pink);
+  }
+
+  input:focus {
+    border-color: var(--checkout-focus);
+    outline: 2px solid var(--checkout-focus);
+    outline-offset: -1px;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--pink) 6%, transparent);
+  }
+
+  input[aria-invalid='true'] {
+    border-color: var(--pink);
+  }
+
+  .privacy-note {
+    max-width: 52ch;
+    margin-top: 16px;
+    color: var(--checkout-muted);
+    font-size: 15px;
+    line-height: 1.55;
+  }
+
+  .order-summary {
+    padding: 28px;
+    border: 1px solid var(--checkout-rule);
+    border-radius: 12px;
+    background: var(--checkout-paper);
+  }
+
+  .order-summary h2 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--checkout-muted);
+    font-family: var(--font-body);
+    font-size: 16px;
+    font-weight: 600;
+  }
+
+  .ticket-selection {
+    margin-top: 12px;
+  }
+
+  .ticket-name {
+    font-family: var(--font-display);
+    font-size: 26px;
+    font-weight: 600;
+    line-height: 1.3;
+  }
+
+  .ticket-quantity, .event-location {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--checkout-muted);
+    font-size: 16px;
+    line-height: 1.5;
+  }
+
+  .ticket-quantity {
+    margin-top: 4px;
+  }
+
+  .event-location {
+    margin-top: 12px;
+  }
+
+  .coupon-row {
+    display: flex;
+    align-items: start;
+    gap: 12px;
+    margin-top: 20px;
+  }
+
+  .coupon {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .coupon summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    min-height: 44px;
+    list-style: none;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .coupon summary::-webkit-details-marker {
+    display: none;
+  }
+
+  [data-checkout-coupon-label] {
+    overflow-wrap: anywhere;
+  }
+
+  .coupon-action {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+    color: var(--pink);
+  }
+
+  .coupon-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+  }
+
+  .coupon-symbol :global(path:last-child) {
+    transition: opacity 140ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .coupon[open] .coupon-symbol :global(path:last-child) {
+    opacity: 0;
+  }
+
+  .coupon-content {
+    padding-top: 12px;
+  }
+
+  .coupon-controls {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px;
+    margin-top: 8px;
+  }
+
+  .coupon-controls input {
+    text-transform: uppercase;
+  }
+
+  .subtle-button {
+    min-height: 48px;
+    padding-inline: 14px;
+    border: 1px solid var(--checkout-rule);
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+  }
+
+  .text-button {
+    min-height: 44px;
+    color: var(--checkout-muted);
+    font-size: 15px;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .coupon-status:not(:empty) {
+    margin-top: 8px;
+    color: var(--checkout-muted);
+    font-size: 15px;
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+  }
+
+  .checkout-quote {
+    display: grid;
+    gap: 10px;
+    margin-top: 20px;
+    font-size: 16px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .checkout-quote > div {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 4px 16px;
+  }
+
+  .checkout-quote dd {
+    margin-left: auto;
+    text-align: right;
+  }
+
+  .checkout-total {
+    margin-top: 10px;
+    font-size: 20px;
+    font-weight: 700;
+  }
+
+  .checkout-notice {
+    display: grid;
+    gap: 4px;
+    margin-top: 20px;
+    font-size: 16px;
+    line-height: 1.45;
+  }
+
+  .checkout-notice p {
+    font-weight: 600;
+  }
+
+  .checkout-notice span {
+    color: var(--checkout-muted);
+  }
+
+  .payment-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    width: 100%;
+    min-height: 48px;
+    margin-top: 24px;
+    padding: 12px 16px;
+    border-radius: 8px;
+    background: var(--yellow);
+    color: var(--checkout-ink);
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1.3;
+  }
+
+  button:disabled {
+    color: var(--checkout-muted);
+    cursor: not-allowed;
+  }
+
+  .payment-button:disabled {
+    background: var(--checkout-rule);
+  }
+
+  .payment-note {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin-top: 12px;
+    color: var(--checkout-muted);
+    font-size: 14px;
+    line-height: 1.45;
+    text-align: center;
+  }
+
+  .payment-note :global(.checkout-icon) {
+    width: 16px;
+    height: 16px;
+  }
+
+  button, .back-link {
+    transition: transform 140ms var(--checkout-ease);
+  }
+
+  button:not(:disabled):active {
+    transform: scale(0.97);
+  }
+
+  a:focus-visible, button:focus-visible, summary:focus-visible {
+    outline: 2px solid var(--pink);
+    outline-offset: 4px;
+  }
+
+  .invalid-selection, .no-script {
+    max-width: 60ch;
+  }
+
+  .invalid-selection p {
+    margin-block: 12px 20px;
+    color: var(--checkout-muted);
+  }
+
+  .no-script {
+    margin-top: 24px;
+  }
+
+  .no-script a {
+    text-decoration: underline;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    button:not(:disabled):hover, .back-link:hover {
+      transform: translateY(-1px);
+    }
+  }
+
+  @media (max-width: 720px) {
+    .checkout-header, .checkout-main {
+      width: min(100% - 40px, 520px);
+    }
+
+    .checkout-header {
+      gap: 16px;
+      padding-block: 20px;
+    }
+
+    .checkout-header img {
+      width: 128px;
+    }
+
+    .back-link {
+      font-size: 15px;
+    }
+
+    .checkout-main {
+      padding-block: 24px 48px;
+    }
+
+    .checkout-backdrop {
+      top: 200px;
+    }
+
+    .checkout-intro {
+      margin-bottom: 32px;
+    }
+
+    h1 {
+      font-size: 2rem;
+    }
+
+    .checkout-form {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 28px;
+    }
+
+    .order-summary {
+      padding: 22px;
+    }
+  }
+
+  @media (forced-colors: active) {
+    .checkout-backdrop {
+      display: none;
+    }
+
+    input:focus, a:focus-visible, button:focus-visible, summary:focus-visible {
+      outline: 2px solid Highlight;
+      outline-offset: 2px;
+      box-shadow: none;
+    }
+
+    .payment-button {
+      border: 1px solid ButtonText;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :global(html) {
+      scroll-behavior: auto;
+    }
+
+    button, .back-link, .coupon-symbol :global(path:last-child) {
+      transition: none;
+    }
+
+    button:not(:disabled):is(:hover, :active), .back-link:hover {
+      transform: none;
+    }
+  }
+</style>

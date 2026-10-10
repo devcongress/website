@@ -48,7 +48,7 @@ const statusConfig = {
     <div class="page-header">
       <div class="container">
         <span class="eyebrow">Events</span>
-        <h1 class="heading-serif page-title">Where we show up</h1>
+        <h1 class="heading-display page-title">Where we show up</h1>
         <p class="page-sub">
           {sorted.length} event{sorted.length !== 1 ? 's' : ''} and counting.
         </p>
@@ -76,7 +76,7 @@ const statusConfig = {
                   <time datetime={meetup.data.start}>{formatDate(meetup.data.start)}</time>
                   <span class="meetup-location" title={meetup.data.location.label ?? meetup.data.location.name}>{meetup.data.location.label ?? meetup.data.location.name}</span>
                 </div>
-                <h2 class="heading-serif meetup-name" title={meetup.data.name}>
+                <h2 class="heading-display meetup-name" title={meetup.data.name}>
                   <a href={`/meetups/${meetup.slug}/`}>{meetup.data.name}</a>
                 </h2>
                 <p class="meetup-desc">{meetup.data.description}</p>

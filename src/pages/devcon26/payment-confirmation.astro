@@ -1,0 +1,723 @@
+---
+import Base from '../../layouts/Base.astro';
+
+const checkoutApiOrigin = import.meta.env.PUBLIC_DEVCON26_API_ORIGIN || 'https://em.devcongress.org';
+---
+
+<Base title="Payment confirmation | DevCon26" description="Your DevCon26 payment summary and event details." noindex={true} showFooter={false}>
+  <div class="payment-page" data-payment-confirmation data-checkout-api-origin={checkoutApiOrigin} data-payment-state="loading">
+    <a class="skip-link" href="#payment-main">Skip to payment confirmation</a>
+    <header class="payment-header page-shell">
+      <a class="brand" href="/" aria-label="DevCongress home">
+        <img src="/images/logo.png" alt="dev:congress{};" width="154" height="36" />
+      </a>
+      <a class="header-return" href="/devcon26/">Back to the event <span aria-hidden="true">↗</span></a>
+    </header>
+
+    <main class="page-shell" id="payment-main">
+      <div class="payment-status" data-payment-status role="status" aria-live="polite" aria-busy="true">
+        <div class="status-intro">
+          <p class="confirmation-label">DevCon26 <span>Good company awaits.</span></p>
+          <h1 data-payment-title>Checking your payment.</h1>
+          <p class="status-copy" data-payment-copy>Just a moment while we confirm your payment with Paystack.</p>
+        </div>
+        <div class="confirmation-seal" aria-hidden="true">
+          <svg viewBox="0 0 100 100" fill="none" focusable="false">
+            <path d="m50 2 10 12 15-3 3 15 14 7-7 14 5 15-15 5-5 15-15-5-14 7-7-14-15-3 3-15L2 50l12-10-3-15 15-3 7-14 14 7Z" fill="currentColor" />
+            <path d="m32 49 12 12 24-25" stroke="var(--text)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+          <span>Payment received</span>
+        </div>
+      </div>
+      <noscript>
+        <p class="no-script">JavaScript is required to verify this payment. Enable it and reload this page, or contact <a href="mailto:hello@devcongress.org">hello@devcongress.org</a> for help. No success is confirmed on this page without verification.</p>
+      </noscript>
+
+      <section class="payment-attention" data-payment-attention hidden aria-label="Payment review details">
+        <p>Keep this reference handy when contacting the event team.</p>
+        <dl>
+          <div><dt>Payment reference</dt><dd data-attention-reference></dd></div>
+          <div><dt>Expected checkout total</dt><dd data-attention-amount></dd></div>
+        </dl>
+      </section>
+
+      <div class="confirmation-content" data-payment-receipt hidden>
+        <section class="payment-receipt" aria-labelledby="summary-title">
+          <div class="receipt-photo" aria-hidden="true">
+            <img src="/images/devcon26/ticket-solo.webp" data-payment-photo alt="" width="640" height="512" decoding="async" />
+          </div>
+          <div class="receipt-heading">
+            <h2 id="summary-title">Your payment summary</h2>
+            <span class="verified-label"><span aria-hidden="true">✓</span> Confirmed</span>
+          </div>
+          <dl class="payment-details">
+            <div class="amount-detail">
+              <dt>Payment amount</dt>
+              <dd data-payment-amount></dd>
+            </div>
+            <div>
+              <dt>Ticket total</dt>
+              <dd data-payment-base></dd>
+            </div>
+            <div data-payment-discount-row hidden>
+              <dt>Coupon discount <span data-payment-coupon></span></dt>
+              <dd data-payment-discount></dd>
+            </div>
+            <div class="ticket-detail">
+              <dt>Ticket selection</dt>
+              <dd data-payment-ticket></dd>
+            </div>
+            <div>
+              <dt>Selected for</dt>
+              <dd data-payment-quantity></dd>
+            </div>
+            <div class="reference-detail">
+              <dt>Payment reference</dt>
+              <dd data-payment-reference></dd>
+            </div>
+            <div>
+              <dt>Payment provider</dt>
+              <dd>Paystack</dd>
+            </div>
+          </dl>
+          <div class="receipt-stub">
+            <button class="print-button" data-payment-print type="button" hidden>Save your payment summary <span aria-hidden="true">↗</span></button>
+            <p class="receipt-caption">Payment record only. Not an admission ticket.</p>
+          </div>
+        </section>
+
+        <section class="next-steps" aria-labelledby="next-title">
+          <h2 id="next-title">Next stop, <em>Accra.</em></h2>
+          <div class="venue-note">
+            <p class="venue-label">The place to meet</p>
+            <h3>Ghana Digital<br />Center<span aria-hidden="true">.</span><span class="venue-former-name">(formerly Accra Digital Center)</span></h3>
+            <p class="venue-address">Accra, Ghana</p>
+            <p class="venue-date">December 2026</p>
+            <a class="venue-directions" href="https://www.google.com/maps/search/?api=1&query=Accra%20Digital%20Centre%2C%20Accra%2C%20Ghana" target="_blank" rel="noopener noreferrer">Find the venue <span aria-hidden="true">↗</span><span class="sr-only"> (opens in a new tab)</span></a>
+          </div>
+          <div class="next-step">
+            <span class="step-number" aria-hidden="true">01</span>
+            <div>
+              <h3>Keep this handy.</h3>
+              <p>Save your summary and payment reference. They make it easy for us to help with any payment questions.</p>
+            </div>
+          </div>
+          <div class="next-step">
+            <span class="step-number" aria-hidden="true">02</span>
+            <div>
+              <h3>Stay close to the programme.</h3>
+              <p>The exact date, speakers, and schedule will be shared on the event page. Attendee and admission details are separate from this payment record.</p>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <div class="payment-actions">
+        <button class="action-button retry-button" data-payment-retry type="button" hidden>Check payment status <span aria-hidden="true">↗</span></button>
+        <a class="action-button event-button" href="/devcon26/">Back to DevCon26 <span aria-hidden="true">↗</span></a>
+        <a class="support-link" href="mailto:hello@devcongress.org?subject=DevCon26%20payment">Need a hand? Contact us <span aria-hidden="true">↗</span></a>
+      </div>
+    </main>
+  </div>
+</Base>
+
+<script>
+  import { initializeDevcon26PaymentConfirmation } from '../../lib/devcon26-payment-confirmation';
+
+  const page = document.querySelector('[data-payment-confirmation]');
+
+  if (page instanceof HTMLElement) initializeDevcon26PaymentConfirmation(page);
+</script>
+
+<style>
+  .payment-page {
+    --payment-paper: oklch(0.982 0.008 91);
+    --payment-outline: hsl(38, 12%, 46%);
+    --payment-ease: cubic-bezier(0.16, 1, 0.3, 1);
+    padding-bottom: 56px;
+    background: radial-gradient(ellipse at 90% 20%, oklch(0.94 0.06 99 / 0.22), transparent 45%);
+  }
+
+  [hidden] {
+    display: none !important;
+  }
+
+  .payment-attention {
+    max-width: 720px;
+    margin-block: 30px;
+    padding: 24px;
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    background: var(--yellow-bg);
+  }
+
+  .payment-attention p {
+    color: var(--text-mid);
+  }
+
+  .payment-attention dl {
+    display: grid;
+    gap: 18px;
+    margin-top: 24px;
+  }
+
+  .payment-attention dt {
+    font-size: var(--text-sm);
+    color: var(--text-mid);
+  }
+
+  .payment-attention dd {
+    margin-top: 5px;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+  }
+
+  .page-shell {
+    width: min(100% - 64px, 1100px);
+    margin-inline: auto;
+  }
+
+  .payment-header {
+    display: flex;
+    min-height: 90px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+  }
+
+  .brand {
+    display: inline-flex;
+    min-height: 44px;
+    align-items: center;
+  }
+
+  .brand img {
+    width: 136px;
+    height: auto;
+  }
+
+  .header-return {
+    display: inline-flex;
+    min-height: 44px;
+    align-items: center;
+    gap: 12px;
+    font-size: var(--text-sm);
+  }
+
+  .header-return span, .action-button span, .support-link span, .print-button span {
+    color: var(--pink);
+  }
+
+  .payment-status {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 32px;
+    padding-block: 40px 44px;
+  }
+
+  .confirmation-label {
+    display: inline-flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 18px;
+    font-size: var(--text-sm);
+    font-weight: 600;
+  }
+
+  .confirmation-label span {
+    padding-left: 12px;
+    border-left: 1px solid var(--border-light);
+    color: var(--text-mid);
+    font-weight: 400;
+  }
+
+  .confirmation-seal {
+    display: none;
+    flex: 0 0 140px;
+    text-align: center;
+    transform: rotate(7deg);
+  }
+
+  [data-payment-state='verified'] .confirmation-seal {
+    display: block;
+  }
+
+  .confirmation-seal svg {
+    display: block;
+    width: 104px;
+    margin: 0 auto 12px;
+    color: var(--yellow);
+  }
+
+  .confirmation-seal span {
+    font-size: var(--text-xs);
+    font-weight: 600;
+  }
+
+  h1 {
+    font-family: var(--font-display);
+    font-size: clamp(36px, 5vw, 58px);
+    font-weight: 600;
+    line-height: var(--leading-tight);
+    letter-spacing: var(--tracking-display);
+    text-wrap: balance;
+  }
+
+  .status-copy {
+    max-width: 52ch;
+    margin-top: 16px;
+    color: var(--text-mid);
+    font-size: var(--text-lg);
+    line-height: var(--leading-body);
+  }
+
+  .confirmation-content {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 0.95fr);
+    align-items: start;
+    gap: clamp(32px, 5vw, 64px);
+  }
+
+  .payment-receipt {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    padding: 28px;
+    border: 1px solid oklch(0.84 0.016 91);
+    border-radius: 12px;
+    background: var(--payment-paper);
+  }
+
+  .payment-receipt > :not(.receipt-photo) {
+    position: relative;
+    z-index: 1;
+  }
+
+  .receipt-photo {
+    position: absolute;
+    inset: 6% -15% auto 8%;
+    z-index: 0;
+    aspect-ratio: 5 / 4;
+    opacity: 0.09;
+    mix-blend-mode: multiply;
+    mask-image: radial-gradient(ellipse at 60% 52%, #000 24%, transparent 72%);
+    pointer-events: none;
+  }
+
+  .receipt-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: grayscale(0.75);
+  }
+
+  .receipt-heading {
+    display: flex;
+    align-items: start;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+
+  h2 {
+    font-size: var(--text-lg);
+    font-weight: 700;
+    line-height: var(--leading-snug);
+  }
+
+  .verified-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: var(--text-xs);
+    font-weight: 600;
+  }
+
+  .verified-label span {
+    display: grid;
+    width: 20px;
+    height: 20px;
+    place-items: center;
+    border-radius: 50%;
+    background: var(--yellow);
+    font-size: var(--text-sm);
+  }
+
+  .payment-details {
+    display: grid;
+    row-gap: 6px;
+  }
+
+  .payment-details > div {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 24px;
+    padding-block: 8px;
+  }
+
+  .payment-details dt {
+    color: var(--text-mid);
+    font-size: var(--text-sm);
+  }
+
+  .payment-details dd {
+    text-align: right;
+    font-size: var(--text-sm);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .payment-details .ticket-detail, .payment-details .reference-detail, .payment-details .amount-detail {
+    display: block;
+  }
+
+  .ticket-detail dd {
+    margin-top: 4px;
+    font-size: var(--text-2xl);
+    text-align: left;
+    line-height: var(--leading-snug);
+    letter-spacing: -0.025em;
+  }
+
+  .amount-detail dd {
+    margin-top: 5px;
+    font-size: clamp(32px, 3.5vw, 44px);
+    text-align: left;
+    line-height: 1.2;
+    letter-spacing: -0.035em;
+  }
+
+  .payment-details .amount-detail {
+    padding-block: 12px 20px;
+  }
+
+  .payment-details .ticket-detail {
+    margin-top: 16px;
+  }
+
+  .payment-details .reference-detail {
+    margin-top: 12px;
+  }
+
+  .reference-detail dd {
+    margin-top: 6px;
+    text-align: left;
+    overflow-wrap: anywhere;
+    font-size: var(--text-xs);
+    letter-spacing: 0.035em;
+  }
+
+  .receipt-stub {
+    display: grid;
+    gap: 8px;
+    margin-top: 28px;
+  }
+
+  .print-button {
+    display: inline-flex;
+    min-height: 44px;
+    align-items: center;
+    gap: 12px;
+    font-size: var(--text-sm);
+    font-weight: 600;
+  }
+
+  .receipt-caption {
+    color: var(--text-mid);
+    font-size: var(--text-xs);
+  }
+
+  .next-steps {
+    padding-top: 4px;
+  }
+
+  .next-steps h2 {
+    margin-bottom: 12px;
+    font-family: var(--font-display);
+    font-size: clamp(28px, 3vw, 38px);
+    font-weight: 600;
+    line-height: var(--leading-tight);
+    letter-spacing: var(--tracking-display);
+  }
+
+  .next-steps h2 em {
+    color: var(--pink);
+    font-style: normal;
+  }
+
+  .venue-note {
+    padding: 26px 0 24px;
+  }
+
+  .venue-label {
+    margin-bottom: 12px;
+    color: var(--text-mid);
+    font-size: var(--text-xs);
+  }
+
+  .venue-note h3 {
+    font-size: clamp(28px, 3vw, 38px);
+    font-weight: 700;
+    letter-spacing: -0.035em;
+    line-height: 1.08;
+  }
+
+  .venue-note h3 span[aria-hidden], .venue-directions span[aria-hidden] {
+    color: var(--pink);
+  }
+
+  .venue-address, .venue-date {
+    font-size: var(--text-sm);
+    line-height: 1.7;
+  }
+
+  .venue-date {
+    margin-top: 12px;
+    font-weight: 600;
+  }
+
+  .venue-former-name {
+    display: block;
+    margin-top: 8px;
+    color: var(--text-mid);
+    font-size: var(--text-xs);
+    font-weight: 400;
+    letter-spacing: 0;
+    line-height: 1.7;
+  }
+
+  .venue-directions {
+    display: inline-flex;
+    min-height: 44px;
+    align-items: center;
+    gap: 20px;
+    font-size: var(--text-sm);
+    font-weight: 600;
+  }
+
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .next-step {
+    display: grid;
+    grid-template-columns: 24px minmax(0, 1fr);
+    gap: 16px;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-light);
+  }
+
+  .step-number {
+    padding-top: 2px;
+    color: var(--text-mid);
+    font-size: var(--text-xs);
+    font-weight: 600;
+  }
+
+  h3 {
+    margin-bottom: 6px;
+    font-size: var(--text-base);
+    line-height: var(--leading-snug);
+  }
+
+  .next-step p {
+    color: var(--text-mid);
+    font-size: var(--text-sm);
+    line-height: var(--leading-body);
+  }
+
+  .payment-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px 24px;
+    margin-top: 36px;
+  }
+
+  .action-button {
+    display: inline-flex;
+    min-height: 48px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 28px;
+    padding: 12px 20px;
+    border: 1px solid var(--payment-outline);
+    border-radius: 8px;
+    background: var(--payment-paper);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    line-height: 1.4;
+    transition: transform 120ms var(--payment-ease);
+  }
+
+  .event-button, .retry-button {
+    background: var(--yellow);
+    border-color: transparent;
+  }
+
+  .payment-page:is([data-payment-state='pending'], [data-payment-state='error']) .event-button {
+    background: transparent;
+    border-color: var(--payment-outline);
+  }
+
+  .support-link {
+    display: inline-flex;
+    min-height: 44px;
+    align-items: center;
+    gap: 12px;
+    font-size: var(--text-sm);
+    color: var(--text-mid);
+  }
+
+  .no-script {
+    max-width: 65ch;
+    margin-bottom: 24px;
+  }
+
+  .no-script a {
+    text-decoration: underline;
+  }
+
+  .skip-link {
+    position: fixed;
+    top: 12px;
+    left: 12px;
+    z-index: 10;
+    padding: 12px;
+    background: var(--yellow);
+    transform: translateY(-150%);
+  }
+
+  .skip-link:focus {
+    transform: none;
+  }
+
+  a:focus-visible, button:focus-visible {
+    outline: 3px solid var(--payment-outline);
+    outline-offset: 4px;
+  }
+
+  .action-button:active {
+    transform: scale(0.97);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .action-button:hover {
+      transform: translateY(-2px);
+    }
+
+    .support-link:hover, .print-button:hover, .header-return:hover {
+      text-decoration: underline;
+      text-underline-offset: 4px;
+    }
+  }
+
+  @media (max-width: 760px) {
+    .page-shell {
+      width: min(100% - 40px, 580px);
+    }
+
+    .payment-header {
+      min-height: 72px;
+      flex-wrap: wrap;
+      gap: 0 20px;
+      padding-block: 12px;
+    }
+
+    .brand img {
+      width: 116px;
+    }
+
+    .payment-status {
+      padding-block: 28px 28px;
+      gap: 16px;
+    }
+
+    .confirmation-seal {
+      flex-basis: 70px;
+    }
+
+    .confirmation-seal svg {
+      width: 64px;
+    }
+
+    .confirmation-seal span {
+      display: none;
+    }
+
+    .status-copy {
+      font-size: var(--text-base);
+    }
+
+    .confirmation-content {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 32px;
+    }
+
+    .payment-receipt {
+      padding: 22px;
+    }
+
+    .payment-details > div {
+      flex-wrap: wrap;
+      gap: 4px 16px;
+    }
+
+    .payment-actions {
+      align-items: stretch;
+      flex-direction: column;
+      margin-top: 28px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :global(html) {
+      scroll-behavior: auto;
+    }
+
+    .action-button {
+      transition: none;
+    }
+
+    .action-button:hover, .action-button:active {
+      transform: none;
+    }
+  }
+
+  @media print {
+    .payment-header, .payment-actions, .print-button, .skip-link, .receipt-photo, .venue-directions, .confirmation-seal {
+      display: none !important;
+    }
+
+    .page-shell {
+      width: 100%;
+    }
+
+    .payment-status {
+      padding-top: 0;
+    }
+
+    .confirmation-content {
+      display: block;
+    }
+
+    .payment-receipt {
+      break-inside: avoid;
+      box-shadow: none;
+    }
+
+    .next-steps {
+      margin-top: 24px;
+    }
+  }
+</style>

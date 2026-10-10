@@ -1,5 +1,5 @@
 import { DEVCON26_CHECKOUT_PATH, devcon26Amount, devcon26Quote, type Devcon26Quote } from './devcon26-checkout-contract';
-import { devcon26ConfirmationUrl, devcon26TestPaymentSummary } from './devcon26-payment-confirmation';
+import { DEVCON26_TICKETS, devcon26CheckoutTier } from './devcon26-checkout-navigation';
 
 const COUPON_MESSAGES = {
   invalid: 'That coupon code isn’t valid. Check the code and try again.',
@@ -18,177 +18,95 @@ class CheckoutError extends Error {
 }
 
 export function initializeDevcon26Checkout(page: HTMLElement): void {
-  const dialog = page.querySelector<HTMLDialogElement>('#ticket-checkout-dialog');
-
-  if (!dialog || typeof dialog.showModal !== 'function') return;
-
-  const form = dialog.querySelector<HTMLFormElement>('[data-checkout-buyer-form]')!;
+  const form = page.querySelector<HTMLFormElement>('[data-checkout-buyer-form]')!;
+  const fields = form.querySelector<HTMLFieldSetElement>('[data-checkout-fields]')!;
   const purchaserName = form.querySelector<HTMLInputElement>('[data-checkout-purchaser-name]')!;
   const purchaserEmail = form.querySelector<HTMLInputElement>('[data-checkout-purchaser-email]')!;
   const couponInput = form.querySelector<HTMLInputElement>('[data-checkout-coupon-code]')!;
   const couponDetails = form.querySelector<HTMLDetailsElement>('[data-checkout-coupon]')!;
   const couponSummary = couponDetails.querySelector<HTMLElement>('summary')!;
   const couponContent = couponDetails.querySelector<HTMLElement>('[data-checkout-coupon-content]')!;
-  const afterCoupon = form.querySelector<HTMLElement>('[data-checkout-after-coupon]')!;
-  const panel = dialog.querySelector<HTMLElement>('.checkout-panel')!;
-  const panelContent = panel.querySelector<HTMLElement>('[data-checkout-content]')!;
-  const surface = dialog.querySelector<HTMLElement>('[data-checkout-surface]')!;
+  const couponLabel = couponSummary.querySelector<HTMLElement>('[data-checkout-coupon-label]')!;
+  const couponAction = couponSummary.querySelector<HTMLElement>('[data-checkout-coupon-action]')!;
   const couponApply = form.querySelector<HTMLButtonElement>('[data-checkout-coupon-apply]')!;
   const couponRemove = form.querySelector<HTMLButtonElement>('[data-checkout-coupon-remove]')!;
   const couponStatus = form.querySelector<HTMLElement>('[data-checkout-coupon-status]')!;
   const payment = form.querySelector<HTMLButtonElement>('[data-checkout-payment]')!;
-  const noticeTitle = dialog.querySelector<HTMLElement>('[data-checkout-notice-title]')!;
-  const noticeCopy = dialog.querySelector<HTMLElement>('[data-checkout-notice-copy]')!;
-  const ticketName = dialog.querySelector<HTMLElement>('[data-checkout-ticket-name]')!;
-  const ticketPrice = dialog.querySelector<HTMLElement>('[data-checkout-ticket-price]')!;
-  const ticketPhoto = dialog.querySelector<HTMLImageElement>('[data-checkout-ticket-photo]')!;
+  const paymentLabel = payment.querySelector<HTMLElement>('[data-checkout-payment-label]')!;
+  const notice = form.querySelector<HTMLElement>('[data-checkout-notice]')!;
+  const noticeTitle = notice.querySelector<HTMLElement>('[data-checkout-notice-title]')!;
+  const noticeCopy = notice.querySelector<HTMLElement>('[data-checkout-notice-copy]')!;
   const quoteView = form.querySelector<HTMLElement>('[data-checkout-quote]')!;
-  const choices = Array.from(page.querySelectorAll<HTMLButtonElement>('[data-ticket-choice]'));
+  const tier = devcon26CheckoutTier(window.location.search);
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
-  let tier = 'regular';
   let quote: Devcon26Quote | null = null;
   let requestKey: string | undefined;
-  let reference: string | undefined;
-  let action: 'availability' | 'quote' | 'initialize' | 'verify' = 'availability';
+  let action: 'availability' | 'quote' | 'initialize' = 'availability';
   let busy = false;
+  let active = true;
   let operation = 0;
   let revision = 0;
   let abort: AbortController | undefined;
-  let closeTimer: number | undefined;
   let refreshTimer: number | undefined;
-  let transition = 0;
+
+  if (!tier) {
+    form.hidden = true;
+    page.querySelector<HTMLElement>('[data-checkout-invalid]')!.hidden = false;
+
+    return;
+  }
+
+  const ticket = DEVCON26_TICKETS[tier];
+  const photo = page.querySelector<HTMLImageElement>('[data-checkout-photo]')!;
+
+  page.querySelector<HTMLElement>('[data-checkout-ticket-name]')!.textContent = ticket.name;
+  page.querySelector<HTMLElement>('[data-checkout-ticket-quantity]')!.textContent = ticket.quantity + (ticket.quantity === 1 ? ' person' : ' people');
+  photo.src = ticket.photo;
+  photo.hidden = false;
+  fields.disabled = false;
+
   let catalogReady = false;
-  let returningPayment = false;
-  let couponExpanded = couponDetails.open;
-  let couponTransition = 0;
-  let couponAnimations: Animation[] = [];
-  let couponScroll: { expanded: boolean; start: number; end: number } | undefined;
-
-  couponDetails.dataset.couponOpen = String(couponExpanded);
-  couponContent.inert = !couponExpanded;
-
-  function settleCouponMotion(): void {
-    couponTransition += 1;
-    couponAnimations.forEach((animation) => {
-      animation.onfinish = null;
-      animation.cancel();
-    });
-    couponAnimations = [];
-    couponDetails.open = couponExpanded;
-    panel.style.height = '';
-
-    if (couponScroll) {
-      panel.scrollTop = couponExpanded === couponScroll.expanded ? couponScroll.end : couponScroll.start;
-      couponScroll = undefined;
-    }
-  }
-
-  function setCouponOpen(next: boolean): void {
-    if (next === couponExpanded) return;
-
-    couponExpanded = next;
-    couponDetails.dataset.couponOpen = String(next);
-    couponContent.inert = !next;
-
-    if (couponAnimations.length) {
-      couponAnimations.forEach((animation) => animation.reverse());
-
-      return;
-    }
-
-    if (reducedMotion.matches || typeof couponContent.animate !== 'function') {
-      settleCouponMotion();
-
-      return;
-    }
-
-    const startSurface = surface.getBoundingClientRect();
-    const startPanelTop = panel.getBoundingClientRect().top;
-    const startContentTop = panelContent.getBoundingClientRect().top;
-    const startAfterTop = afterCoupon.getBoundingClientRect().top - startContentTop;
-    const startScroll = panel.scrollTop;
-
-    // Probe the destination synchronously; the browser never paints this state.
-    couponDetails.open = next;
-    const endSurface = surface.getBoundingClientRect();
-    const endPanelTop = panel.getBoundingClientRect().top;
-    const endContentTop = panelContent.getBoundingClientRect().top;
-    const endAfterTop = afterCoupon.getBoundingClientRect().top - endContentTop;
-    const endScroll = panel.scrollTop;
-
-    // Keep a stable clipping/scroll viewport and normal-flow fields until finish.
-    couponDetails.open = true;
-    panel.style.height = `${Math.max(startSurface.height, endSurface.height)}px`;
-    panel.scrollTop = startScroll;
-    couponScroll = { expanded: next, start: startScroll, end: endScroll };
-    const frame = surface.getBoundingClientRect();
-    const panelTop = panel.getBoundingClientRect().top;
-    const startPanelOffset = startPanelTop - panelTop;
-    const endPanelOffset = endPanelTop - panelTop;
-    const contentTop = panelContent.getBoundingClientRect().top;
-    const afterTop = afterCoupon.getBoundingClientRect().top - contentTop;
-    const current = ++couponTransition;
-    const options: KeyframeAnimationOptions = {
-      duration: 180,
-      easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
-      fill: 'both',
-    };
-    const contentAnimation = couponContent.animate([
-      { opacity: next ? 0 : 1, transform: next ? 'translateY(-8px)' : 'translateY(0)' },
-      { opacity: next ? 1 : 0, transform: next ? 'translateY(0)' : 'translateY(-8px)' },
-    ], options);
-
-    // Move the scroll viewport for recentering; internal motion only bridges scroll clamping.
-    // Scale only the decorative paper; text and controls remain unscaled.
-    couponAnimations = [
-      contentAnimation,
-      afterCoupon.animate([
-        { transform: `translateY(${startAfterTop - afterTop}px)` },
-        { transform: `translateY(${endAfterTop - afterTop}px)` },
-      ], options),
-      panelContent.animate([
-        { transform: `translateY(${startContentTop - contentTop - startPanelOffset}px)` },
-        { transform: `translateY(${endContentTop - contentTop - endPanelOffset}px)` },
-      ], options),
-      surface.animate([
-        { transform: `translateY(${startSurface.top - frame.top}px) scaleY(${startSurface.height / frame.height})` },
-        { transform: `translateY(${endSurface.top - frame.top}px) scaleY(${endSurface.height / frame.height})` },
-      ], options),
-      panel.animate([
-        { transform: `translateY(${startPanelOffset}px)` },
-        { transform: `translateY(${endPanelOffset}px)` },
-      ], options),
-    ];
-
-    contentAnimation.onfinish = () => {
-      if (current === couponTransition) settleCouponMotion();
-    };
-  }
-
-  couponSummary.addEventListener('click', (event) => {
-    event.preventDefault();
-    setCouponOpen(!couponExpanded);
-  });
-  reducedMotion.addEventListener('change', () => {
-    if (reducedMotion.matches) settleCouponMotion();
-  });
-  window.addEventListener('resize', settleCouponMotion);
-  panel.addEventListener('wheel', settleCouponMotion, { passive: true });
-  panel.addEventListener('touchstart', settleCouponMotion, { passive: true });
 
   function couponCode(): string {
     return couponInput.value.trim().toUpperCase();
   }
 
-  function message(title: string, copy: string, label: string, disabled = false): void {
-    settleCouponMotion();
+  function renderCoupon(): void {
+    const applied = quote?.coupon_applied;
+
+    couponContent.inert = !couponDetails.open;
+    couponLabel.textContent = applied && !couponDetails.open ? applied + ' applied' : 'Have a coupon?';
+    couponAction.textContent = couponDetails.open ? 'Close' : applied ? 'Change' : '';
+    couponRemove.hidden = !couponCode();
+  }
+
+  function setCouponOpen(open: boolean): void {
+    if (!open && couponContent.contains(document.activeElement)) couponSummary.focus({ preventScroll: true });
+
+    couponDetails.open = open;
+    renderCoupon();
+  }
+
+  couponDetails.addEventListener('toggle', () => {
+    renderCoupon();
+
+    if (couponDetails.open && !reducedMotion.matches && typeof couponContent.animate === 'function') {
+      couponContent.animate(
+        [{ opacity: 0, transform: 'translateY(-4px)' }, { opacity: 1, transform: 'translateY(0)' }],
+        { duration: 180, easing: 'cubic-bezier(0.16, 1, 0.3, 1)' },
+      );
+    }
+  });
+
+  function message(title: string, copy: string, label: string, disabled = false, quiet = false): void {
     noticeTitle.textContent = title;
     noticeCopy.textContent = copy;
-    payment.textContent = label;
+    notice.hidden = quiet;
+    paymentLabel.textContent = label;
     payment.disabled = disabled;
     payment.setAttribute('aria-busy', String(busy));
-    couponApply.disabled = busy || returningPayment;
-    couponRemove.disabled = busy || returningPayment;
+    couponApply.disabled = busy;
+    couponRemove.disabled = busy;
   }
 
   function beginOperation(): { id: number; revision: number; controller: AbortController } {
@@ -202,8 +120,7 @@ export function initializeDevcon26Checkout(page: HTMLElement): void {
   }
 
   function isCurrent(current: { id: number; revision: number }): boolean {
-    return current.id === operation && current.revision === revision && dialog!.open
-      && dialog!.dataset.visible !== 'closing';
+    return active && current.id === operation && current.revision === revision;
   }
 
   async function api(path: string, controller: AbortController, body?: Record<string, unknown>): Promise<Record<string, unknown>> {
@@ -250,27 +167,25 @@ export function initializeDevcon26Checkout(page: HTMLElement): void {
   }
 
   function hideQuote(): void {
-    settleCouponMotion();
     quote = null;
     quoteView.hidden = true;
+    renderCoupon();
   }
 
   function showQuote(value: Devcon26Quote): void {
-    settleCouponMotion();
     quote = value;
-    ticketPrice.textContent = devcon26Amount(value.final_amount_minor);
     form.querySelector<HTMLElement>('[data-checkout-base]')!.textContent = devcon26Amount(value.base_amount_minor);
     form.querySelector<HTMLElement>('[data-checkout-discount]')!.textContent = '−' + devcon26Amount(value.discount_amount_minor);
     form.querySelector<HTMLElement>('[data-checkout-final]')!.textContent = devcon26Amount(value.final_amount_minor);
     form.querySelector<HTMLElement>('[data-checkout-discount-row]')!.hidden = value.discount_amount_minor === 0;
     quoteView.hidden = false;
-    couponRemove.hidden = !value.coupon_applied && !couponCode();
-    couponStatus.textContent = value.coupon_applied ? value.coupon_applied + ' applied. Your discount is included below.' : '';
+    couponStatus.textContent = '';
+    setCouponOpen(false);
   }
 
   function ready(): void {
     action = 'initialize';
-    message('Ready when you are.', 'Review your total, then continue to Paystack to complete your payment securely.', 'Continue to payment');
+    message('', '', 'Continue to payment', false, true);
   }
 
   function couponFailure(error: unknown): boolean {
@@ -278,16 +193,16 @@ export function initializeDevcon26Checkout(page: HTMLElement): void {
 
     couponInput.setAttribute('aria-invalid', 'true');
     couponStatus.textContent = COUPON_MESSAGES[error.couponError];
-    couponRemove.hidden = false;
     action = 'quote';
-    message('Your coupon needs another look.', 'Try another code, or remove it to refresh your total.', 'Update your coupon', true);
+    message('Check your coupon.', 'Try another code, or remove it to refresh your total.', 'Apply coupon first', true);
     setCouponOpen(true);
 
     return true;
   }
 
   async function refreshQuote(): Promise<void> {
-    if (!dialog!.open || returningPayment) return;
+    if (!active) return;
+    if (!catalogReady) return void checkAvailability();
 
     const code = couponCode();
 
@@ -311,7 +226,7 @@ export function initializeDevcon26Checkout(page: HTMLElement): void {
 
       if (!isCurrent(current)) return;
 
-      const value = devcon26Quote(result, tier);
+      const value = devcon26Quote(result, tier!);
 
       if (!value || value.coupon_applied !== (code || null)) throw new CheckoutError();
 
@@ -331,6 +246,8 @@ export function initializeDevcon26Checkout(page: HTMLElement): void {
   }
 
   async function checkAvailability(): Promise<void> {
+    if (!active) return;
+
     const current = beginOperation();
 
     hideQuote();
@@ -361,7 +278,6 @@ export function initializeDevcon26Checkout(page: HTMLElement): void {
   }
 
   function invalidateInput(): void {
-    settleCouponMotion();
     window.clearTimeout(refreshTimer);
     abort?.abort();
     operation += 1;
@@ -370,82 +286,10 @@ export function initializeDevcon26Checkout(page: HTMLElement): void {
     busy = false;
   }
 
-  function selectTicket(button: HTMLButtonElement): void {
-    tier = button.dataset.ticketId!.replaceAll('-', '_');
-    ticketName.textContent = button.dataset.ticketName || '';
-    ticketPrice.textContent = button.dataset.ticketPrice || '';
-    ticketPhoto.src = button.dataset.ticketPhoto!;
-    dialog!.dataset.ticketFeatured = button.dataset.ticketFeatured || 'false';
-  }
-
-  function showCheckout(): void {
-    window.clearTimeout(closeTimer);
-    const current = ++transition;
-
-    if (!dialog!.open) dialog!.showModal();
-    window.requestAnimationFrame(() => {
-      if (current === transition && dialog!.open) dialog!.dataset.visible = 'true';
-    });
-  }
-
-  function closeCheckout(): void {
-    if (!dialog!.open) return;
-
-    window.clearTimeout(closeTimer);
-    settleCouponMotion();
-    invalidateInput();
-    transition += 1;
-    dialog!.dataset.visible = 'closing';
-    closeTimer = window.setTimeout(() => {
-      dialog!.close();
-      dialog!.removeAttribute('data-visible');
-    }, reducedMotion.matches ? 0 : 180);
-  }
-
-  async function verifyPayment(value: string): Promise<void> {
-    returningPayment = true;
-    form.querySelector<HTMLElement>('.checkout-buyer-fields')!.hidden = true;
-    couponDetails.hidden = true;
-    const current = beginOperation();
-
-    reference = value;
-    action = 'verify';
-    message('Confirming your payment.', 'Checking the result directly with Paystack.', 'Confirming…', true);
-
-    try {
-      const result = await api('/verify', current.controller, { reference: value });
-
-      if (!isCurrent(current)) return;
-
-      const summary = devcon26TestPaymentSummary(result);
-      const button = choices.find((candidate) => candidate.dataset.ticketId!.replaceAll('-', '_') === result.tier_key);
-
-      if (!summary || !button) throw new CheckoutError();
-
-      selectTicket(button);
-      ticketPrice.textContent = summary.amount;
-      busy = false;
-
-      if (summary.status === 'verified' || summary.status === 'refund_required') {
-        window.location.replace(devcon26ConfirmationUrl(value));
-      } else if (summary.status === 'pending') {
-        message('Your payment is still pending.', 'Paystack hasn’t confirmed success yet. Check the existing payment before starting another.', 'Check payment status');
-      } else {
-        message('Payment wasn’t successful.', 'No successful payment was confirmed. Close this window when you’re ready to try again.', 'Check payment status');
-      }
-    } catch {
-      if (!isCurrent(current)) return;
-
-      busy = false;
-      message('We couldn’t confirm your payment yet.', 'Please check the status again before starting another payment.', 'Check payment status');
-    }
-  }
-
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
 
-    if (busy) return;
-    if (action === 'verify') return void verifyPayment(reference || '');
+    if (!active || busy) return;
     if (action === 'availability') return void checkAvailability();
     if (action === 'quote') return void refreshQuote();
     if (!quote || quote.coupon_applied !== (couponCode() || null)) return;
@@ -475,7 +319,7 @@ export function initializeDevcon26Checkout(page: HTMLElement): void {
 
       if (!isCurrent(current)) return;
 
-      const initialized = devcon26Quote(result, tier);
+      const initialized = devcon26Quote(result, tier!);
       const destination = new URL(String(result.authorization_url));
 
       if (!initialized || initialized.coupon_applied !== expected.coupon_applied
@@ -487,7 +331,7 @@ export function initializeDevcon26Checkout(page: HTMLElement): void {
         || initialized.final_amount_minor !== expected.final_amount_minor) {
         busy = false;
         showQuote(initialized);
-        message('Your total has changed.', 'Review the updated total below before continuing to payment.', 'Continue to payment');
+        message('Your total has changed.', 'Review the updated total before continuing to payment.', 'Continue to payment');
 
         return;
       }
@@ -521,33 +365,29 @@ export function initializeDevcon26Checkout(page: HTMLElement): void {
         return;
       }
 
-      message('Checkout couldn’t start.', 'No payment was confirmed. Please try again shortly.', 'Try again');
+      message('Checkout couldn’t start.', 'Please try again. We’ll retry the same checkout.', 'Try again');
     }
   });
-
-  purchaserName.addEventListener('input', buyerChanged);
-  purchaserEmail.addEventListener('input', buyerChanged);
 
   function buyerChanged(): void {
     purchaserName.setCustomValidity('');
     purchaserEmail.setCustomValidity('');
     invalidateInput();
 
-    if (returningPayment) return;
     if (quote) return ready();
 
     refreshTimer = window.setTimeout(() => {
-      if (dialog!.open && dialog!.dataset.visible !== 'closing') {
-        void (catalogReady ? refreshQuote() : checkAvailability());
-      }
+      if (active) void refreshQuote();
     }, 250);
   }
+
+  purchaserName.addEventListener('input', buyerChanged);
+  purchaserEmail.addEventListener('input', buyerChanged);
 
   couponInput.addEventListener('input', () => {
     invalidateInput();
     hideQuote();
     couponInput.removeAttribute('aria-invalid');
-    couponRemove.hidden = !couponInput.value;
     couponStatus.textContent = couponCode() ? 'Apply your code to update the total.' : '';
     action = 'quote';
     message('Review your coupon.', 'Apply the code or remove it to refresh your total.', 'Apply coupon first', true);
@@ -556,60 +396,47 @@ export function initializeDevcon26Checkout(page: HTMLElement): void {
   });
 
   couponApply.addEventListener('click', () => {
-    if (!busy && !returningPayment) void refreshQuote();
+    if (active && !busy) void refreshQuote();
+  });
+
+  couponInput.addEventListener('keydown', (event) => {
+    if (event.key !== 'Enter') return;
+
+    event.preventDefault();
+
+    if (active && !busy) void refreshQuote();
   });
 
   couponRemove.addEventListener('click', () => {
+    if (!active || busy) return;
+
+    if (document.activeElement === couponRemove) couponSummary.focus({ preventScroll: true });
+
     invalidateInput();
     couponInput.value = '';
     couponInput.removeAttribute('aria-invalid');
     couponStatus.textContent = '';
-    couponRemove.hidden = true;
+    setCouponOpen(false);
     void refreshQuote();
   });
 
-  choices.forEach((button) => {
-    button.disabled = false;
-    button.addEventListener('click', () => {
-      invalidateInput();
-      selectTicket(button);
-      reference = undefined;
-      returningPayment = false;
-      form.querySelector<HTMLElement>('.checkout-buyer-fields')!.hidden = false;
-      couponDetails.hidden = false;
-      showCheckout();
-      void checkAvailability();
-    });
-  });
-
-  dialog.addEventListener('click', (event) => {
-    if (event.target === dialog) closeCheckout();
-  });
-  dialog.addEventListener('cancel', (event) => {
-    event.preventDefault();
-    closeCheckout();
-  });
-  dialog.querySelector<HTMLFormElement>('.checkout-dismiss')!.addEventListener('submit', (event) => {
-    event.preventDefault();
-    closeCheckout();
-  });
-  dialog.addEventListener('close', () => {
-    settleCouponMotion();
-    invalidateInput();
-    dialog.removeAttribute('data-visible');
-  });
   window.addEventListener('pagehide', () => {
-    settleCouponMotion();
-    invalidateInput();
+    active = false;
+    window.clearTimeout(refreshTimer);
+    abort?.abort();
+    operation += 1;
+    busy = false;
+    hideQuote();
+    payment.disabled = true;
   });
 
-  const returnUrl = new URL(window.location.href);
-  const returnedReference = returnUrl.searchParams.get('reference');
+  window.addEventListener('pageshow', (event) => {
+    if (!event.persisted) return;
 
-  if (returnUrl.searchParams.get('test_checkout') === 'return') {
-    ['reference', 'trxref', 'test_checkout'].forEach((key) => returnUrl.searchParams.delete(key));
-    window.history.replaceState(null, '', returnUrl.pathname + returnUrl.search + returnUrl.hash);
-    showCheckout();
-    void verifyPayment(returnedReference || '');
-  }
+    active = true;
+    void checkAvailability();
+  });
+
+  renderCoupon();
+  void checkAvailability();
 }

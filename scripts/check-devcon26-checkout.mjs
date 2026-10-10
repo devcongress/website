@@ -68,6 +68,35 @@ assert.equal(devcon26TestPaymentSummary({ ...quote, status: 'refund_required', a
 assert.equal(devcon26TestPaymentSummary({ mode: 'test', status: 'verified', tier_key: 'regular', quantity: 1, currency: 'GHS', amount_minor: 19999 }).amount, 'GHS 199.99');
 assert.equal(devcon26TestPaymentSummary({ mode: 'test', status: 'verified', tier_key: 'regular', quantity: 1, currency: 'GHS', amount_minor: 19999, base_amount_minor: 19999 }), null);
 
+const navigationCode = await bundle('src/lib/devcon26-checkout-navigation.ts');
+const testReference = 'devcon26-test-' + 'a'.repeat(32);
+
+for (const [search, expected] of [
+  ['?test_checkout=return&reference=' + testReference + '&trxref=' + testReference, '/devcon26/payment-confirmation/#reference=DC26-' + 'A'.repeat(32)],
+  ['?test_checkout=return', '/devcon26/payment-confirmation/'],
+  ['?test_checkout=return&reference=invalid', '/devcon26/payment-confirmation/'],
+  ['?test_checkout=return&reference=' + testReference + '&reference=' + testReference, '/devcon26/payment-confirmation/'],
+  ['?test_checkout=return&test_checkout=other&reference=' + testReference, '/devcon26/payment-confirmation/'],
+  ['?tier=regular', null],
+]) {
+  const module = { exports: {} };
+  const cleaned = [];
+  const destinations = [];
+  const window = {
+    location: { href: 'https://devcongress.org/devcon26/' + search, replace: (url) => destinations.push(url) },
+    history: { replaceState: (_state, _title, url) => cleaned.push(url) },
+  };
+
+  vm.runInNewContext(navigationCode, { module, window, URL, URLSearchParams, Intl, Number, Object });
+  module.exports.redirectDevcon26PaymentReturn();
+  assert.deepEqual(destinations, expected ? [expected] : []);
+
+  if (expected) {
+    assert.equal(cleaned.length, 1);
+    assert.ok(!/reference|trxref|test_checkout/.test(cleaned[0]), 'Legacy callback parameters are removed before confirmation navigation');
+  }
+}
+
 class Element {
   constructor() {
     this.dataset = {};
@@ -117,14 +146,12 @@ class Element {
     return true;
   }
 
-  showModal() {
-    this.open = true;
+  contains(element) {
+    return this === element || [...this.children.values()].some((child) => child instanceof Element && child.contains(element));
   }
 
-  close() {
-    this.open = false;
-
-    void this.fire('close');
+  focus() {
+    this.focused = true;
   }
 }
 
@@ -142,109 +169,80 @@ function child(parent, selector) {
 
 const checkoutCode = await bundle('src/lib/devcon26-checkout.ts');
 
-function checkoutFixture({ motion = false, mobile = false, viewportHeight = 1000 } = {}) {
+function checkoutFixture({ motion = false, search = '?tier=regular', origin = 'https://em.devcongress.org' } = {}) {
   const page = new Element();
-  const dialog = child(page, '#ticket-checkout-dialog');
-  const form = child(dialog, '[data-checkout-buyer-form]');
+  const form = child(page, '[data-checkout-buyer-form]');
+  const fields = child(form, '[data-checkout-fields]');
+  const invalid = child(page, '[data-checkout-invalid]');
   const elements = {};
-  const selectors = [
-    'purchaser-name', 'purchaser-email', 'coupon-code', 'coupon', 'coupon-apply',
-    'coupon-remove', 'coupon-status', 'payment', 'quote', 'base', 'discount',
-    'final', 'discount-row',
-  ];
-
-  for (const name of selectors) {
-    elements[name] = child(form, '[data-checkout-' + name + ']');
-  }
-
-  elements['coupon-summary'] = child(elements.coupon, 'summary');
-  elements['coupon-content'] = child(elements.coupon, '[data-checkout-coupon-content]');
-  elements['after-coupon'] = child(form, '[data-checkout-after-coupon]');
-  elements.panel = child(dialog, '.checkout-panel');
-  elements.content = child(elements.panel, '[data-checkout-content]');
-  elements.surface = child(dialog, '[data-checkout-surface]');
-  elements.dialog = dialog;
-  child(form, '.checkout-buyer-fields');
-  child(dialog, '.checkout-dismiss');
-
-  for (const name of ['notice-title', 'notice-copy', 'ticket-name', 'ticket-price', 'ticket-photo']) {
-    elements[name] = child(dialog, '[data-checkout-' + name + ']');
-  }
-
-  const button = new Element();
-
-  button.dataset = { ticketId: 'regular', ticketName: 'Regular ticket', ticketPrice: 'GHS 199.99', ticketPhoto: '/photo.webp' };
-  page.children.set('[data-ticket-choice]', [button]);
-  page.dataset.checkoutApiOrigin = 'https://em.devcongress.org';
-  elements['purchaser-name'].value = 'Ada Buyer';
-  elements['purchaser-email'].value = 'ADA@example.org';
-
   const requests = [];
   const assigned = [];
   const animations = [];
   const reducedMotion = new Element();
   const windowEvents = new Element();
+  const document = { activeElement: null };
 
+  fields.disabled = true;
+  invalid.hidden = true;
   reducedMotion.matches = !motion;
 
+  for (const name of ['purchaser-name', 'purchaser-email', 'coupon-code', 'coupon', 'coupon-apply', 'coupon-remove', 'coupon-status', 'payment', 'quote', 'base', 'discount', 'final', 'discount-row']) {
+    elements[name] = child(form, '[data-checkout-' + name + ']');
+  }
+
+  const notice = child(form, '[data-checkout-notice]');
+
+  elements['notice-title'] = child(notice, '[data-checkout-notice-title]');
+  elements['notice-copy'] = child(notice, '[data-checkout-notice-copy]');
+  elements.notice = notice;
+  elements['payment-label'] = child(elements.payment, '[data-checkout-payment-label]');
+  elements.photo = child(page, '[data-checkout-photo]');
+  elements.photo.hidden = true;
+  elements['ticket-name'] = child(page, '[data-checkout-ticket-name]');
+  elements['ticket-quantity'] = child(page, '[data-checkout-ticket-quantity]');
+  elements['coupon-summary'] = child(elements.coupon, 'summary');
+  elements['coupon-label'] = child(elements['coupon-summary'], '[data-checkout-coupon-label]');
+  elements['coupon-action'] = child(elements['coupon-summary'], '[data-checkout-coupon-action]');
+  elements['coupon-content'] = child(elements.coupon, '[data-checkout-coupon-content]');
+  elements['coupon-content'].children.set('input', elements['coupon-code']);
+  elements['coupon-summary'].focus = () => {
+    document.activeElement = elements['coupon-summary'];
+  };
+  page.dataset.checkoutApiOrigin = origin;
+  elements['purchaser-name'].value = ' Ada Buyer ';
+  elements['purchaser-email'].value = ' ADA@EXAMPLE.ORG ';
+
   if (motion) {
-    const naturalHeight = () => elements.coupon.open ? 600 : 500;
-    const panelHeight = () => Math.min(Number.parseFloat(elements.panel.style.height) || naturalHeight(), viewportHeight);
-    const panelTop = () => (viewportHeight - panelHeight()) / (mobile ? 1 : 2);
-    const contentTop = () => {
-      elements.panel.scrollTop = Math.min(elements.panel.scrollTop, naturalHeight() - panelHeight());
-
-      return panelTop() - elements.panel.scrollTop;
+    elements['coupon-content'].animate = (keyframes, options) => {
+      animations.push({ keyframes, options });
     };
-
-    elements.panel.getBoundingClientRect = () => ({ top: panelTop(), height: panelHeight() });
-    elements.surface.getBoundingClientRect = elements.panel.getBoundingClientRect;
-    elements.content.getBoundingClientRect = () => ({ top: contentTop(), height: naturalHeight() });
-    elements['coupon-content'].getBoundingClientRect = () => ({ top: contentTop() + 140 });
-    elements['after-coupon'].getBoundingClientRect = () => ({
-      top: contentTop() + (elements.coupon.open ? 240 : 140),
-    });
-
-    for (const name of ['surface', 'panel', 'content', 'coupon-content', 'after-coupon']) {
-      elements[name].animate = (keyframes, options) => {
-        const animation = {
-          name, keyframes, options, cancelled: false, onfinish: null, reversals: 0, currentTime: 75,
-
-          reverse() {
-            this.reversals += 1;
-          },
-
-          cancel() {
-            this.cancelled = true;
-          },
-        };
-
-        animations.push(animation);
-
-        return animation;
-      };
-    }
   }
 
   const window = {
     matchMedia: () => reducedMotion,
-    getComputedStyle: () => ({ opacity: '1' }),
     setTimeout,
     clearTimeout,
-    requestAnimationFrame: (callback) => callback(),
     addEventListener: (name, callback) => windowEvents.addEventListener(name, callback),
-    location: { href: 'https://devcongress.org/devcon26/', assign: (url) => assigned.push(url), replace: (url) => assigned.push(url) },
-    history: { replaceState: noop },
+    location: {
+      href: 'https://devcongress.org/devcon26/checkout/' + search,
+      search,
+      assign: (url) => assigned.push(url),
+    },
   };
   const fetch = (url, options) => new Promise((resolve, reject) => {
     requests.push({ url: String(url), options, body: options.body ? JSON.parse(options.body) : null, resolve, reject });
   });
   const module = { exports: {} };
 
-  vm.runInNewContext(checkoutCode, { module, window, fetch, URL, URLSearchParams, Intl, Number, Object, AbortController, crypto: { randomUUID } });
+  vm.runInNewContext(checkoutCode, { module, document, window, fetch, URL, URLSearchParams, Intl, Number, Object, AbortController, crypto: { randomUUID } });
   module.exports.initializeDevcon26Checkout(page);
 
-  return { page, dialog, form, elements, button, requests, assigned, animations, reducedMotion, windowEvents };
+  return { page, form, fields, invalid, elements, document, requests, assigned, animations, reducedMotion, windowEvents };
+}
+
+async function toggleCoupon(fixture, open) {
+  fixture.elements.coupon.open = open;
+  await fixture.elements.coupon.fire('toggle');
 }
 
 function tick() {
@@ -310,7 +308,6 @@ assert.equal(printed, false);
 async function readyFixture(options) {
   const fixture = checkoutFixture(options);
 
-  await fixture.button.fire('click');
   respond(fixture.requests[0], catalog);
   await tick();
   respond(fixture.requests[1], baseQuote);
@@ -319,149 +316,142 @@ async function readyFixture(options) {
   return fixture;
 }
 
+for (const search of ['', '?tier=wrong', '?tier=regular&tier=team_3', '?tier=__proto__', '?tier=team-3']) {
+  const invalid = checkoutFixture({ search });
+
+  assert.equal(invalid.requests.length, 0, 'Invalid selection never starts an API request');
+  assert.equal(invalid.fields.disabled, true);
+  assert.equal(invalid.form.hidden, true);
+  assert.equal(invalid.invalid.hidden, false);
+  assert.equal(invalid.elements.photo.hidden, true, 'Invalid selection never selects a photo');
+}
+
+for (const [tier, name, quantity, amount, photo] of [
+  ['regular', 'Regular ticket', 1, 19999, 'ticket-solo.webp'],
+  ['team_3', 'Team of 3', 3, 54999, 'ticket-small-group.webp'],
+  ['team_5', 'Team of 5', 5, 84999, 'ticket-community.webp'],
+]) {
+  const selected = checkoutFixture({ search: '?tier=' + tier });
+  const selectedQuote = { ...baseQuote, tier_key: tier, quantity, base_amount_minor: amount, final_amount_minor: amount };
+
+  assert.equal(selected.elements['ticket-name'].textContent, name);
+  assert.equal(selected.elements['ticket-quantity'].textContent, quantity + (quantity === 1 ? ' person' : ' people'));
+  assert.equal(selected.elements.photo.src, '/images/devcon26/' + photo);
+  assert.equal(selected.elements.photo.hidden, false);
+  assert.ok(readFileSync(root + '/public' + selected.elements.photo.src).length > 0, 'Selected photo exists locally');
+  assert.equal(selected.fields.disabled, false);
+  respond(selected.requests[0], { ...catalog, tiers: [{ tier_key: tier, currency: 'GHS', amount_minor: amount }] });
+  await tick();
+  assert.deepEqual(selected.requests[1].body, { tier_key: tier });
+  respond(selected.requests[1], selectedQuote);
+  await tick();
+  assert.equal(selected.elements.payment.disabled, false);
+  assert.equal(selected.elements['payment-label'].textContent, 'Continue to payment');
+  assert.equal(selected.elements.payment.textContent, '', 'State changes update the label, preserving the button icon');
+  assert.equal(selected.requests.length, 2, 'Page load only checks catalog and quote');
+  assert.equal(selected.assigned.length, 0);
+}
+
 const disclosure = await readyFixture();
 
 assert.equal(disclosure.elements['coupon-content'].inert, true);
-await disclosure.elements['coupon-summary'].fire('click');
-assert.equal(disclosure.elements.coupon.open, true);
+await toggleCoupon(disclosure, true);
 assert.equal(disclosure.elements['coupon-content'].inert, false);
-await disclosure.elements['coupon-summary'].fire('click');
-assert.equal(disclosure.elements.coupon.open, false);
+await toggleCoupon(disclosure, false);
 assert.equal(disclosure.elements['coupon-content'].inert, true);
 assert.equal(disclosure.animations.length, 0, 'Reduced motion skips animations');
 assert.equal(disclosure.requests.length, 2, 'Disclosure does not request a new quote');
+assert.equal(disclosure.elements.photo.src, '/images/devcon26/ticket-solo.webp', 'Coupon toggles retain the selected background');
 
 const movingDisclosure = await readyFixture({ motion: true });
 
-await movingDisclosure.elements['coupon-summary'].fire('click');
-assert.equal(movingDisclosure.elements.coupon.open, true);
-assert.equal(movingDisclosure.elements.panel.style.height, '600px', 'Freeze the clipping viewport for the entire transition');
-assert.equal(movingDisclosure.animations[1].keyframes[0].transform, 'translateY(-100px)');
-assert.equal(movingDisclosure.animations[2].keyframes[0].transform, 'translateY(0px)', 'Roomy content stays inside its own scroll viewport');
-assert.equal(movingDisclosure.animations[2].keyframes[1].transform, 'translateY(0px)');
-assert.equal(movingDisclosure.animations[2].name, 'content', 'Translate content without scaling its text');
-assert.equal(movingDisclosure.animations[3].name, 'surface');
-assert.equal(movingDisclosure.animations[3].keyframes[0].transform, 'translateY(50px) scaleY(0.8333333333333334)');
-assert.equal(movingDisclosure.animations[3].keyframes[1].transform, 'translateY(0px) scaleY(1)');
-assert.equal(movingDisclosure.animations.length, 5);
-assert.equal(movingDisclosure.animations[4].name, 'panel');
-assert.equal(movingDisclosure.animations[4].keyframes[0].transform, 'translateY(50px)', 'Recentring moves the scroll viewport, not its contents');
-assert.equal(movingDisclosure.animations[4].keyframes[1].transform, 'translateY(0px)');
+await toggleCoupon(movingDisclosure, true);
+assert.equal(movingDisclosure.animations.length, 1);
+assert.equal(movingDisclosure.animations[0].options.duration, 180);
+assert.equal(movingDisclosure.animations[0].options.easing, 'cubic-bezier(0.16, 1, 0.3, 1)');
+assert.ok(movingDisclosure.animations[0].keyframes.every((frame) => Object.keys(frame).every((property) => ['transform', 'opacity'].includes(property))));
 
-for (const animation of movingDisclosure.animations) {
-  assert.equal(animation.options.duration, 180);
-  assert.equal(animation.options.easing, 'cubic-bezier(0.16, 1, 0.3, 1)');
+const applied = await readyFixture();
 
-  for (const frame of animation.keyframes) {
-    assert.ok(Object.keys(frame).every((property) => ['transform', 'opacity'].includes(property)));
-  }
-}
-
-await movingDisclosure.elements['coupon-summary'].fire('click');
-assert.equal(movingDisclosure.elements.coupon.open, true, 'Keep exit content rendered until its fade completes');
-assert.equal(movingDisclosure.elements.panel.style.height, '600px', 'Closing must not collapse the clipping viewport');
-assert.equal(movingDisclosure.elements['coupon-content'].inert, true);
-assert.equal(movingDisclosure.animations.length, 5, 'Reverse the live timeline rather than snapping to a new layout');
-assert.ok(movingDisclosure.animations.every((animation) => animation.reversals === 1 && animation.currentTime === 75));
-
-await movingDisclosure.elements['coupon-summary'].fire('click');
-assert.equal(movingDisclosure.elements.coupon.open, true);
-assert.ok(movingDisclosure.animations.every((animation) => animation.reversals === 2));
-assert.equal(movingDisclosure.elements['coupon-content'].inert, false);
-const staleFinish = movingDisclosure.animations[0].onfinish;
-
-movingDisclosure.animations[0].onfinish();
-assert.ok(movingDisclosure.animations.every((animation) => animation.cancelled));
-assert.equal(movingDisclosure.elements.panel.style.height, '');
-
-await movingDisclosure.elements['coupon-summary'].fire('click');
-staleFinish();
-assert.equal(movingDisclosure.elements.panel.style.height, '600px', 'Stale completion cannot settle a newer transition');
-assert.equal(movingDisclosure.animations[6].keyframes[1].transform, 'translateY(-100px)');
-assert.equal(movingDisclosure.animations[7].keyframes[1].transform, 'translateY(0px)', 'Closing has no internal recentering overflow');
-assert.equal(movingDisclosure.animations[8].keyframes[1].transform, 'translateY(50px) scaleY(0.8333333333333334)');
-assert.equal(movingDisclosure.animations[9].keyframes[1].transform, 'translateY(50px)');
-movingDisclosure.animations[5].onfinish();
-assert.equal(movingDisclosure.elements.coupon.open, false);
-assert.equal(movingDisclosure.elements.panel.style.height, '');
-
-await movingDisclosure.elements['coupon-summary'].fire('click');
-await movingDisclosure.elements['coupon-summary'].fire('click');
-movingDisclosure.reducedMotion.matches = true;
-await movingDisclosure.reducedMotion.fire('change');
-assert.equal(movingDisclosure.elements.coupon.open, false, 'Reduced-motion change settles an in-flight close');
-assert.equal(movingDisclosure.elements.panel.style.height, '');
-assert.ok(movingDisclosure.animations.every((animation) => animation.cancelled));
-
-const reversedClose = await readyFixture({ motion: true });
-
-await reversedClose.elements['coupon-summary'].fire('click');
-reversedClose.animations[0].onfinish();
-await reversedClose.elements['coupon-summary'].fire('click');
-await reversedClose.elements['coupon-summary'].fire('click');
-assert.ok(reversedClose.animations.slice(5).every((animation) => animation.reversals === 1));
-reversedClose.animations[5].onfinish();
-assert.equal(reversedClose.elements.coupon.open, true, 'Reversing a closing timeline commits its open starting state');
-assert.equal(reversedClose.elements.panel.style.height, '');
-await reversedClose.elements['coupon-summary'].fire('click');
-reversedClose.elements['coupon-code'].value = 'SAVE-10';
-await reversedClose.elements['coupon-code'].fire('input');
-assert.ok(reversedClose.animations.every((animation) => animation.cancelled), 'Content changes clear old geometry before updating fields');
-assert.equal(reversedClose.elements.panel.style.height, '');
-
-const mobileDisclosure = await readyFixture({ motion: true, mobile: true });
-
-await mobileDisclosure.elements['coupon-summary'].fire('click');
-assert.equal(mobileDisclosure.animations[3].keyframes[0].transform, 'translateY(100px) scaleY(0.8333333333333334)', 'Bottom sheets keep their bottom edge anchored');
-assert.equal(mobileDisclosure.animations[4].keyframes[0].transform, 'translateY(100px)');
-assert.equal(mobileDisclosure.animations[2].keyframes[0].transform, 'translateY(0px)', 'Roomy bottom sheets do not create internal overflow');
-await mobileDisclosure.windowEvents.fire('resize');
-assert.equal(mobileDisclosure.elements.panel.style.height, '');
-assert.ok(mobileDisclosure.animations.every((animation) => animation.cancelled));
-
-for (const viewportHeight of [550, 600]) {
-  const boundaryDisclosure = await readyFixture({ motion: true, viewportHeight });
-
-  await boundaryDisclosure.elements['coupon-summary'].fire('click');
-  assert.ok(boundaryDisclosure.animations[2].keyframes.every((frame) => frame.transform === 'translateY(0px)'), 'Recentring never creates internal overflow at the viewport boundary');
-  boundaryDisclosure.animations[0].onfinish();
-  await boundaryDisclosure.elements['coupon-summary'].fire('click');
-  assert.ok(boundaryDisclosure.animations[7].keyframes.every((frame) => frame.transform === 'translateY(0px)'));
-  boundaryDisclosure.animations[5].onfinish();
-  assert.equal(boundaryDisclosure.elements.panel.style.height, '');
-}
-
-const scrolledDisclosure = await readyFixture({ motion: true, viewportHeight: 400 });
-
-await scrolledDisclosure.elements['coupon-summary'].fire('click');
-scrolledDisclosure.animations[0].onfinish();
-scrolledDisclosure.elements.panel.scrollTop = 180;
-await scrolledDisclosure.elements['coupon-summary'].fire('click');
-assert.equal(scrolledDisclosure.elements.panel.scrollTop, 180, 'Destination probing must restore the live scroll position');
-assert.equal(scrolledDisclosure.animations[7].keyframes[1].transform, 'translateY(80px)', 'Bridge the final scroll clamp without moving the viewport');
-assert.equal(scrolledDisclosure.animations[9].keyframes[1].transform, 'translateY(0px)', 'Capped panels retain their native scrolling position');
-scrolledDisclosure.animations[5].onfinish();
-assert.equal(scrolledDisclosure.elements.panel.scrollTop, 100);
-assert.equal(scrolledDisclosure.elements.panel.style.height, '');
-await scrolledDisclosure.elements['coupon-summary'].fire('click');
-await scrolledDisclosure.elements.panel.fire('wheel');
-assert.ok(scrolledDisclosure.animations.every((animation) => animation.cancelled), 'Scrolling settles motion without blocking the gesture');
-await scrolledDisclosure.elements['coupon-summary'].fire('click');
-await scrolledDisclosure.elements.panel.fire('touchstart');
-assert.ok(scrolledDisclosure.animations.every((animation) => animation.cancelled), 'Touch scrolling remains available on constrained panels');
-
-const validationDisclosure = await readyFixture({ motion: true });
-
-validationDisclosure.elements['coupon-code'].value = 'INVALID-CODE';
-await validationDisclosure.elements['coupon-code'].fire('input');
-await validationDisclosure.elements['coupon-apply'].fire('click');
-respond(validationDisclosure.requests[2], { coupon_error: 'invalid' }, 400);
+await toggleCoupon(applied, true);
+applied.elements['coupon-code'].value = 'save-10';
+await applied.elements['coupon-code'].fire('input');
+applied.document.activeElement = applied.elements['coupon-code'];
+await applied.elements['coupon-apply'].fire('click');
+respond(applied.requests[2], quote);
 await tick();
-assert.equal(validationDisclosure.elements.coupon.open, true, 'Validation opens the coupon through the motion helper');
-assert.equal(validationDisclosure.elements['coupon-content'].inert, false);
-assert.equal(validationDisclosure.animations.length, 5);
-await validationDisclosure.dialog.fire('close');
-assert.ok(validationDisclosure.animations.every((animation) => animation.cancelled));
+assert.equal(applied.elements.coupon.open, false, 'Applying a coupon collapses the editor');
+assert.equal(applied.document.activeElement, applied.elements['coupon-summary'], 'Collapsed fields return focus to the summary');
+assert.equal(applied.elements['coupon-label'].textContent, 'SAVE-10 applied');
+assert.equal(applied.elements['coupon-action'].textContent, 'Change');
+assert.equal(applied.elements['coupon-remove'].hidden, false);
+assert.equal(applied.elements.final.textContent, 'GHS 189.99');
+await toggleCoupon(applied, true);
+assert.equal(applied.requests.length, 3, 'Change keeps the accepted quote until the draft changes');
+assert.equal(applied.elements.payment.disabled, false);
+applied.elements['coupon-code'].value = 'OTHER-CODE';
+await applied.elements['coupon-code'].fire('input');
+assert.equal(applied.elements.payment.disabled, true, 'Editing requires an explicit new quote');
+applied.document.activeElement = applied.elements['coupon-remove'];
+await applied.elements['coupon-remove'].fire('click');
+assert.equal(applied.document.activeElement, applied.elements['coupon-summary'], 'Removing a coupon returns focus before the Remove button is hidden');
+assert.deepEqual(applied.requests[3].body, { tier_key: 'regular' });
+respond(applied.requests[3], baseQuote);
+await tick();
+assert.equal(applied.elements.coupon.open, false);
+assert.equal(applied.elements['coupon-label'].textContent, 'Have a coupon?');
+assert.equal(applied.elements.final.textContent, 'GHS 199.99');
+
+const keyboardCoupon = await readyFixture();
+
+keyboardCoupon.elements['coupon-code'].value = 'SAVE-10';
+await keyboardCoupon.elements['coupon-code'].fire('input');
+await keyboardCoupon.elements['coupon-code'].fire('keydown', { key: 'Enter' });
+assert.ok(keyboardCoupon.requests[2].url.endsWith('/quote'), 'Enter in the coupon field applies a quote, never initializes payment');
+respond(keyboardCoupon.requests[2], quote);
+await tick();
+await toggleCoupon(keyboardCoupon, true);
+await keyboardCoupon.elements['coupon-code'].fire('keydown', { key: 'Enter' });
+assert.ok(keyboardCoupon.requests[3].url.endsWith('/quote'), 'Enter on an unchanged applied coupon still cannot start payment');
+respond(keyboardCoupon.requests[3], quote);
+await tick();
+assert.equal(keyboardCoupon.assigned.length, 0);
+
+const discounted = await readyFixture();
+
+discounted.elements['coupon-code'].value = 'SAVE-10';
+await discounted.elements['coupon-code'].fire('input');
+await discounted.elements['coupon-apply'].fire('click');
+respond(discounted.requests[2], quote);
+await tick();
+const discountedSubmission = discounted.form.fire('submit');
+
+assert.equal(discounted.requests[3].body.coupon_code, 'SAVE-10');
+respond(discounted.requests[3], { ...quote, authorization_url: 'https://checkout.paystack.com/valid' });
+await discountedSubmission;
+assert.deepEqual(discounted.assigned, ['https://checkout.paystack.com/valid']);
+
+for (const invalidCatalog of [
+  { ...catalog, mode: 'live' },
+  { ...catalog, accepts_coupon: false },
+  { ...catalog, tiers: [] },
+  { ...catalog, tiers: [{ tier_key: 'regular', currency: 'USD', amount_minor: 19999 }] },
+]) {
+  const unavailable = checkoutFixture();
+
+  respond(unavailable.requests[0], invalidCatalog);
+  await tick();
+  assert.equal(unavailable.requests.length, 1);
+  assert.equal(unavailable.elements.quote.hidden, true);
+  assert.equal(unavailable.elements['notice-title'].textContent, 'We couldn’t connect to checkout.');
+}
+
+for (const origin of ['http://api.example.org', 'https://user:pass@api.example.org', 'https://api.example.org/path', 'https://api.example.org/?secret=1']) {
+  const invalidOrigin = checkoutFixture({ origin });
+
+  await tick();
+  assert.equal(invalidOrigin.requests.length, 0, 'Unsafe API origins never receive a request');
+}
 
 const changed = await readyFixture();
 const firstSubmission = changed.form.fire('submit');
@@ -483,13 +473,29 @@ respond(changed.requests[3], { ...baseQuote, authorization_url: 'https://checkou
 await retrySubmission;
 assert.equal(changed.assigned.length, 1);
 
-const closed = await readyFixture();
-const closingSubmission = closed.form.fire('submit');
+const leftPage = await readyFixture();
+const leavingSubmission = leftPage.form.fire('submit');
+const leavingKey = leftPage.requests[2].body.checkout_request_key;
 
-await closed.dialog.fire('cancel');
-respond(closed.requests[2], { ...baseQuote, authorization_url: 'https://checkout.paystack.com/valid' });
-await closingSubmission;
-assert.equal(closed.assigned.length, 0);
+await leftPage.windowEvents.fire('pagehide');
+assert.equal(leftPage.requests[2].options.signal.aborted, true);
+respond(leftPage.requests[2], { ...baseQuote, authorization_url: 'https://checkout.paystack.com/valid' });
+await leavingSubmission;
+assert.equal(leftPage.assigned.length, 0, 'Responses cannot redirect after leaving the page');
+await leftPage.form.fire('submit');
+assert.equal(leftPage.requests.length, 3, 'A hidden page cannot start another request');
+await leftPage.windowEvents.fire('pageshow', { persisted: true });
+respond(leftPage.requests[3], catalog);
+await tick();
+respond(leftPage.requests[4], baseQuote);
+await tick();
+assert.equal(leftPage.requests.length, 5, 'BFCache restore only refreshes availability and quote');
+const restoredSubmission = leftPage.form.fire('submit');
+
+assert.equal(leftPage.requests[5].body.checkout_request_key, leavingKey, 'BFCache preserves the unchanged checkout key');
+respond(leftPage.requests[5], { ...baseQuote, authorization_url: 'https://checkout.paystack.com/valid' });
+await restoredSubmission;
+assert.equal(leftPage.assigned.length, 1);
 
 const stale = await readyFixture();
 
@@ -559,6 +565,21 @@ assert.equal(progressing.requests[3].body.checkout_request_key, progressingKey);
 respond(progressing.requests[3], { ...baseQuote, authorization_url: 'https://checkout.paystack.com/valid' });
 await progressingRetry;
 
+for (const authorizationUrl of [
+  'http://checkout.paystack.com/valid',
+  'https://checkout.paystack.com.evil.example/valid',
+  'https://user:password@checkout.paystack.com/valid',
+  'https://checkout.paystack.com:444/valid',
+  'javascript:alert(1)',
+]) {
+  const unsafe = await readyFixture();
+  const submission = unsafe.form.fire('submit');
+
+  respond(unsafe.requests[2], { ...baseQuote, authorization_url: authorizationUrl });
+  await submission;
+  assert.equal(unsafe.assigned.length, 0, 'Unsafe provider destinations are rejected');
+}
+
 for (const couponError of ['invalid', 'expired', 'ineligible', 'unavailable']) {
   const bounded = await readyFixture();
 
@@ -575,18 +596,37 @@ for (const couponError of ['invalid', 'expired', 'ineligible', 'unavailable']) {
 
 const html = readFileSync(root + '/dist/devcon26/index.html', 'utf8');
 const sponsorSection = html.slice(html.indexOf('<section id="sponsors"'), html.indexOf('<section id="faqs"'));
-const checkoutSurface = html.match(/<div\b[^>]*data-checkout-surface[^>]*>([\s\S]*?)<\/div>/)?.[1];
-const checkoutArt = html.match(/<div\b[^>]*data-checkout-art[^>]*>([\s\S]*?)<\/div>/)?.[1];
+const checkoutSource = readFileSync(root + '/src/pages/devcon26/checkout.astro', 'utf8');
+const checkoutHtml = readFileSync(root + '/dist/devcon26/checkout/index.html', 'utf8');
 
-assert.ok(html.includes('data-checkout-coupon-content'));
-assert.ok(html.includes('data-checkout-after-coupon'));
-assert.ok(html.includes('data-checkout-surface'));
-assert.ok(html.includes('data-checkout-content'));
-assert.equal(checkoutSurface, '', 'Only the paper belongs to the stretching checkout surface');
-assert.ok(checkoutArt?.includes('data-checkout-ticket-photo'), 'The masked photo has its own unscaled layer');
-assert.ok(html.indexOf('data-checkout-surface') < html.indexOf('data-checkout-art'));
-assert.ok(html.indexOf('data-checkout-art') < html.indexOf('<section class="checkout-panel"'));
-assert.ok(!html.includes('data-coupon-closing'), 'Exit fields must remain in normal flow');
+assert.ok(!html.includes('ticket-checkout-dialog'), 'The landing page no longer contains a checkout modal');
+
+for (const tier of ['regular', 'team_3', 'team_5']) {
+  assert.ok(html.includes('href="/devcon26/checkout/?tier=' + tier + '"'), 'Ticket cards navigate directly to checkout');
+}
+
+assert.ok(checkoutHtml.includes('data-checkout-page'));
+assert.ok(checkoutHtml.includes('Complete your booking.'));
+assert.ok(checkoutHtml.includes('noindex, nofollow'));
+assert.ok(checkoutHtml.includes('data-checkout-fields disabled'), 'Buyer fields are disabled without JavaScript');
+assert.ok(!/name="(?:purchaser_name|purchaser_email|coupon_code)"/.test(checkoutHtml), 'Native form fallback cannot send buyer details in a URL');
+assert.ok(!checkoutHtml.includes('<dialog'), 'Checkout has no dialog');
+assert.ok(checkoutHtml.includes('class="checkout-backdrop"') && checkoutHtml.includes('data-checkout-photo'), 'Checkout renders a decorative tier-selected background');
+assert.ok(checkoutHtml.includes('src="/images/logo.png"') && !checkoutHtml.includes('devcongress-logo.png'), 'Header uses the existing working logo asset');
+assert.ok(readFileSync(root + '/public/images/logo.png').length > 0);
+assert.equal((checkoutHtml.match(/class="checkout-icon"/g) || []).length, 9, 'Navigation, ticket details, coupon, payment, and security icons render inline');
+assert.ok(checkoutHtml.includes('data-checkout-payment-label'), 'Payment label has its own node so icons survive state changes');
+assert.match(checkoutSource, /\.checkout-backdrop\s*\{[^}]*position: absolute;[^}]*height: 960px;/, 'Background geometry does not depend on the expanding coupon content');
+assert.match(checkoutSource, /\.checkout-backdrop img\s*\{[^}]*aspect-ratio: 5 \/ 4;[^}]*mask-image: radial-gradient/, 'Large photo keeps its crop and soft edge mask');
+assert.match(checkoutSource, /ellipse 50% 50% at 50% 50%,[\s\S]*?transparent 96%/, 'An inscribed centred ellipse fades completely before all four image edges');
+assert.match(checkoutSource, /\.checkout-backdrop img\s*\{[^}]*width: min\(1100px, 100%\);/, 'The photo stays within its container instead of clipping an oversized crop');
+assert.ok(!checkoutSource.includes('coupon-chevron'), 'Coupon disclosure no longer uses a chevron');
+assert.ok(checkoutSource.includes('CheckoutIcon name="plus"'), 'Coupon disclosure renders a plus icon');
+assert.match(checkoutSource, /\.coupon\[open\] \.coupon-symbol :global\(path:last-child\)\s*\{\s*opacity: 0;/, 'Open disclosure hides only the vertical stroke to show a minus');
+assert.match(checkoutSource, /\.coupon-symbol :global\(path:last-child\)\s*\{\s*transition: opacity 140ms/, 'The plus-to-minus change uses a brief interruptible opacity transition');
+assert.match(checkoutSource, /input:focus\s*\{[^}]*border-color: var\(--checkout-focus\);[^}]*outline: 2px solid var\(--checkout-focus\);[^}]*outline-offset: -1px;/, 'Focus uses a crisp subdued edge that remains visible without stacked black outlines');
+assert.ok(!/overflow-y: ?(?:auto|scroll)|max-height:/.test(checkoutSource), 'Checkout uses natural page scrolling, not a nested scroll viewport');
+assert.ok(checkoutSource.includes('grid-template-columns: minmax(0, 1fr);'), 'Mobile stacks buyer details and summary');
 assert.ok(!html.includes('partner-symbol'), 'The decorative pink plus signs are removed');
 
 assert.equal((sponsorSection.match(/class="sponsor-item"/g) || []).length, 1);
@@ -708,7 +748,40 @@ assert.ok(html.indexOf('<section id="faqs"') < html.indexOf('<section class="pas
 assert.ok(html.includes('download="DevCon26 Sponsorship Packages.pdf"'));
 assert.ok(!/19 December|keynote|700 attendees/i.test(html));
 
-for (const pageName of ['index.html', 'payment-confirmation/index.html']) {
+const confirmationSource = readFileSync(root + '/src/pages/devcon26/payment-confirmation.astro', 'utf8');
+const confirmationHtml = readFileSync(root + '/dist/devcon26/payment-confirmation/index.html', 'utf8');
+
+function confirmationRule(selector, occurrence = 0) {
+  const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const rules = Array.from(confirmationSource.matchAll(new RegExp('(?:^|\\n)\\s*' + escaped + '\\s*\\{([^}]*)\\}', 'g')));
+  const rule = rules[occurrence];
+
+  assert.ok(rule, 'Confirmation style exists: ' + selector + ' occurrence ' + occurrence);
+
+  return rule[1];
+}
+
+assert.ok(!confirmationSource.includes('venue-photo'), 'Confirmation venue has no decorative photo or mask');
+assert.ok(!confirmationHtml.includes('ghana-digital-center.webp'), 'Confirmation does not load the removed building image');
+assert.ok(confirmationHtml.includes('class="receipt-photo"') && confirmationHtml.includes('data-payment-photo'), 'Selected ticket photo remains available');
+assert.match(confirmationRule('.payment-receipt'), /border:\s*1px solid/, 'Receipt retains a single outer border');
+assert.match(confirmationRule('.payment-receipt'), /padding:\s*28px;/, 'Desktop receipt has balanced padding on every edge');
+assert.match(confirmationRule('.payment-receipt', 1), /padding:\s*22px;/, 'Mobile receipt retains balanced padding on every edge');
+assert.ok(!/box-shadow|border-bottom/.test(confirmationRule('.payment-receipt')), 'Receipt retains one outer edge, without a stacked bottom outline');
+assert.match(confirmationRule('.payment-details'), /display:\s*grid;/, 'Receipt details use a consistent grid');
+assert.match(confirmationRule('.payment-details'), /row-gap:\s*6px;/, 'Receipt details retain their row spacing');
+assert.match(confirmationRule('.payment-details > div'), /padding-block:\s*8px;/, 'Receipt rows retain breathing room without separators');
+assert.ok(!/border/.test(confirmationRule('.payment-details > div')), 'Receipt rows use hierarchy instead of separator lines');
+assert.match(confirmationRule('.receipt-stub'), /display:\s*grid;/, 'Save action and disclaimer retain their grouped layout');
+assert.match(confirmationRule('.receipt-stub'), /gap:\s*8px;/, 'Receipt footer retains spacing between the save action and disclaimer');
+assert.match(confirmationRule('.receipt-stub'), /margin-top:\s*28px;/, 'Receipt footer remains separated by whitespace');
+assert.ok(!/border|background|margin-inline/.test(confirmationRule('.receipt-stub')), 'Receipt footer has no ruled or tinted band');
+assert.match(confirmationRule('.payment-details .amount-detail'), /padding-block:\s*12px 20px;/, 'Amount remains the leading receipt group');
+assert.ok(confirmationRule('.payment-details .ticket-detail').includes('margin-top: 16px'), 'Ticket selection begins a distinct spacing group');
+assert.ok(confirmationRule('.payment-details .reference-detail').includes('margin-top: 12px'), 'Payment reference begins a distinct spacing group');
+assert.ok(confirmationHtml.includes('data-payment-print') && confirmationHtml.includes('Payment record only. Not an admission ticket.'), 'Save action and non-admission boundary remain');
+
+for (const pageName of ['index.html', 'checkout/index.html', 'payment-confirmation/index.html']) {
   const built = readFileSync(root + '/dist/devcon26/' + pageName, 'utf8');
   const meta = built.match(/<meta[^>]*http-equiv="Content-Security-Policy"[^>]*>/i)?.[0];
   const csp = meta?.match(/content="([^"]+)"/i)?.[1];
@@ -735,4 +808,4 @@ function sha(buffer) {
 assert.equal(sha(pdfPublished), APPROVED_PDF_SHA256, 'Published PDF matches the approved source');
 assert.equal(sha(pdfBuilt), APPROVED_PDF_SHA256, 'Built PDF matches the approved source');
 
-console.log('PASS: unscaled checkout photo layer, coupon disclosure motion/reversal/cleanup/reduced motion, quote/confirmation contracts and needs-attention rendering, coupon consistency and bounded errors, strict payload, changed/closed cart, stale coupon responses, changed server total, UUID network/in-progress/expiry/conflict retries, safe redirects, built sponsorship content/CSP, historical partners, and identical PDF.');
+console.log('PASS: dedicated checkout navigation and tier whitelist, matched background photos and persistent inline icons, restrained input focus, compact applied coupon and reduced motion, server-only totals and strict payload, stale input/pagehide responses and BFCache UUID retention, network/in-progress/expiry/conflict retries, bounded coupon errors, safe Paystack redirects and legacy returns, confirmation contracts and clean receipt, built pages/CSP, sponsorships and identical PDF.');

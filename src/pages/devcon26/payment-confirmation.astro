@@ -89,9 +89,6 @@ const checkoutApiOrigin = import.meta.env.PUBLIC_DEVCON26_API_ORIGIN || 'https:/
         <section class="next-steps" aria-labelledby="next-title">
           <h2 id="next-title">Next stop, <em>Accra.</em></h2>
           <div class="venue-note">
-            <div class="venue-photo" aria-hidden="true">
-              <img src="/images/devcon26/ghana-digital-center.webp" alt="" width="1200" height="1594" loading="lazy" decoding="async" />
-            </div>
             <p class="venue-label">The place to meet</p>
             <h3>Ghana Digital<br />Center<span aria-hidden="true">.</span><span class="venue-former-name">(formerly Accra Digital Center)</span></h3>
             <p class="venue-address">Accra, Ghana</p>
@@ -287,11 +284,10 @@ const checkoutApiOrigin = import.meta.env.PUBLIC_DEVCON26_API_ORIGIN || 'https:/
     position: relative;
     isolation: isolate;
     overflow: hidden;
-    padding: 28px 28px 0;
+    padding: 28px;
     border: 1px solid oklch(0.84 0.016 91);
     border-radius: 12px;
     background: var(--payment-paper);
-    box-shadow: 0 8px 0 -3px oklch(0.96 0.016 91), 0 9px 0 -3px oklch(0.84 0.016 91);
   }
 
   .payment-receipt > :not(.receipt-photo) {
@@ -350,13 +346,17 @@ const checkoutApiOrigin = import.meta.env.PUBLIC_DEVCON26_API_ORIGIN || 'https:/
     font-size: var(--text-sm);
   }
 
+  .payment-details {
+    display: grid;
+    row-gap: 6px;
+  }
+
   .payment-details > div {
     display: flex;
     align-items: baseline;
     justify-content: space-between;
     gap: 24px;
-    padding-block: 12px;
-    border-bottom: 1px solid var(--border-light);
+    padding-block: 8px;
   }
 
   .payment-details dt {
@@ -392,7 +392,15 @@ const checkoutApiOrigin = import.meta.env.PUBLIC_DEVCON26_API_ORIGIN || 'https:/
   }
 
   .payment-details .amount-detail {
-    padding-block: 18px 24px;
+    padding-block: 12px 20px;
+  }
+
+  .payment-details .ticket-detail {
+    margin-top: 16px;
+  }
+
+  .payment-details .reference-detail {
+    margin-top: 12px;
   }
 
   .reference-detail dd {
@@ -404,10 +412,9 @@ const checkoutApiOrigin = import.meta.env.PUBLIC_DEVCON26_API_ORIGIN || 'https:/
   }
 
   .receipt-stub {
-    margin: 20px -28px 0;
-    padding: 18px 28px 22px;
-    border-top: 1px dashed var(--payment-outline);
-    background: oklch(0.964 0.02 98 / 0.6);
+    display: grid;
+    gap: 8px;
+    margin-top: 28px;
   }
 
   .print-button {
@@ -443,28 +450,7 @@ const checkoutApiOrigin = import.meta.env.PUBLIC_DEVCON26_API_ORIGIN || 'https:/
   }
 
   .venue-note {
-    position: relative;
-    isolation: isolate;
     padding: 26px 0 24px;
-  }
-
-  .venue-photo {
-    position: absolute;
-    inset: 0;
-    z-index: -1;
-    overflow: hidden;
-    opacity: 0.22;
-    pointer-events: none;
-    mask-image: radial-gradient(ellipse at 66% 52%, black 24%, rgb(0 0 0 / 65%) 48%, transparent 74%);
-  }
-
-  .venue-photo img {
-    display: block;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: center 65%;
-    filter: saturate(0.65);
   }
 
   .venue-label {
@@ -679,12 +665,7 @@ const checkoutApiOrigin = import.meta.env.PUBLIC_DEVCON26_API_ORIGIN || 'https:/
     }
 
     .payment-receipt {
-      padding: 22px 22px 0;
-    }
-
-    .receipt-stub {
-      margin-inline: -22px;
-      padding-inline: 22px;
+      padding: 22px;
     }
 
     .payment-details > div {
@@ -714,7 +695,7 @@ const checkoutApiOrigin = import.meta.env.PUBLIC_DEVCON26_API_ORIGIN || 'https:/
   }
 
   @media print {
-    .payment-header, .payment-actions, .print-button, .skip-link, .receipt-photo, .venue-photo, .venue-directions, .confirmation-seal {
+    .payment-header, .payment-actions, .print-button, .skip-link, .receipt-photo, .venue-directions, .confirmation-seal {
       display: none !important;
     }
 

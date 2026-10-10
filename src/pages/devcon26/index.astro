@@ -106,8 +106,6 @@ const heroSlots = [
   },
 ];
 
-const checkoutApiOrigin = import.meta.env.PUBLIC_DEVCON26_API_ORIGIN || 'https://em.devcongress.org';
-
 const faqs = [
   ['Who is DevCon26 for?', 'For the people building technology across Africa: developers, designers, founders, product people, researchers, and students.'],
   ['When and where is it?', 'Meet us at Ghana Digital Center (formerly Accra Digital Center), Accra, Ghana in December 2026. The exact date and programme will be announced here.'],
@@ -196,7 +194,7 @@ function packageEnquiryLink(sponsorship: (typeof sponsorshipPackages)[number]) {
 ---
 
 <Base title="DevCon26 | DevCongress" description="DevCon26 brings Africa’s builders together in Accra, Ghana in December 2026.">
-  <div class="devcon-page" data-checkout-api-origin={checkoutApiOrigin}>
+  <div class="devcon-page">
     <a class="skip-link" href="#main-content">Skip to content</a>
 
     <header class="site-header page-shell" data-devcon-header>
@@ -369,24 +367,15 @@ function packageEnquiryLink(sponsorship: (typeof sponsorshipPackages)[number]) {
               <p class="ticket-people">{ticket.people}</p>
               <p class="ticket-price">{ticket.price}</p>
               <p class="ticket-detail">{ticket.detail}</p>
-              <button
+              <a
                 class="ticket-buy-button"
-                type="button"
-                data-ticket-choice
-                data-ticket-id={ticket.id}
-                data-ticket-name={ticket.name}
-                data-ticket-price={ticket.price}
-                data-ticket-photo={ticket.photo}
-                data-ticket-featured={ticket.featured ? 'true' : 'false'}
-                aria-haspopup="dialog"
-                disabled
+                href={'/devcon26/checkout/?tier=' + ticket.id.replaceAll('-', '_')}
               >
                 Buy ticket <span aria-hidden="true">↗</span>
-              </button>
+              </a>
             </article>
           ))}
         </div>
-        <noscript><p class="ticket-fallback">Enable JavaScript to choose a ticket and continue to checkout.</p></noscript>
         <p class="ticket-sales-note">Secure checkout with Paystack. No account needed.</p>
       </section>
 
@@ -499,75 +488,16 @@ function packageEnquiryLink(sponsorship: (typeof sponsorshipPackages)[number]) {
         </ul>
       </section>
     </main>
-
-    <dialog class="checkout-dialog" id="ticket-checkout-dialog" aria-labelledby="checkout-title">
-      <div class="checkout-surface" data-checkout-surface aria-hidden="true"></div>
-      <div class="checkout-art" data-checkout-art aria-hidden="true">
-        <div class="ticket-illustration" aria-hidden="true">
-          <img src={tickets[0].photo} data-checkout-ticket-photo alt="" width="640" height="512" decoding="async" />
-        </div>
-      </div>
-      <section class="checkout-panel">
-        <div class="checkout-content" data-checkout-content>
-          <form method="dialog" class="checkout-dismiss">
-            <button type="submit" class="checkout-close" aria-label="Close ticket checkout">×</button>
-          </form>
-          <p class="section-caption">DevCon26 tickets</p>
-          <h2 id="checkout-title">Your ticket choice.</h2>
-          <div class="checkout-selection" aria-live="polite">
-            <div>
-              <p class="checkout-selection-label">Selected ticket</p>
-              <p class="checkout-ticket-name" data-checkout-ticket-name>Regular ticket</p>
-            </div>
-            <p class="checkout-ticket-price" data-checkout-ticket-price>GHS 199.99</p>
-          </div>
-          <div class="checkout-notice" role="status" aria-live="polite">
-            <p data-checkout-notice-title>Getting your checkout ready.</p>
-            <span data-checkout-notice-copy>Checking availability for your ticket choice.</span>
-          </div>
-          <form class="checkout-buyer-form" data-checkout-buyer-form novalidate>
-            <div class="checkout-buyer-fields">
-              <label for="checkout-purchaser-name">Your name</label>
-              <input id="checkout-purchaser-name" data-checkout-purchaser-name name="purchaser_name" autocomplete="name" maxlength="160" required aria-describedby="checkout-privacy-note" />
-              <label for="checkout-purchaser-email">Email address</label>
-              <input id="checkout-purchaser-email" data-checkout-purchaser-email name="purchaser_email" type="email" autocomplete="email" maxlength="254" required aria-describedby="checkout-privacy-note" />
-              <p id="checkout-privacy-note" class="checkout-privacy-note">We store your name and email with your payment record so the event team can help with checkout questions. No EMS account needed.</p>
-            </div>
-            <details class="checkout-coupon" data-checkout-coupon>
-              <summary>Have a coupon? <span aria-hidden="true">+</span></summary>
-              <div class="checkout-coupon-content" data-checkout-coupon-content>
-                <label for="checkout-coupon-code">Coupon code</label>
-                <div class="checkout-coupon-controls">
-                  <input id="checkout-coupon-code" data-checkout-coupon-code name="coupon_code" autocomplete="off" maxlength="48" spellcheck="false" aria-describedby="checkout-coupon-status" />
-                  <button data-checkout-coupon-apply type="button">Apply</button>
-                  <button data-checkout-coupon-remove type="button" hidden>Remove</button>
-                </div>
-                <p id="checkout-coupon-status" data-checkout-coupon-status role="status" aria-live="polite"></p>
-              </div>
-            </details>
-            <div class="checkout-after-coupon" data-checkout-after-coupon>
-              <dl class="checkout-quote" data-checkout-quote hidden aria-live="polite">
-                <div><dt>Ticket total</dt><dd data-checkout-base></dd></div>
-                <div data-checkout-discount-row hidden><dt>Coupon discount</dt><dd data-checkout-discount></dd></div>
-                <div class="checkout-total"><dt>Total to pay</dt><dd data-checkout-final></dd></div>
-              </dl>
-              <button class="checkout-payment-button" data-checkout-payment type="submit" disabled aria-describedby="checkout-payment-note">Checking checkout…</button>
-              <p id="checkout-payment-note" class="checkout-payment-note">Secure checkout powered by Paystack.</p>
-            </div>
-          </form>
-        </div>
-      </section>
-    </dialog>
   </div>
 </Base>
 
 <script>
-  import { initializeDevcon26Checkout } from '../../lib/devcon26-checkout';
+  import { redirectDevcon26PaymentReturn } from '../../lib/devcon26-checkout-navigation';
 
   const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
   const page = document.querySelector<HTMLElement>('.devcon-page');
 
-  if (page) initializeDevcon26Checkout(page);
+  redirectDevcon26PaymentReturn();
 
   const faqItems = Array.from(document.querySelectorAll('.faq-item'));
   const faqTimers = new WeakMap();
@@ -921,7 +851,7 @@ function packageEnquiryLink(sponsorship: (typeof sponsorshipPackages)[number]) {
     line-height: 1.6;
   }
 
-  .button, .ticket-buy-button, .checkout-payment-button {
+  .button, .ticket-buy-button {
     display: inline-flex;
     min-height: var(--dc-control-height);
     align-items: center;
@@ -1421,16 +1351,11 @@ function packageEnquiryLink(sponsorship: (typeof sponsorshipPackages)[number]) {
     cursor: pointer;
   }
 
-  .ticket-buy-button:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
-
   .ticket-buy-button span {
     color: var(--dc-pink);
   }
 
-  .ticket-sales-note, .ticket-fallback {
+  .ticket-sales-note {
     margin-top: 22px;
     color: var(--dc-muted);
     font-size: var(--dc-text-meta);
@@ -1950,317 +1875,8 @@ function packageEnquiryLink(sponsorship: (typeof sponsorshipPackages)[number]) {
     transform: translateY(0);
   }
 
-  .checkout-dialog {
-    isolation: isolate;
-    width: min(100% - 32px, 520px);
-    max-height: calc(100dvh - 32px);
-    margin: auto;
-    padding: 0;
-    border: 0;
-    border-radius: 12px;
-    background: transparent;
-    color: var(--dc-ink);
-    overflow: hidden;
-    opacity: 0;
-    transform: translateY(12px) scale(0.98);
-    transition: transform 180ms var(--dc-ease), opacity 180ms var(--dc-ease);
-  }
-
-  .checkout-dialog::backdrop {
-    background: oklch(0.2 0.006 83 / 0.3);
-    backdrop-filter: blur(3px);
-  }
-
-  .checkout-panel {
-    position: relative;
-    z-index: 1;
-    max-height: calc(100dvh - 32px);
-    overflow-x: hidden;
-    overflow-y: auto;
-    overflow-anchor: none;
-    scrollbar-gutter: stable;
-  }
-
-  .checkout-surface {
-    position: absolute;
-    inset: 0;
-    overflow: hidden;
-    border-radius: inherit;
-    background: var(--dc-paper);
-    transform-origin: top;
-    pointer-events: none;
-  }
-
-  .checkout-art {
-    position: absolute;
-    inset: 0;
-    overflow: hidden;
-    border-radius: inherit;
-    pointer-events: none;
-  }
-
-  .checkout-content {
-    position: relative;
-    padding: clamp(26px, 5vw, 42px);
-  }
-
-  .checkout-content > :not(.checkout-dismiss) {
-    position: relative;
-    z-index: 1;
-  }
-
-  .checkout-art .ticket-illustration {
-    top: 50%;
-    bottom: auto;
-    width: 90%;
-    max-width: none;
-    opacity: 0.1;
-    transform: translateY(-50%);
-  }
-
-  .checkout-dialog[data-ticket-featured='true'] .ticket-illustration {
-    opacity: 0.08;
-  }
-
-  .checkout-dialog[data-visible='true'] {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-
-  .checkout-panel .section-caption {
-    padding-right: 30px;
-  }
-
-  .checkout-panel h2 {
-    max-width: 330px;
-    font-size: 40px;
-  }
-
-  .checkout-dismiss {
-    position: absolute;
-    top: 12px;
-    right: 12px;
-    z-index: 2;
-  }
-
-  .checkout-close {
-    display: grid;
-    width: 44px;
-    height: 44px;
-    place-items: center;
-    border-radius: 8px;
-    color: var(--dc-ink);
-    font-size: 28px;
-    line-height: 1;
-    transition: transform 140ms var(--dc-ease);
-  }
-
-  .checkout-selection {
-    display: flex;
-    align-items: end;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 16px;
-    margin-top: 30px;
-    padding-block: 20px;
-    border-block: 1px solid var(--dc-rule);
-  }
-
-  .checkout-selection-label {
-    color: var(--dc-muted);
-    font-size: var(--dc-text-meta);
-  }
-
-  .checkout-ticket-name {
-    margin-top: 6px;
-    font-family: var(--font-display);
-    font-size: var(--dc-text-subtitle);
-    font-weight: 600;
-    letter-spacing: var(--tracking-heading);
-  }
-
-  .checkout-ticket-price {
-    font-size: var(--dc-text-subtitle);
-    font-weight: 700;
-    font-variant-numeric: tabular-nums;
-    white-space: nowrap;
-  }
-
-  .checkout-notice {
-    display: grid;
-    gap: 6px;
-    margin-top: 24px;
-    font-size: var(--dc-text-body);
-    line-height: 1.65;
-  }
-
-  .checkout-notice p {
-    font-weight: 700;
-  }
-
-  .checkout-notice span, .checkout-payment-note {
-    color: var(--dc-muted);
-  }
-
-  .checkout-payment-button {
-    width: 100%;
-    justify-content: center;
-    margin-top: 24px;
-    background: var(--dc-paper-light);
-    color: var(--dc-ink);
-    box-shadow: inset 0 0 0 1px var(--dc-ticket-action-outline);
-    cursor: pointer;
-  }
-
-  .checkout-payment-button:disabled {
-    background: oklch(0.84 0.013 91);
-    color: var(--dc-muted);
-    box-shadow: none;
-    cursor: not-allowed;
-  }
-
-  .checkout-payment-note {
-    margin-top: 12px;
-    font-size: var(--dc-text-meta);
-    line-height: 1.5;
-    text-align: center;
-  }
-
   .devcon-page [hidden] {
     display: none !important;
-  }
-
-  .checkout-buyer-fields {
-    display: grid;
-    gap: 8px;
-    margin-top: 24px;
-  }
-
-  .checkout-buyer-fields label, .checkout-coupon-content > label {
-    font-size: var(--dc-text-small);
-    font-weight: 600;
-  }
-
-  .checkout-buyer-fields label:not(:first-child) {
-    margin-top: 8px;
-  }
-
-  .checkout-buyer-form input {
-    width: 100%;
-    min-width: 0;
-    min-height: 46px;
-    padding: 10px 12px;
-    border: 1px solid var(--dc-rule);
-    border-radius: 6px;
-    background: var(--dc-paper-light);
-    color: var(--dc-ink);
-    font: inherit;
-    font-size: var(--dc-text-body);
-    caret-color: var(--dc-pink);
-  }
-
-  .checkout-buyer-form input:focus {
-    border-color: var(--dc-ink);
-    outline: 1px solid var(--dc-ink);
-    outline-offset: 0;
-    box-shadow: 0 0 0 4px color-mix(in srgb, var(--dc-pink) 8%, transparent);
-  }
-
-  .checkout-buyer-form input[aria-invalid='true'] {
-    border-color: var(--dc-pink);
-  }
-
-  .checkout-buyer-form input[aria-invalid='true']:focus {
-    outline-color: var(--dc-pink);
-  }
-
-  .checkout-privacy-note {
-    margin-top: 6px;
-    color: var(--dc-muted);
-    font-size: var(--dc-text-meta);
-    line-height: 1.6;
-  }
-
-  .checkout-coupon {
-    position: relative;
-    margin-top: 14px;
-  }
-
-  .checkout-coupon summary {
-    min-height: 48px;
-    font-size: var(--dc-text-small);
-  }
-
-  .checkout-coupon-content, .checkout-after-coupon {
-    display: flow-root;
-  }
-
-  .checkout-coupon[data-coupon-open='false'] summary span {
-    transform: rotate(0);
-  }
-
-  .checkout-coupon-content > label {
-    display: block;
-    margin-block: 4px 8px;
-  }
-
-  .checkout-coupon-controls {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .checkout-coupon-controls input {
-    flex: 1;
-    text-transform: uppercase;
-  }
-
-  .checkout-coupon-controls button {
-    min-height: 46px;
-    padding-inline: 10px;
-    border: 1px solid var(--dc-rule);
-    border-radius: 6px;
-    background: var(--dc-paper-light);
-    font-size: var(--dc-text-small);
-    font-weight: 600;
-  }
-
-  .checkout-coupon-controls button:disabled {
-    color: var(--dc-muted);
-    cursor: not-allowed;
-  }
-
-  [data-checkout-coupon-status] {
-    margin-top: 10px;
-    color: var(--dc-muted);
-    font-size: var(--dc-text-small);
-    line-height: 1.55;
-  }
-
-  .checkout-quote {
-    display: grid;
-    gap: 10px;
-    margin-top: 20px;
-    padding-top: 16px;
-    border-top: 1px solid var(--dc-rule);
-    font-size: var(--dc-text-small);
-    font-variant-numeric: tabular-nums;
-  }
-
-  .checkout-quote > div {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 16px;
-  }
-
-  .checkout-quote dd {
-    text-align: right;
-  }
-
-  .checkout-total {
-    font-size: var(--dc-text-body);
-    font-weight: 700;
   }
 
   a:focus-visible, button:focus-visible, summary:focus-visible {
@@ -2284,16 +1900,6 @@ function packageEnquiryLink(sponsorship: (typeof sponsorshipPackages)[number]) {
     }
 
     .sponsorship-download:focus-visible {
-      outline-color: Highlight;
-    }
-
-    .checkout-buyer-form input:focus {
-      outline: 2px solid Highlight;
-      outline-offset: 2px;
-      box-shadow: none;
-    }
-
-    .checkout-buyer-form input[aria-invalid='true']:focus {
       outline-color: Highlight;
     }
   }
@@ -2323,16 +1929,12 @@ function packageEnquiryLink(sponsorship: (typeof sponsorshipPackages)[number]) {
       color: var(--dc-pink);
     }
 
-    .button:hover, .ticket-buy-button:not(:disabled):hover {
+    .button:hover, .ticket-buy-button:hover {
       transform: translateY(-2px);
     }
 
-    .ticket-buy-button:not(:disabled):hover {
+    .ticket-buy-button:hover {
       background: var(--dc-paper);
-    }
-
-    .checkout-close:hover {
-      background: var(--dc-yellow);
     }
 
     .sponsor-item a:hover .sponsor-visit {
@@ -2340,7 +1942,7 @@ function packageEnquiryLink(sponsorship: (typeof sponsorshipPackages)[number]) {
     }
   }
 
-  .button:active, .ticket-buy-button:not(:disabled):active, .checkout-close:active {
+  .button:active, .ticket-buy-button:active {
     transform: scale(0.96);
   }
 
@@ -2720,44 +2322,6 @@ function packageEnquiryLink(sponsorship: (typeof sponsorshipPackages)[number]) {
       gap: 30px;
       padding-block: 60px 64px;
     }
-
-    .checkout-panel h2 {
-      font-size: 35px;
-    }
-
-    .checkout-dialog {
-      position: fixed;
-      inset: auto 0 0;
-      width: 100%;
-      max-width: 100%;
-      max-height: calc(100dvh - max(16px, env(safe-area-inset-top)));
-      margin: 0 auto;
-      border-radius: 12px 12px 0 0;
-      transform: translateY(100%);
-    }
-
-    .checkout-dialog[data-visible='true'] {
-      transform: translateY(0);
-    }
-
-    .checkout-panel {
-      max-height: calc(100dvh - max(16px, env(safe-area-inset-top)));
-      overscroll-behavior: contain;
-    }
-
-    .checkout-art .ticket-illustration {
-      top: auto;
-      bottom: 78px;
-      transform: none;
-    }
-
-    .checkout-content {
-      padding: 26px calc(20px + env(safe-area-inset-right)) calc(24px + env(safe-area-inset-bottom)) calc(20px + env(safe-area-inset-left));
-    }
-
-    .checkout-dismiss {
-      right: calc(12px + env(safe-area-inset-right));
-    }
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -2769,8 +2333,8 @@ function packageEnquiryLink(sponsorship: (typeof sponsorshipPackages)[number]) {
       transition: none !important;
     }
 
-    .button:active, .ticket-buy-button:not(:disabled):active, .checkout-close:active,
-    .button:hover, .ticket-buy-button:not(:disabled):hover, .sponsor-item a:hover .sponsor-visit {
+    .button:active, .ticket-buy-button:active,
+    .button:hover, .ticket-buy-button:hover, .sponsor-item a:hover .sponsor-visit {
       transform: none;
     }
 
@@ -2780,7 +2344,7 @@ function packageEnquiryLink(sponsorship: (typeof sponsorshipPackages)[number]) {
       transform: none;
     }
 
-    .has-faq-motion .faq-answer p, .checkout-dialog {
+    .has-faq-motion .faq-answer p {
       transform: none;
     }
 

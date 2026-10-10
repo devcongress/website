@@ -1,6 +1,7 @@
 # DevCon26 public test checkout
 
-The `/devcon26/` route uses the public EMS API at `https://em.devcongress.org`.
+The `/devcon26/` ticket links lead to `/devcon26/checkout/?tier=...`, which uses
+the public EMS API at `https://em.devcongress.org`.
 Buyers do not log in to EMS. The browser never receives a Paystack secret key.
 Live ticket sales remain closed; this sandbox does not charge real money,
 reserve seats, issue admission tickets, or send ticket emails.
@@ -58,7 +59,7 @@ need explicit approval and the test-only allowlist setting in EMS.
 Do not use wildcard CORS or production `NODE_ENV=development` as a workaround.
 
 Unapproved preview origins can review the layout, navigation, single-open FAQs,
-selected ticket image, mobile bottom drawer, and unavailable checkout/retry
+dedicated checkout page, and unavailable checkout/retry
 states, but cannot complete a hosted Paystack round trip.
 
 The website defaults to the production EMS hostname. Its existing CSP permits
@@ -68,14 +69,15 @@ an explicit CSP review, not only a `PUBLIC_DEVCON26_API_ORIGIN` override.
 ## Verification boundaries
 
 The Astro build and focused source/VM checks cover client checkout states,
-safe redirect validation, cancellation, navigation, and drawer contracts. They
+safe redirect validation, cancellation, navigation, and checkout-page contracts. They
 are not browser-rendering tests or evidence of a successful provider payment.
 Use the existing Arc session for any browser verification.
 
 ## Dedicated payment confirmation
 
-After EMS verifies a successful test payment on the existing Paystack return,
-the website replaces that return entry with `/devcon26/payment-confirmation/`.
+The existing Paystack callback still returns to `/devcon26/?test_checkout=return`.
+The website cleans the callback parameters and replaces that entry with
+`/devcon26/payment-confirmation/`, where EMS verifies the payment.
 The strictly validated reference travels in `#reference=...`, not a query
 parameter on the new page request. New links display a neutral `DC26-` prefix
 and the full 32-character session identifier in uppercase. The client reverses
@@ -135,12 +137,11 @@ Center as the primary venue name and "formerly Accra Digital Center" in supporti
 venue copy and the FAQ. The original upload remains unchanged. The website serves
 one optimized 1200 × 1594 WebP (239,078 bytes) with image metadata removed.
 
-Both the event location section and verified confirmation venue details use the
-photo as a lazy-loaded, decorative background. Absolute positioning avoids adding
-an image row or changing the content layout; low opacity and soft edge masks keep
-the copy readable. The image is hidden from assistive technology and print output
-on the confirmation page. Checkout scripts, verification, payment mode, dates,
-and admission behavior are unchanged.
+The photo was initially used as a lazy-loaded decorative background in both the
+event location section and verified confirmation venue details. The later
+location-image removal and confirmation cleanup documented below remove those
+uses. The optimized asset and original upload remain unchanged. Checkout scripts,
+verification, payment mode, dates, and admission behavior are unchanged.
 
 ### 2026-10-08: Left-column venue photo refinement
 
@@ -180,17 +181,66 @@ test is not evidence of the new page being deployed or visually checked.
 ### 2026-10-07: Built-script CSP regression
 
 The checkout and FAQ client must use an Astro-processed `<script>` rather than
-`is:inline`. The card buttons start disabled and are enabled by that client;
-an unprocessed inline script without an allowed hash is blocked in production.
+`is:inline`. The earlier modal card buttons started disabled and were enabled
+by that client. Ticket cards now use ordinary navigation links; the dedicated
+checkout's buyer fields and payment action still require the processed client.
+An unprocessed inline script without an allowed hash is blocked in production.
 
 After building, inspect `dist/devcon26/index.html`: every executable inline
 script must have its exact hash in the script CSP, and any external client
 module must be a served, same-origin asset. Verify the output includes checkout,
-FAQ, and mobile-menu initialization, then confirm card selection in Arc.
+FAQ, and mobile-menu initialization, then confirm ticket navigation in Arc.
 Source/VM checks alone do not catch a blocked production script. Keep the CSP
 intact; do not add `unsafe-inline` or bypass the sandbox's origin restrictions.
 
-### 2026-10-10: Purchaser details and quoted coupons
+### 2026-10-10: Dedicated checkout page
+
+Ticket cards are ordinary links to `/devcon26/checkout/?tier=regular`,
+`?tier=team_3`, or `?tier=team_5`. Exactly one whitelisted tier is required;
+missing, unknown, or duplicate values show a return-to-tickets state without
+making API requests. Names, email addresses, coupons, prices, and payment-status
+flags are never placed in checkout links.
+
+The page uses a compact heading, buyer details beside an order summary on
+desktop, and one naturally scrolling column on mobile. It has no dialog
+or nested scroll viewport. A large decorative background reuses the Regular,
+Team of 3, or Team of 5 photo from the ticket cards. Its fixed, width-derived
+crop and soft mask do not resize when the coupon opens. The summary remains
+opaque for readability, and forced-colors mode removes the decoration.
+The centred mask uses explicit half-width/half-height radii and becomes fully
+transparent before every image boundary. The photo fits the viewport without
+an oversized mobile crop, avoiding a visible rectangular edge.
+Inline SVG icons reinforce navigation, ticket quantity and venue, coupons,
+and payment. Payment-state changes update only the label, preserving its icon.
+The coupon disclosure uses a plus when closed and a minus when open, with a
+brief vertical-stroke fade that is disabled for reduced motion.
+Focused inputs use one crisp stone-grey edge and a faint pink halo.
+A successful coupon quote
+collapses to an applied-code row with Change and Remove. Opening Change keeps
+the accepted quote; editing the code disables payment until Apply or Remove
+obtains a fresh server quote. Coupon errors remain visible next to the control.
+
+The existing catalog, quote, and initialize contracts remain unchanged.
+Page load and back-forward cache restoration only check availability and totals;
+only an explicit valid form submission can initialize Paystack. Page departure
+aborts pending work and rejects stale responses, while keeping the unchanged
+request UUID in page memory for a same-page or back-forward retry. No browser
+storage or automatic payment resumption is introduced. Buyer or coupon edits
+clear the UUID; uncertain failures and in-progress responses keep it.
+
+The old Paystack callback remains supported without changing EMS configuration.
+Exactly one return flag and one valid test reference are required to create the
+neutral confirmation fragment. Invalid or ambiguous callback data goes to the
+confirmation page's missing-reference state, never to payment initialization.
+The confirmation page alone verifies payment status with EMS.
+
+The new page is noindex and uses an Astro-processed client script and the
+existing restrictive CSP. Buyer fields stay disabled without JavaScript;
+inputs have no native form names, preventing a GET fallback from exposing
+private details. Purchaser details are sent only in the initialization JSON body.
+This is a local website change, not live-payment activation or a deployed preview.
+
+### 2026-10-10: Purchaser details and quoted coupons (earlier modal)
 
 The checkout collects a purchaser name and email without requiring an EMS login.
 The browser sends those fields only in the initialization POST body; it does not
@@ -210,7 +260,7 @@ and a pink caret instead of the page's wider action-link focus outline. Invalid
 coupon fields retain their pink error edge. Forced-colors mode uses a system
 highlight outline; native browser autocomplete and keyboard behavior remain intact.
 
-The coupon disclosure keeps its native details/summary keyboard behavior while
+The earlier modal's coupon disclosure kept its native details/summary keyboard behavior while
 the fields fade and slide over 180ms. The clipping and scroll viewport stays at
 the larger endpoint size for that transition; a separate decorative paper
 surface translates and scales to bridge the modal's visible size. The selected
@@ -238,7 +288,7 @@ scroll/touch gestures, checkout-content changes, and modal closure settle the
 latest requested state and clear the temporary viewport size and animations.
 The modal's own entrance/exit transform is not changed by the disclosure.
 
-### 2026-10-10: Stable checkout photo during coupon disclosure
+### 2026-10-10: Stable checkout photo during coupon disclosure (earlier modal)
 
 Separated the selected ticket photo from the resizing paper surface so coupon
 opening, closing, and reversal no longer stretch it. The existing five-animation
@@ -266,6 +316,20 @@ quote fields remain supported as undiscounted records; partial or inconsistent
 quote summaries are rejected. Test mode guards and live-payment flags remain
 unchanged. Deploying this client alone does not apply the new EMS migration.
 
+### 2026-10-10: Cleaner payment summary and venue
+
+The completed-payment summary keeps a single outer border without the stacked
+bottom shadow. Internal row rules, the dashed footer divider, and its full-bleed
+tinted band are removed. Amount-first typography and additional spacing around
+ticket selection and the payment reference provide the hierarchy instead.
+Desktop and mobile retain comfortable padding, and the save action and
+"Payment record only. Not an admission ticket." caption remain intact.
+
+The confirmation venue block no longer includes the building photo or its mask.
+Venue information and directions remain; the selected ticket photo inside the
+payment summary is unchanged. No checkout script, verification gate, payment
+mode, or print/save behavior changes.
+
 #### Repeatable website verification
 
 From the website repository, run:
@@ -278,10 +342,11 @@ The script bundles the existing client with Astro's installed esbuild dependency
 and exercises it in Node with a fake DOM and mocked requests. It covers quote
 validation, bounded coupon errors, stale responses, request-key retry rules,
 changed server totals, safe redirects, and needs-attention confirmation states.
-Disclosure checks cover the stable viewport and decorative surface endpoints,
-desktop/mobile positioning, scrolled-panel clamp continuity, transform-only
-motion, reversal in both directions, validation-driven reopening, content and
-modal cleanup, resize/scroll interruption, and live reduced-motion changes.
+Page checks cover tier whitelisting, direct ticket links, no automatic
+initialization, compact applied coupons, removal and re-quoting, reduced motion,
+page-departure cancellation, back-forward UUID retention, safe provider URLs,
+and cleaned legacy callbacks. Built checks require natural scrolling, disabled
+no-JavaScript fields, no buyer-data query fallback, and the new page's CSP.
 It also checks the built sponsorship content, historical partner order, and CSP
 hashes. The published and built PDF must match the approved SHA-256 recorded in
 the script; no Downloads folder or external source file is required.

@@ -1,0 +1,33 @@
+---
+interface Props {
+  name: 'arrow-left' | 'arrow-right' | 'arrow-up-right' | 'ticket' | 'people' | 'pin' | 'tag' | 'plus' | 'lock';
+}
+
+const { name } = Astro.props;
+const paths = {
+  'arrow-left': ['M19 12H5', 'm12 19-7-7 7-7'],
+  'arrow-right': ['M5 12h14', 'm12 5 7 7-7 7'],
+  'arrow-up-right': ['M7 17 17 7', 'M7 7h10v10'],
+  ticket: ['M4 5h16v5a2 2 0 0 0 0 4v5H4v-5a2 2 0 0 0 0-4V5Z', 'M15 5v2m0 3v4m0 3v2'],
+  people: ['M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2', 'M22 21v-2a4 4 0 0 0-3-3.87', 'M16 3.13a4 4 0 0 1 0 7.75'],
+  pin: ['M20 10c0 6-8 11-8 11S4 16 4 10a8 8 0 1 1 16 0Z'],
+  tag: ['M20 13 13 20a2 2 0 0 1-2.83 0L3 12.83V3h9.83L20 10.17A2 2 0 0 1 20 13Z', 'M7 7h.01'],
+  plus: ['M5 12h14', 'M12 5v14'],
+  lock: ['M5 11h14v10H5z', 'M8 11V7a4 4 0 0 1 8 0v4'],
+};
+---
+
+<svg class="checkout-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+  {paths[name].map((d) => <path d={d} />)}
+  {name === 'people' && <circle cx="9" cy="7" r="4" />}
+  {name === 'pin' && <circle cx="12" cy="10" r="2.5" />}
+</svg>
+
+<style>
+  .checkout-icon {
+    display: block;
+    flex: 0 0 auto;
+    width: 20px;
+    height: 20px;
+  }
+</style>

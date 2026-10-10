@@ -82,6 +82,30 @@ const heroScenes = [
   },
 ];
 
+const heroSlots = [
+  {
+    name: 'gatherings',
+    photos: heroScenes.map((scene, index) => ({
+      ...scene.main,
+      position: index === 0 ? '50% 80%' : '50% 55%',
+    })),
+  },
+  {
+    name: 'conversations',
+    photos: [6, 0, 2, 4].map((index) => ({
+      ...heroScenes[index].secondary,
+      position: '50% 30%',
+    })),
+  },
+  {
+    name: 'ideas',
+    photos: [1, 3, 5, 7].map((index) => ({
+      ...heroScenes[index].secondary,
+      position: '50% 30%',
+    })),
+  },
+];
+
 const checkoutApiOrigin = import.meta.env.PUBLIC_DEVCON26_API_ORIGIN || 'https://em.devcongress.org';
 
 const faqs = [
@@ -178,7 +202,6 @@ function packageEnquiryLink(sponsorship: (typeof sponsorshipPackages)[number]) {
     <header class="site-header page-shell" data-devcon-header>
       <a href="/" class="brand" aria-label="DevCongress home">
         <img src="/images/logo.png" alt="dev:congress{};" width="154" height="36" />
-        <span>DevCon26</span>
       </a>
       <nav class="section-nav" aria-label="DevCon26 sections">
         {sectionLinks.map((link) => (
@@ -216,15 +239,24 @@ function packageEnquiryLink(sponsorship: (typeof sponsorshipPackages)[number]) {
         </div>
 
         <div class="hero-images" data-hero-slideshow role="group" aria-label="DevCongress gatherings throughout the year">
-          {heroScenes.map((scene, index) => (
-            <div class:list={['hero-scene', { 'is-active': index === 0 }]} data-hero-slide role="group" aria-label={scene.label} aria-hidden={index !== 0 ? 'true' : undefined}>
-              <figure class="hero-photo hero-photo-main">
-                <img src={index === 0 ? scene.main.src : undefined} data-hero-src={scene.main.src} alt={scene.main.alt} width={scene.main.width} height={scene.main.height} loading={index === 0 ? 'eager' : 'lazy'} fetchpriority={index === 0 ? 'high' : 'auto'} decoding="async" />
-              </figure>
-              <figure class="hero-photo hero-photo-secondary">
-                <img src={index === 0 ? scene.secondary.src : undefined} data-hero-src={scene.secondary.src} alt={scene.secondary.alt} width={scene.secondary.width} height={scene.secondary.height} loading="lazy" decoding="async" />
-              </figure>
-            </div>
+          {heroSlots.map((slot, slotIndex) => (
+            <figure class:list={['hero-photo', { 'hero-photo-main': slotIndex === 0 }]} data-hero-slot={slot.name}>
+              {slot.photos.map((photo, photoIndex) => (
+                <img
+                  class:list={{ 'is-active': photoIndex === 0 }}
+                  src={photoIndex === 0 ? photo.src : undefined}
+                  data-hero-src={photo.src}
+                  alt={photo.alt}
+                  aria-hidden={photoIndex !== 0 ? 'true' : undefined}
+                  width={photo.width}
+                  height={photo.height}
+                  style={'object-position: ' + photo.position}
+                  loading={photoIndex === 0 ? 'eager' : 'lazy'}
+                  fetchpriority={slotIndex === 0 && photoIndex === 0 ? 'high' : 'auto'}
+                  decoding="async"
+                />
+              ))}
+            </figure>
           ))}
         </div>
       </section>
@@ -753,19 +785,11 @@ function packageEnquiryLink(sponsorship: (typeof sponsorshipPackages)[number]) {
     display: inline-flex;
     min-height: 44px;
     align-items: center;
-    gap: 15px;
   }
 
   .brand img {
     width: 136px;
     height: auto;
-  }
-
-  .brand span {
-    padding-left: 15px;
-    border-left: 1px solid var(--dc-rule);
-    font-size: var(--dc-text-small);
-    font-weight: 700;
   }
 
   .section-nav {
@@ -931,23 +955,25 @@ function packageEnquiryLink(sponsorship: (typeof sponsorshipPackages)[number]) {
   }
 
   .hero-images {
-    position: relative;
-    align-self: stretch;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-self: center;
+    gap: 12px;
     min-width: 0;
-    min-height: 510px;
-    margin-top: 15px;
   }
 
-  .hero-scene {
-    position: absolute;
-    inset: 0;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 250ms var(--dc-ease);
+  .hero-photo {
+    position: relative;
+    overflow: hidden;
+    min-width: 0;
+    aspect-ratio: 1.42;
+    border-radius: 8px;
+    background: var(--dc-paper-light);
   }
 
-  .hero-scene.is-active {
-    opacity: 1;
+  .hero-photo-main {
+    grid-column: 1 / -1;
+    aspect-ratio: 1.9;
   }
 
   .hero-photo img, .programme-photo img {
@@ -958,37 +984,17 @@ function packageEnquiryLink(sponsorship: (typeof sponsorshipPackages)[number]) {
     outline-offset: -1px;
   }
 
-  .hero-photo-main {
+  .hero-photo img {
     position: absolute;
-    top: 28px;
-    right: 0;
-    width: 94%;
-    transform: rotate(3deg);
+    inset: 0;
+    opacity: 0;
+    pointer-events: none;
+    border-radius: inherit;
+    transition: opacity 250ms var(--dc-ease);
   }
 
-  .hero-photo-main img {
-    aspect-ratio: 1.24;
-    border-radius: 8px;
-    object-position: 45% center;
-  }
-
-  .hero-photo-secondary {
-    position: absolute;
-    z-index: 1;
-    bottom: 0;
-    left: -24px;
-    width: 42%;
-    padding: 7px;
-    border-radius: 12px;
-    background: var(--dc-paper-light);
-    box-shadow: 0 3px 6px rgb(0 0 0 / 0.06), 0 16px 28px rgb(0 0 0 / 0.09);
-    transform: rotate(-7deg);
-  }
-
-  .hero-photo-secondary img {
-    aspect-ratio: 0.83;
-    border-radius: 6px;
-    object-position: center 30%;
+  .hero-photo img.is-active {
+    opacity: 1;
   }
 
   .story-section {
@@ -1478,11 +1484,7 @@ function packageEnquiryLink(sponsorship: (typeof sponsorshipPackages)[number]) {
     list-style: none;
   }
 
-  .sponsor-item {
-    border-top: 1px solid var(--dc-rule);
-  }
-
-  .sponsor-item:last-child {
+  .sponsor-item:not(:last-child) {
     border-bottom: 1px solid var(--dc-rule);
   }
 
@@ -1851,7 +1853,6 @@ function packageEnquiryLink(sponsorship: (typeof sponsorshipPackages)[number]) {
     gap: 16px;
     height: 100%;
     padding: 18px;
-    border-top: 1px solid var(--dc-rule);
     font-size: var(--dc-text-small);
     font-weight: 600;
   }
@@ -2359,17 +2360,7 @@ function packageEnquiryLink(sponsorship: (typeof sponsorshipPackages)[number]) {
     }
 
     .hero-images {
-      min-height: 480px;
-    }
-
-    .hero-photo-main {
-      top: 60px;
-    }
-
-    .hero-photo-secondary {
-      bottom: 35px;
-      left: -10px;
-      width: 48%;
+      gap: 10px;
     }
 
     .story-section, .speakers-header, .section-intro, .location-section, .faq-section {
@@ -2521,16 +2512,8 @@ function packageEnquiryLink(sponsorship: (typeof sponsorshipPackages)[number]) {
       padding-block: 12px;
     }
 
-    .brand {
-      gap: 12px;
-    }
-
     .brand img {
       width: clamp(100px, 28vw, 126px);
-    }
-
-    .brand span {
-      padding-left: 12px;
     }
 
     .section-nav {
@@ -2564,26 +2547,11 @@ function packageEnquiryLink(sponsorship: (typeof sponsorshipPackages)[number]) {
     }
 
     .hero-images {
-      min-height: 0;
-      aspect-ratio: 1.08;
-      margin-top: 20px;
+      gap: 8px;
     }
 
-    .hero-photo-main {
-      top: 5px;
-      width: 86%;
-    }
-
-    .hero-photo-main img {
+    .hero-photo:not(.hero-photo-main) {
       aspect-ratio: 1.35;
-    }
-
-    .hero-photo-secondary {
-      bottom: 0;
-      left: 0;
-      width: 35%;
-      padding: 5px;
-      border-radius: 11px;
     }
 
     .story-section {

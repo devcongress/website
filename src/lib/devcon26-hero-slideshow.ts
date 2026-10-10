@@ -45,27 +45,33 @@ function waitForPhoto(image: HTMLImageElement, signal: AbortSignal): Promise<boo
 }
 
 export function initDevcon26HeroSlideshow(root: HTMLElement): () => void {
-  const slides = Array.from(root.querySelectorAll<HTMLElement>('[data-hero-slide]'));
+  const slots = Array.from(root.querySelectorAll<HTMLElement>('[data-hero-slot]')).map((slot) => ({
+    photos: Array.from(slot.querySelectorAll<HTMLImageElement>('img')),
+    active: 0,
+    failed: new Set<number>(),
+  }));
+  type Candidate = { slotIndex: number; photoIndex: number };
 
-  if (slides.length < 2) {
+  if (!slots.some((slot) => slot.photos.length > 1)) {
     return () => {};
   }
 
   const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
   const bounds = root.getBoundingClientRect();
-  const failed = new Set<number>();
   const listeners = new AbortController();
   const focusScope = root.closest<HTMLElement>('.hero') || root;
-  let active = 0;
+  const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)');
+  let nextSlot = 0;
   let inView = bounds.bottom > 0 && bounds.top < window.innerHeight;
   let hovered = false;
   let focused = focusScope.contains(document.activeElement);
   let suspended = false;
   let disposed = false;
-  let busy = false;
+  let advancing = false;
   let generation = 0;
   let timer: number | undefined;
   let pending: AbortController | undefined;
+  let prepared: Promise<Candidate | null> | undefined;
 
   const clearTimer = () => {
     if (timer !== undefined) window.clearTimeout(timer);
@@ -77,24 +83,62 @@ export function initDevcon26HeroSlideshow(root: HTMLElement): () => void {
     generation += 1;
     pending?.abort();
     pending = undefined;
-    busy = false;
+    prepared = undefined;
+    advancing = false;
   };
 
   const canRotate = () => !disposed && !suspended && !motion.matches
-    && !document.hidden && inView && !hovered && !focused && failed.size < slides.length - 1;
+    && !document.hidden && inView && !hovered && !focused
+    && slots.some((slot) => slot.failed.size < slot.photos.length - 1);
+
+  // Prepare the next single photo before its turn, keeping all visible photos intact.
+  const prepare = async (signal: AbortSignal, token: number): Promise<Candidate | null> => {
+    for (let offset = 0; offset < slots.length; offset += 1) {
+      const slotIndex = (nextSlot + offset) % slots.length;
+      const slot = slots[slotIndex];
+
+      for (let step = 1; step < slot.photos.length; step += 1) {
+        const photoIndex = (slot.active + step) % slot.photos.length;
+
+        if (slot.failed.has(photoIndex)) continue;
+
+        const loaded = await waitForPhoto(slot.photos[photoIndex], signal);
+
+        if (disposed || signal.aborted || token !== generation) return null;
+
+        if (loaded) return { slotIndex, photoIndex };
+
+        slot.failed.add(photoIndex);
+      }
+    }
+
+    return null;
+  };
+
+  const prime = () => {
+    if (prepared || !canRotate()) return;
+
+    pending = new AbortController();
+    prepared = prepare(pending.signal, generation);
+  };
 
   const updatePlayback = () => {
     clearTimer();
 
     if (disposed) return;
 
-    if (!canRotate() && busy) cancelPending();
+    if (!canRotate()) {
+      cancelPending();
+      return;
+    }
 
-    if (canRotate() && !busy) {
+    prime();
+
+    if (!advancing) {
       timer = window.setTimeout(() => {
         timer = undefined;
         void show();
-      }, 6000);
+      }, 3000);
     }
   };
 
@@ -102,40 +146,33 @@ export function initDevcon26HeroSlideshow(root: HTMLElement): () => void {
     if (!canRotate()) return;
 
     clearTimer();
-    cancelPending();
     const token = generation;
-    const request = new AbortController();
 
-    pending = request;
-    busy = true;
-    updatePlayback();
+    advancing = true;
+    prime();
+    const candidate = await prepared;
 
-    for (let step = 1; step < slides.length; step += 1) {
-      const index = (active + step) % slides.length;
-
-      if (failed.has(index)) continue;
-
-      const photos = Array.from(slides[index].querySelectorAll<HTMLImageElement>('img'));
-      const loaded = photos.length === 2
-        && (await Promise.all(photos.map((photo) => waitForPhoto(photo, request.signal)))).every(Boolean);
-
-      if (disposed || token !== generation || request.signal.aborted) return;
-
-      if (!loaded) {
-        failed.add(index);
-        continue;
-      }
-
-      slides[active].classList.remove('is-active');
-      slides[active].setAttribute('aria-hidden', 'true');
-      slides[index].classList.add('is-active');
-      slides[index].removeAttribute('aria-hidden');
-      active = index;
-      break;
+    if (token !== generation || !canRotate()) {
+      if (token === generation) updatePlayback();
+      return;
     }
 
-    busy = false;
+    if (candidate) {
+      const slot = slots[candidate.slotIndex];
+      const outgoing = slot.photos[slot.active];
+      const incoming = slot.photos[candidate.photoIndex];
+
+      outgoing.classList.remove('is-active');
+      outgoing.setAttribute('aria-hidden', 'true');
+      incoming.classList.add('is-active');
+      incoming.removeAttribute('aria-hidden');
+      slot.active = candidate.photoIndex;
+      nextSlot = (candidate.slotIndex + 1) % slots.length;
+    }
+
+    prepared = undefined;
     pending = undefined;
+    advancing = false;
     updatePlayback();
   };
 
@@ -151,13 +188,13 @@ export function initDevcon26HeroSlideshow(root: HTMLElement): () => void {
     focused = focusScope.contains((event as FocusEvent).relatedTarget as Node | null);
     updatePlayback();
   });
-  on(focusScope, 'pointerenter', (event) => {
-    if ((event as PointerEvent).pointerType === 'touch') return;
+  on(root, 'pointerenter', (event) => {
+    if (!finePointer.matches || (event as PointerEvent).pointerType === 'touch') return;
 
     hovered = true;
     updatePlayback();
   });
-  on(focusScope, 'pointerleave', () => {
+  on(root, 'pointerleave', () => {
     hovered = false;
     updatePlayback();
   });

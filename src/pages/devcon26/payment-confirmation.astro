@@ -10,7 +10,6 @@ const checkoutApiOrigin = import.meta.env.PUBLIC_DEVCON26_API_ORIGIN || 'https:/
     <header class="payment-header page-shell">
       <a class="brand" href="/" aria-label="DevCongress home">
         <img src="/images/logo.png" alt="dev:congress{};" width="154" height="36" />
-        <span>DevCon26</span>
       </a>
       <a class="header-return" href="/devcon26/">Back to the event <span aria-hidden="true">↗</span></a>
     </header>
@@ -193,19 +192,11 @@ const checkoutApiOrigin = import.meta.env.PUBLIC_DEVCON26_API_ORIGIN || 'https:/
     display: inline-flex;
     min-height: 44px;
     align-items: center;
-    gap: 15px;
   }
 
   .brand img {
     width: 136px;
     height: auto;
-  }
-
-  .brand span {
-    padding-left: 15px;
-    border-left: 1px solid var(--border-light);
-    font-size: var(--text-sm);
-    font-weight: 700;
   }
 
   .header-return {
@@ -657,16 +648,8 @@ const checkoutApiOrigin = import.meta.env.PUBLIC_DEVCON26_API_ORIGIN || 'https:/
       padding-block: 12px;
     }
 
-    .brand {
-      gap: 12px;
-    }
-
     .brand img {
       width: 116px;
-    }
-
-    .brand span {
-      padding-left: 12px;
     }
 
     .payment-status {

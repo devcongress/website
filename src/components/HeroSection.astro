@@ -1,5 +1,9 @@
 ---
-interface Cta { text: string; color: 'pink' | 'outline' | 'white' | 'yellow'; }
+interface Cta {
+  text: string;
+  color: 'pink' | 'outline' | 'white' | 'yellow';
+}
+
 interface Hero {
   eyebrow: string;
   headline: string;
@@ -8,12 +12,14 @@ interface Hero {
   video_label: string;
   video_live: string;
 }
+
 interface Props {
   hero: Hero;
   slackUrl: string;
   paystackUrl: string;
   youtubeEmbedUrl: string;
 }
+
 const { hero, slackUrl, paystackUrl, youtubeEmbedUrl } = Astro.props;
 
 const colorClass: Record<string, string> = {
@@ -26,30 +32,52 @@ const colorClass: Record<string, string> = {
 
 <section class="hero" id="hero">
   <div class="container">
-
     <div class="hero-top">
-      <span class="eyebrow">{hero.eyebrow}</span>
-      <h1 class="heading-display hero-headline">{hero.headline}</h1>
-      <div class="hero-ctas">
-        <a
-          href={slackUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          class={`btn ${colorClass[hero.cta_primary.color]} btn-hero`}
-        >
-          {hero.cta_primary.text}
-        </a>
-        <a
-          href={paystackUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          class={`btn ${colorClass[hero.cta_secondary.color]} btn-hero`}
-        >
-          {hero.cta_secondary.text}
-        </a>
+      <div class="hero-copy">
+        <span class="eyebrow">{hero.eyebrow}</span>
+        <h1 class="heading-display hero-headline">{hero.headline}</h1>
+        <p class="hero-invitation">We connect all year. This December, we come together at <strong>DevCon26.</strong></p>
+        <div class="hero-conference-meta">
+          <time datetime="2026-12">December 2026</time>
+          <p>Ghana Digital Center (formerly Accra Digital Center), Accra</p>
+        </div>
+        <div class="hero-ctas">
+          <a
+            href="/devcon26/#tickets"
+            class={`btn ${colorClass[hero.cta_primary.color]} btn-hero`}
+          >
+            {hero.cta_primary.text} <span aria-hidden="true">↗</span>
+          </a>
+          <a
+            href={slackUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            class={`btn ${colorClass[hero.cta_secondary.color]} btn-hero`}
+          >
+            {hero.cta_secondary.text}
+          </a>
+          <a
+            href={paystackUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="btn btn-outline btn-hero"
+          >
+            Support us
+          </a>
+        </div>
       </div>
+      <figure class="hero-community-photo">
+        <img
+          src="/images/devcon26/hero-may-connections.webp"
+          alt="DevCongress members chatting at a community meetup"
+          width="1100"
+          height="734"
+          loading="eager"
+          fetchpriority="high"
+          decoding="async"
+        />
+      </figure>
     </div>
-
   </div>
 
   <div class="hero-video-wrap">
@@ -77,33 +105,123 @@ const colorClass: Record<string, string> = {
   }
 
   .hero-top {
-    max-width: 900px;
-    margin-inline: auto;
-    margin-bottom: var(--s9);
-    text-align: center;
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
     align-items: center;
+    gap: var(--s7);
+    margin-bottom: var(--s8);
+  }
+
+  .hero-copy {
+    min-width: 0;
   }
 
   .hero-headline {
-    font-size: clamp(var(--text-3xl), 7vw, var(--text-5xl));
+    font-size: clamp(var(--text-3xl), 4.7vw, var(--text-4xl));
     font-weight: 700;
-    margin-bottom: var(--s7);
+    margin-bottom: var(--s5);
     letter-spacing: -0.03em;
     text-wrap: balance;
+  }
+
+  .hero-invitation {
+    max-width: 38ch;
+    font-size: var(--text-xl);
+    line-height: var(--leading-snug);
+  }
+
+  .hero-invitation strong {
+    font-weight: 700;
+  }
+
+  .hero-conference-meta {
+    margin-top: var(--s5);
+    padding-left: var(--s3);
+    border-left: 3px solid var(--pink);
+  }
+
+  .hero-conference-meta time {
+    font-weight: 700;
+  }
+
+  .hero-conference-meta p {
+    max-width: 46ch;
+    margin-top: var(--s1);
+    color: var(--text-mid);
+    font-size: var(--text-sm);
+    line-height: var(--leading-snug);
+  }
+
+  .hero-community-photo {
+    min-width: 0;
+    border: 2px solid var(--black);
+    border-radius: var(--r-lg);
+    overflow: hidden;
+    box-shadow: 6px 6px 0 var(--pink);
+  }
+
+  .hero-community-photo img {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    object-position: 50% 60%;
   }
 
   .hero-ctas {
     display: flex;
     flex-wrap: wrap;
-    gap: var(--s4);
-    justify-content: center;
+    gap: var(--s3);
+    margin-top: var(--s6);
   }
 
   .btn-hero {
-    padding: var(--s5) var(--s9);
-    font-size: var(--text-lg);
+    min-height: 46px;
+    justify-content: center;
+    padding: var(--s3) var(--s4);
+    border-width: 2px;
+    font-size: var(--text-sm);
+    transition: transform 120ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .btn-hero.btn-primary {
+    background: color-mix(in srgb, var(--pink) 92%, var(--black));
+    color: var(--bg-white);
+  }
+
+  .btn-hero:hover {
+    transform: none;
+    box-shadow: none;
+  }
+
+  .btn-hero > span {
+    display: inline-block;
+    transition: transform 160ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .btn-hero:focus-visible {
+    outline: 3px solid var(--pink);
+    outline-offset: 4px;
+  }
+
+  .btn-hero:active {
+    transform: scale(0.97);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .btn-hero:hover {
+      transform: translate(-2px, -2px);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .btn-hero:hover > span {
+      transform: translate(2px, -2px);
+    }
+
+    .btn-hero:active {
+      transform: scale(0.97);
+    }
   }
 
   .hero-video-wrap {
@@ -144,16 +262,41 @@ const colorClass: Record<string, string> = {
     display: block;
   }
 
-  @media (max-width: 640px) {
-    .hero-top { margin-bottom: var(--s7); }
-    .hero-headline { margin-bottom: var(--s6); }
-    .hero-ctas { gap: var(--s3); width: 100%; }
+  @media (max-width: 800px) {
+    .hero-top {
+      grid-template-columns: minmax(0, 1fr);
+      gap: var(--s6);
+      margin-bottom: var(--s7);
+    }
+
+    .hero-headline {
+      max-width: 18ch;
+      font-size: clamp(36px, 7vw, var(--text-4xl));
+    }
+
+    .hero-community-photo img {
+      aspect-ratio: 1100 / 734;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .hero-invitation {
+      font-size: var(--text-lg);
+    }
+
+    .hero-ctas {
+      flex-direction: column;
+    }
+
     .btn-hero {
-      width: min(100%, 19rem);
-      min-height: 46px;
-      justify-content: center;
-      padding: var(--s3) var(--s6);
-      font-size: var(--text-base);
+      width: 100%;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .btn-hero, .btn-hero > span {
+      transition: none;
+      transform: none !important;
     }
   }
 </style>

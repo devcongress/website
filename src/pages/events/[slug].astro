@@ -60,7 +60,7 @@ const externalAction = action?.href.startsWith('http') ?? false;
       <div class="event-hero-overlay" aria-hidden="true"></div>
       <div class="container event-hero-content">
         <span class={`event-status-badge status-${status}`} data-event-status>{statusLabel}</span>
-        <h1 class="heading-serif event-hero-title" id="event-title">{event.title}</h1>
+        <h1 class="heading-display event-hero-title" id="event-title">{event.title}</h1>
         <p class="event-hero-meta">
           <time datetime={event.startsAt} data-event-time>{formatDate(event.startsAt, event.timezone)} · {formatTime(event.startsAt, event.timezone)}</time>
           <span aria-hidden="true">•</span>

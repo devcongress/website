@@ -91,8 +91,84 @@ const faqs = [
   ['How do I buy a ticket?', 'Choose a ticket below and continue to secure checkout with Paystack. You do not need a DevCongress or EMS account.'],
 ];
 
-const sponsorIds = new Set(['fido', 'kweku_tech', 'mest']);
-const sponsors = (await getCollection('partners')).filter((partner) => sponsorIds.has(partner.id));
+const sponsorIds = new Set(['kweku_tech']);
+const partners = await getCollection('partners');
+const sponsors = partners.filter((partner) => sponsorIds.has(partner.id));
+const pastSponsors = [...partners].sort((left, right) => left.data.name.localeCompare(right.data.name, 'en', { sensitivity: 'base' }));
+
+const sponsorshipPackages = [
+  {
+    id: 'contributor',
+    name: 'Community Contributor',
+    price: 'GHS 5,000',
+    description: 'A little backing. A lasting connection.',
+    highlights: ['Logo and company profile', 'Event and social recognition', 'Community job sharing'],
+    qualification: 'No exhibition, speaking, or dedicated activations.',
+    passes: '2 conference passes',
+  },
+  {
+    id: 'collaborator',
+    name: 'Community Collaborator',
+    price: 'GHS 10,000',
+    description: 'Get closer to the people making things happen.',
+    highlights: ['Enhanced logo and screen placement', 'Jobs and graduate opportunities', 'Career connections with attendees'],
+    qualification: 'No exhibition or stage opportunities.',
+    passes: '4 conference passes',
+  },
+  {
+    id: 'builder',
+    name: 'Community Builder',
+    price: 'GHS 20,000',
+    description: 'Bring something useful into the room.',
+    highlights: ['Standard exhibition and recruitment', '5-minute Speaker Spotlight', 'Workshop and demo opportunities'],
+    qualification: 'Speaking and programme opportunities require DevCongress approval.',
+    passes: '6 conference passes',
+  },
+  {
+    id: 'catalyst',
+    name: 'Community Catalyst',
+    price: 'GHS 30,000',
+    description: 'Make your presence part of the experience.',
+    highlights: ['Premium exhibition and activation', '5-minute spotlight and stage opportunities', 'Sponsor interview and enhanced visibility'],
+    qualification: 'Programme opportunities require DevCongress approval. Exhibition space and passes replace the previous tier’s allocation.',
+    passes: '8 conference passes',
+  },
+  {
+    id: 'champion',
+    name: 'Community Champion',
+    price: 'GHS 50,000',
+    description: 'A major presence. A deeper community investment.',
+    highlights: ['Premier branding and category exclusivity', '10-minute spotlight and stage opportunities', 'Premium exhibition and talent engagement'],
+    qualification: 'Programme opportunities require DevCongress approval. Exclusivity is limited to the agreed category at this sponsorship level.',
+    passes: '10 conference passes',
+  },
+  {
+    id: 'title',
+    name: 'Title Partner',
+    price: 'GHS 70,000+',
+    description: 'A partnership shaped around your ambition.',
+    highlights: ['Potential title recognition', 'Tailored exhibition and activations', 'Proposed 15-minute featured spotlight'],
+    qualification: 'Benefits are agreed individually. Programme opportunities require DevCongress approval.',
+    passes: 'Conference passes tailored to your partnership',
+  },
+] as const;
+
+function packageEnquiryLink(sponsorship: (typeof sponsorshipPackages)[number]) {
+  const subject = 'DevCon26 ' + sponsorship.name + ' sponsorship enquiry';
+  const body = [
+    'Hi DevCongress team,',
+    '',
+    'We would like to proceed with the ' + sponsorship.name + ' sponsorship package at ' + sponsorship.price + '.',
+    '',
+    'Organisation: [Organisation name]',
+    'Contact name: [Your name]',
+    '',
+    'Please share the next steps to confirm our sponsorship.',
+  ].join('\r\n');
+
+  return 'mailto:events@devcongress.org?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
+}
+
 ---
 
 <Base title="DevCon26 | DevCongress" description="DevCon26 brings Africa’s builders together in Accra, Ghana in December 2026.">
@@ -284,13 +360,9 @@ const sponsors = (await getCollection('partners')).filter((partner) => sponsorId
 
       <section id="sponsors" class="sponsors-section page-shell" aria-labelledby="sponsors-title">
         <div class="sponsors-story">
-          <span class="partner-symbol" aria-hidden="true">{'+ +'}</span>
           <p class="section-caption">The people behind the gathering</p>
           <h2 id="sponsors-title">Good company<br />needs <em>good backing.</em></h2>
           <p>Partners help keep this space open: a place for Ghana’s technology community to meet collaborators, exchange ideas, and take their work further.</p>
-          <a class="button sponsor-button" href="mailto:hello@devcongress.org?subject=DevCon26%20partnership">
-            Become a partner <span aria-hidden="true">↗</span>
-          </a>
         </div>
         <div class="sponsors-community">
           <p>With the support of</p>
@@ -310,7 +382,53 @@ const sponsors = (await getCollection('partners')).filter((partner) => sponsorId
               </li>
             ))}
           </ul>
-          <p class="sponsors-signoff">A community gathering.<br />A collective effort.</p>
+        </div>
+        <div class="sponsorship-packages" aria-labelledby="packages-title">
+          <div class="packages-intro">
+            <div>
+              <p class="section-caption">Sponsorship packages</p>
+              <h3 id="packages-title">Find your way to <em>get involved.</em></h3>
+            </div>
+            <a class="sponsorship-download" href="/downloads/devcon26-sponsorship-packages.pdf" download="DevCon26 Sponsorship Packages.pdf">
+              Download sponsorship packages <span aria-hidden="true">↗</span>
+              <small>PDF · Full benefits and terms</small>
+            </a>
+          </div>
+          <div class="package-grid">
+            {sponsorshipPackages.map((sponsorship) => (
+              <article class="package-plan" aria-labelledby={'package-' + sponsorship.id}>
+                <div class="package-heading">
+                  <h4 id={'package-' + sponsorship.id}>
+                    <span class="package-family">{sponsorship.id === 'title' ? 'Title' : 'Community'}</span>{' '}
+                    <span class="package-tier">{sponsorship.name.replace(/^(Community|Title) /, '')}</span>
+                  </h4>
+                </div>
+                <p class="package-price">
+                  <span class="package-currency">GHS</span>{' '}
+                  <span>{sponsorship.price.replace('GHS ', '')}</span>
+                </p>
+                <p class="package-description">{sponsorship.description}</p>
+                <ul class="package-highlights">
+                  {sponsorship.highlights.map((highlight) => <li>{highlight}</li>)}
+                </ul>
+                <div class="package-allocation">
+                  <p class="package-passes">{sponsorship.passes}</p>
+                  <p class="package-qualification">{sponsorship.qualification}</p>
+                </div>
+                <a class="package-enquiry" href={packageEnquiryLink(sponsorship)}>
+                  Choose this package <span aria-hidden="true">↗</span><span class="sr-only">: {sponsorship.name}</span>
+                </a>
+              </article>
+            ))}
+          </div>
+          <div class="custom-sponsorship">
+            <div>
+              <p class="section-caption">Something more specific?</p>
+              <h3>Let’s build a partnership <em>around your ideas.</em></h3>
+              <p>Back a workshop, networking, recruitment, student access, refreshments, swag, or another part of the day. We prioritise cash sponsorships and consider selected in-kind contributions that support the event.</p>
+            </div>
+            <a class="button sponsor-button" href="mailto:events@devcongress.org?subject=DevCon26%20custom%20sponsorship%20enquiry">Discuss a custom partnership <span aria-hidden="true">↗</span></a>
+          </div>
         </div>
       </section>
 
@@ -328,259 +446,96 @@ const sponsors = (await getCollection('partners')).filter((partner) => sponsorId
           ))}
         </div>
       </section>
+      <section class="past-sponsors-section page-shell" aria-labelledby="past-sponsors-title">
+        <div class="past-sponsors-intro">
+          <p class="section-caption">A history of good company</p>
+          <h2 id="past-sponsors-title">Past <em>sponsors.</em></h2>
+          <p>The organisations that have backed the DevCongress community along the way.</p>
+        </div>
+        <ul class="past-sponsors-list">
+          {pastSponsors.map((partner) => (
+            <li>
+              <a href={partner.data.url} target="_blank" rel="noopener noreferrer" aria-label={'Visit ' + partner.data.name + ' (opens in a new tab)'}>
+                <span class="past-sponsor-logo" style={partner.data.backgroundColor ? 'background-color:' + partner.data.backgroundColor : undefined}>
+                  <img src={partner.data.logo} alt="" width="180" height="70" loading="lazy" decoding="async" />
+                </span>
+                <span>{partner.data.name}</span>
+                <span class="past-sponsor-arrow" aria-hidden="true">↗</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </section>
     </main>
 
     <dialog class="checkout-dialog" id="ticket-checkout-dialog" aria-labelledby="checkout-title">
-      <section class="checkout-panel">
+      <div class="checkout-surface" data-checkout-surface aria-hidden="true"></div>
+      <div class="checkout-art" data-checkout-art aria-hidden="true">
         <div class="ticket-illustration" aria-hidden="true">
           <img src={tickets[0].photo} data-checkout-ticket-photo alt="" width="640" height="512" decoding="async" />
         </div>
-        <form method="dialog" class="checkout-dismiss">
-          <button type="submit" class="checkout-close" aria-label="Close ticket checkout">×</button>
-        </form>
-        <p class="section-caption">DevCon26 tickets</p>
-        <h2 id="checkout-title">Your ticket choice.</h2>
-        <div class="checkout-selection" aria-live="polite">
-          <div>
-            <p class="checkout-selection-label">Selected ticket</p>
-            <p class="checkout-ticket-name" data-checkout-ticket-name>Regular ticket</p>
+      </div>
+      <section class="checkout-panel">
+        <div class="checkout-content" data-checkout-content>
+          <form method="dialog" class="checkout-dismiss">
+            <button type="submit" class="checkout-close" aria-label="Close ticket checkout">×</button>
+          </form>
+          <p class="section-caption">DevCon26 tickets</p>
+          <h2 id="checkout-title">Your ticket choice.</h2>
+          <div class="checkout-selection" aria-live="polite">
+            <div>
+              <p class="checkout-selection-label">Selected ticket</p>
+              <p class="checkout-ticket-name" data-checkout-ticket-name>Regular ticket</p>
+            </div>
+            <p class="checkout-ticket-price" data-checkout-ticket-price>GHS 199.99</p>
           </div>
-          <p class="checkout-ticket-price" data-checkout-ticket-price>GHS 199.99</p>
+          <div class="checkout-notice" role="status" aria-live="polite">
+            <p data-checkout-notice-title>Getting your checkout ready.</p>
+            <span data-checkout-notice-copy>Checking availability for your ticket choice.</span>
+          </div>
+          <form class="checkout-buyer-form" data-checkout-buyer-form novalidate>
+            <div class="checkout-buyer-fields">
+              <label for="checkout-purchaser-name">Your name</label>
+              <input id="checkout-purchaser-name" data-checkout-purchaser-name name="purchaser_name" autocomplete="name" maxlength="160" required aria-describedby="checkout-privacy-note" />
+              <label for="checkout-purchaser-email">Email address</label>
+              <input id="checkout-purchaser-email" data-checkout-purchaser-email name="purchaser_email" type="email" autocomplete="email" maxlength="254" required aria-describedby="checkout-privacy-note" />
+              <p id="checkout-privacy-note" class="checkout-privacy-note">We store your name and email with your payment record so the event team can help with checkout questions. No EMS account needed.</p>
+            </div>
+            <details class="checkout-coupon" data-checkout-coupon>
+              <summary>Have a coupon? <span aria-hidden="true">+</span></summary>
+              <div class="checkout-coupon-content" data-checkout-coupon-content>
+                <label for="checkout-coupon-code">Coupon code</label>
+                <div class="checkout-coupon-controls">
+                  <input id="checkout-coupon-code" data-checkout-coupon-code name="coupon_code" autocomplete="off" maxlength="48" spellcheck="false" aria-describedby="checkout-coupon-status" />
+                  <button data-checkout-coupon-apply type="button">Apply</button>
+                  <button data-checkout-coupon-remove type="button" hidden>Remove</button>
+                </div>
+                <p id="checkout-coupon-status" data-checkout-coupon-status role="status" aria-live="polite"></p>
+              </div>
+            </details>
+            <div class="checkout-after-coupon" data-checkout-after-coupon>
+              <dl class="checkout-quote" data-checkout-quote hidden aria-live="polite">
+                <div><dt>Ticket total</dt><dd data-checkout-base></dd></div>
+                <div data-checkout-discount-row hidden><dt>Coupon discount</dt><dd data-checkout-discount></dd></div>
+                <div class="checkout-total"><dt>Total to pay</dt><dd data-checkout-final></dd></div>
+              </dl>
+              <button class="checkout-payment-button" data-checkout-payment type="submit" disabled aria-describedby="checkout-payment-note">Checking checkout…</button>
+              <p id="checkout-payment-note" class="checkout-payment-note">Secure checkout powered by Paystack.</p>
+            </div>
+          </form>
         </div>
-        <div class="checkout-notice" role="status" aria-live="polite">
-          <p data-checkout-notice-title>Getting your checkout ready.</p>
-          <span data-checkout-notice-copy>Checking availability for your ticket choice.</span>
-        </div>
-        <button class="checkout-payment-button" data-checkout-payment type="button" disabled aria-describedby="checkout-payment-note">Checking checkout…</button>
-        <p id="checkout-payment-note" class="checkout-payment-note">Secure checkout powered by Paystack.</p>
       </section>
     </dialog>
   </div>
 </Base>
 
 <script>
-  import { devcon26ConfirmationUrl } from '../../lib/devcon26-payment-confirmation';
+  import { initializeDevcon26Checkout } from '../../lib/devcon26-checkout';
 
   const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-  const page = document.querySelector('.devcon-page');
-  const checkoutDialog = document.querySelector('#ticket-checkout-dialog');
-  const checkoutTicketName = document.querySelector('[data-checkout-ticket-name]');
-  const checkoutTicketPrice = document.querySelector('[data-checkout-ticket-price]');
-  const checkoutTicketPhoto = document.querySelector('[data-checkout-ticket-photo]');
-  const checkoutPayment = document.querySelector('[data-checkout-payment]');
-  const checkoutNoticeTitle = document.querySelector('[data-checkout-notice-title]');
-  const checkoutNoticeCopy = document.querySelector('[data-checkout-notice-copy]');
-  const checkoutChoices = Array.from(document.querySelectorAll('[data-ticket-choice]'));
-  const checkoutPath = '/api/public/annual-conference/2026/test-checkout';
-  let checkoutTier = 'regular';
-  let checkoutRequestKey;
-  let checkoutReference;
-  let checkoutAction = 'initialize';
-  let checkoutBusy = false;
-  let checkoutOperation = 0;
-  let checkoutAbort;
-  let checkoutCloseTimer;
-  let checkoutTransition = 0;
+  const page = document.querySelector<HTMLElement>('.devcon-page');
 
-  // This browser receives only public catalog/status data, never a provider key.
-  async function checkoutApi(operation = '', body) {
-    const api = new URL(page.dataset.checkoutApiOrigin);
-    const local = ['localhost', '127.0.0.1', '[::1]'].includes(api.hostname);
-
-    if ((api.protocol !== 'https:' && !(local && api.protocol === 'http:')) || api.username || api.password) {
-      throw new Error('Checkout connection is not configured.');
-    }
-    const response = await fetch(new URL(checkoutPath + operation, api.origin), {
-      method: body ? 'POST' : 'GET',
-      credentials: 'omit',
-      cache: 'no-store',
-      headers: body ? { 'Content-Type': 'application/json' } : {},
-      body: body ? JSON.stringify(body) : undefined,
-      signal: checkoutAbort.signal,
-    });
-    const result = await response.json().catch(() => null);
-
-    if (!response.ok || !result) throw new Error('Checkout is temporarily unavailable. Please try again.');
-
-    return result;
-  }
-
-  function checkoutMessage(title, copy, label, disabled = false) {
-    checkoutNoticeTitle.textContent = title;
-    checkoutNoticeCopy.textContent = copy;
-    checkoutPayment.textContent = label;
-    checkoutPayment.disabled = disabled;
-    checkoutPayment.setAttribute('aria-busy', String(checkoutBusy));
-  }
-
-  function beginCheckoutOperation() {
-    checkoutAbort?.abort();
-    checkoutAbort = new AbortController();
-    checkoutBusy = true;
-
-    return ++checkoutOperation;
-  }
-
-  async function checkCheckoutAvailability() {
-    const operation = beginCheckoutOperation();
-
-    checkoutMessage('Getting your checkout ready.', 'Checking availability for your ticket choice.', 'Checking checkout…', true);
-
-    try {
-      const result = await checkoutApi();
-
-      if (operation !== checkoutOperation) return;
-      checkoutBusy = false;
-      checkoutAction = 'initialize';
-      const tier = result.tiers?.find((candidate) => candidate.tier_key === checkoutTier);
-
-      if (result.mode !== 'test' || !tier || tier.currency !== 'GHS' || !Number.isSafeInteger(tier.amount_minor) || tier.amount_minor <= 0) {
-        checkoutAction = 'availability';
-        checkoutMessage('Checkout isn’t available right now.', 'Please check again in a moment. No payment has been started.', 'Check again');
-
-        return;
-      }
-      checkoutTicketPrice.textContent = 'GHS ' + (tier.amount_minor / 100).toFixed(2);
-      checkoutMessage('Ready when you are.', 'Continue to Paystack to complete your payment securely.', 'Continue to payment');
-    } catch {
-      if (operation !== checkoutOperation) return;
-      checkoutBusy = false;
-      checkoutAction = 'availability';
-      checkoutMessage('We couldn’t connect to checkout.', 'Please try again. No payment has been started.', 'Check again');
-    }
-  }
-
-  function selectCheckoutTicket(button) {
-    checkoutTier = button.dataset.ticketId.replaceAll('-', '_');
-    checkoutTicketName.textContent = button.dataset.ticketName || '';
-    checkoutTicketPrice.textContent = button.dataset.ticketPrice || '';
-    checkoutTicketPhoto.src = button.dataset.ticketPhoto;
-    checkoutDialog.dataset.ticketFeatured = button.dataset.ticketFeatured || 'false';
-  }
-
-  function showCheckout() {
-    window.clearTimeout(checkoutCloseTimer);
-    const currentTransition = ++checkoutTransition;
-
-    if (!checkoutDialog.open) checkoutDialog.showModal();
-    window.requestAnimationFrame(() => {
-      if (currentTransition === checkoutTransition && checkoutDialog.open) checkoutDialog.dataset.visible = 'true';
-    });
-  }
-
-  async function verifyCheckoutReturn(reference) {
-    const operation = beginCheckoutOperation();
-
-    checkoutReference = reference;
-    checkoutMessage('Confirming your payment.', 'Checking the result directly with Paystack.', 'Confirming…', true);
-
-    try {
-      const result = await checkoutApi('/verify', { reference });
-
-      if (operation !== checkoutOperation) return;
-      const button = checkoutChoices.find((candidate) => candidate.dataset.ticketId.replaceAll('-', '_') === result.tier_key);
-
-      if (result.mode !== 'test' || !button || result.currency !== 'GHS' || !Number.isSafeInteger(result.amount_minor)) {
-        throw new Error('Invalid checkout result.');
-      }
-      selectCheckoutTicket(button);
-      checkoutTicketPrice.textContent = 'GHS ' + (result.amount_minor / 100).toFixed(2);
-      checkoutBusy = false;
-      checkoutAction = result.status === 'verified' ? 'done' : 'verify';
-
-      if (result.status === 'verified') {
-        window.location.replace(devcon26ConfirmationUrl(reference));
-      } else if (result.status === 'pending') {
-        checkoutMessage('Your payment is still pending.', 'Paystack hasn’t confirmed success yet. You can check the result again.', 'Check payment status');
-      } else if (result.status === 'failed') {
-        checkoutMessage('Payment wasn’t successful.', 'No successful payment was confirmed. Close this window when you’re ready to try again.', 'Check payment status');
-      } else {
-        throw new Error('Invalid checkout status.');
-      }
-    } catch {
-      if (operation !== checkoutOperation) return;
-      checkoutBusy = false;
-      checkoutAction = 'verify';
-      checkoutMessage('We couldn’t confirm your payment yet.', 'Please check the status again before starting another payment.', 'Check payment status');
-    }
-  }
-
-  checkoutPayment?.addEventListener('click', async () => {
-    if (checkoutBusy) return;
-    if (checkoutAction === 'done') return closeCheckout();
-    if (checkoutAction === 'availability') return checkCheckoutAvailability();
-    if (checkoutAction === 'verify') return verifyCheckoutReturn(checkoutReference);
-    const operation = beginCheckoutOperation();
-
-    checkoutMessage('Taking you to Paystack.', 'Complete your payment on Paystack’s secure checkout.', 'Opening Paystack…', true);
-
-    try {
-      checkoutRequestKey ||= crypto.randomUUID();
-      const result = await checkoutApi('/initialize', { tier_key: checkoutTier, checkout_request_key: checkoutRequestKey });
-
-      if (operation !== checkoutOperation) return;
-      const destination = new URL(result.authorization_url);
-
-      if (result.mode !== 'test' || destination.protocol !== 'https:' || destination.hostname !== 'checkout.paystack.com'
-        || destination.username || destination.password || destination.port) throw new Error('Invalid payment destination.');
-      window.location.assign(destination.href);
-    } catch {
-      if (operation !== checkoutOperation) return;
-      checkoutBusy = false;
-      checkoutMessage('Checkout couldn’t start.', 'No payment was confirmed. Please try again shortly.', 'Try again');
-    }
-  });
-
-  function closeCheckout() {
-    if (!(checkoutDialog instanceof HTMLDialogElement) || !checkoutDialog.open) return;
-
-    window.clearTimeout(checkoutCloseTimer);
-    checkoutAbort?.abort();
-    checkoutOperation += 1;
-    checkoutBusy = false;
-    checkoutTransition += 1;
-    checkoutDialog.removeAttribute('data-visible');
-    checkoutCloseTimer = window.setTimeout(() => checkoutDialog.close(), mediaQuery.matches ? 0 : 180);
-  }
-
-  if (checkoutDialog instanceof HTMLDialogElement && typeof checkoutDialog.showModal === 'function') {
-    document.querySelectorAll('[data-ticket-choice]').forEach((button) => {
-      button.disabled = false;
-      button.addEventListener('click', () => {
-        selectCheckoutTicket(button);
-        checkoutRequestKey = undefined;
-        checkoutReference = undefined;
-        showCheckout();
-        checkCheckoutAvailability();
-      });
-    });
-
-    checkoutDialog.addEventListener('click', (event) => {
-      if (event.target === checkoutDialog) closeCheckout();
-    });
-
-    checkoutDialog.addEventListener('cancel', (event) => {
-      event.preventDefault();
-      closeCheckout();
-    });
-
-    checkoutDialog.querySelector('form').addEventListener('submit', (event) => {
-      event.preventDefault();
-      closeCheckout();
-    });
-
-    checkoutDialog.addEventListener('close', () => checkoutDialog.removeAttribute('data-visible'));
-
-    const returnUrl = new URL(window.location.href);
-    const returnedReference = returnUrl.searchParams.get('reference');
-
-    if (returnUrl.searchParams.get('test_checkout') === 'return') {
-      ['reference', 'trxref', 'test_checkout'].forEach((key) => returnUrl.searchParams.delete(key));
-      window.history.replaceState(null, '', returnUrl.pathname + returnUrl.search + returnUrl.hash);
-      showCheckout();
-      verifyCheckoutReturn(returnedReference || '');
-    }
-  }
+  if (page) initializeDevcon26Checkout(page);
 
   const faqItems = Array.from(document.querySelectorAll('.faq-item'));
   const faqTimers = new WeakMap();
@@ -738,17 +693,17 @@ const sponsors = (await getCollection('partners')).filter((partner) => sponsorId
 
   h1, h2, h3 {
     color: inherit;
-    font-family: var(--font-body);
-    font-weight: 700;
-    letter-spacing: -0.055em;
-    line-height: 1.02;
+    font-family: var(--font-display);
+    font-weight: 600;
+    letter-spacing: var(--tracking-heading);
+    line-height: var(--leading-tight);
     text-wrap: balance;
   }
 
   main h1, main h2 {
-    font-family: var(--font-serif);
-    font-weight: 400;
-    letter-spacing: -0.01em;
+    font-family: var(--font-display);
+    font-weight: 600;
+    letter-spacing: var(--tracking-display);
   }
 
   main h2 {
@@ -912,7 +867,12 @@ const sponsors = (await getCollection('partners')).filter((partner) => sponsorId
     z-index: 2;
     max-width: 660px;
     font-size: clamp(48px, 4.8vw, 68px);
-    line-height: 1.04;
+    line-height: 1.08;
+  }
+
+  .hero h1 {
+    font-weight: 700;
+    letter-spacing: -0.03em;
   }
 
   .hero-summary {
@@ -1078,7 +1038,7 @@ const sponsors = (await getCollection('partners')).filter((partner) => sponsorId
     margin-top: 52px;
     font-size: clamp(19px, 2.3vw, 31px);
     font-weight: 600;
-    letter-spacing: -0.045em;
+    letter-spacing: var(--tracking-heading);
   }
 
   .people-line span:nth-child(even) {
@@ -1265,7 +1225,7 @@ const sponsors = (await getCollection('partners')).filter((partner) => sponsorId
   .speaker-card h3 {
     margin-top: 7px;
     font-size: var(--dc-text-card);
-    letter-spacing: -0.035em;
+    letter-spacing: var(--tracking-heading);
   }
 
   .location-section {
@@ -1308,9 +1268,10 @@ const sponsors = (await getCollection('partners')).filter((partner) => sponsorId
   .location-place strong {
     display: block;
     margin-left: -8px;
+    font-family: var(--font-display);
     font-size: clamp(96px, 14vw, 192px);
     font-weight: 700;
-    letter-spacing: -0.09em;
+    letter-spacing: -0.03em;
     line-height: 1.05;
   }
 
@@ -1414,7 +1375,7 @@ const sponsors = (await getCollection('partners')).filter((partner) => sponsorId
   .ticket-heading h3 {
     flex: 1 0 auto;
     font-size: var(--dc-text-card);
-    letter-spacing: -0.045em;
+    letter-spacing: var(--tracking-heading);
   }
 
   .ticket-tag {
@@ -1437,7 +1398,7 @@ const sponsors = (await getCollection('partners')).filter((partner) => sponsorId
     font-size: clamp(30px, 2.9vw, 36px);
     font-weight: 700;
     font-variant-numeric: tabular-nums;
-    letter-spacing: -0.06em;
+    letter-spacing: var(--tracking-heading);
     line-height: 1.2;
   }
 
@@ -1472,18 +1433,9 @@ const sponsors = (await getCollection('partners')).filter((partner) => sponsorId
   .sponsors-section {
     display: grid;
     grid-template-columns: 1.05fr 0.95fr;
-    gap: 70px;
+    column-gap: 70px;
+    row-gap: var(--s6);
     padding-block: 12px 30px;
-  }
-
-  .partner-symbol {
-    display: block;
-    margin-bottom: 24px;
-    color: var(--dc-pink);
-    font-size: 54px;
-    font-weight: 700;
-    letter-spacing: -0.12em;
-    line-height: 0.8;
   }
 
   .sponsors-story .section-caption {
@@ -1545,7 +1497,7 @@ const sponsors = (await getCollection('partners')).filter((partner) => sponsorId
   .sponsor-name {
     font-size: clamp(20px, 2.1vw, 28px);
     font-weight: 600;
-    letter-spacing: -0.045em;
+    letter-spacing: var(--tracking-heading);
   }
 
   .sponsor-item img {
@@ -1566,11 +1518,368 @@ const sponsors = (await getCollection('partners')).filter((partner) => sponsorId
     transition: transform 160ms var(--dc-ease);
   }
 
-  .sponsors-signoff {
-    margin-top: 26px;
+  .sponsorship-packages {
+    grid-column: 1 / -1;
+    min-width: 0;
+    border-top: 1px solid var(--dc-rule);
+  }
+
+  .packages-intro {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--s6);
+    padding-block: var(--s6);
+  }
+
+  .packages-intro .section-caption {
+    margin-bottom: var(--s3);
+  }
+
+  .packages-intro h3 {
+    max-width: 22ch;
+    font-family: var(--font-display);
+    font-size: clamp(28px, 2.8vw, 36px);
+    font-weight: 600;
+    letter-spacing: var(--tracking-display);
+    line-height: 1.2;
+    text-wrap: balance;
+  }
+
+  .packages-intro h3 em, .custom-sponsorship h3 em, .past-sponsors-intro h2 em {
+    color: var(--dc-pink);
+  }
+
+  .sponsorship-download {
+    position: relative;
+    isolation: isolate;
+    display: inline-block;
+    min-height: 44px;
+    padding: var(--s4);
+    border: 1px solid var(--dc-rule);
+    border-radius: 8px;
+    font-size: var(--dc-text-small);
+    font-weight: 600;
+    line-height: 1.5;
+    transition: transform 160ms var(--dc-ease);
+  }
+
+  .sponsorship-download::before {
+    position: absolute;
+    inset: -1px;
+    z-index: -1;
+    border: 1px solid color-mix(in srgb, var(--dc-ink) 28%, transparent);
+    border-radius: inherit;
+    background: var(--dc-paper-light);
+    box-shadow: 0 3px 8px rgb(0 0 0 / 0.04);
+    opacity: 0;
+    pointer-events: none;
+    content: '';
+    transition: opacity 160ms var(--dc-ease);
+  }
+
+  .sponsorship-download:is(:focus-visible, :active)::before {
+    opacity: 1;
+  }
+
+  .sponsorship-download > span {
+    display: inline-block;
+    margin-left: var(--s2);
+    color: var(--dc-pink);
+    transition: transform 160ms var(--dc-ease);
+  }
+
+  .sponsorship-download:focus-visible > span {
+    transform: translate(2px, -2px);
+  }
+
+  .sponsorship-download small {
+    display: block;
+    margin-top: var(--s2);
+    color: var(--dc-muted);
+    font-size: var(--dc-text-meta);
+    font-weight: 400;
+  }
+
+  .package-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--s5);
+    padding-bottom: var(--s6);
+  }
+
+  .package-plan {
+    display: grid;
+    grid-template-rows: auto auto auto 1fr auto auto;
+    min-width: 0;
+    padding: var(--s5);
+    border: 1px solid color-mix(in oklch, var(--dc-ink) 16%, var(--dc-paper));
+    border-radius: 12px;
+    background: var(--dc-paper-light);
+  }
+
+  @supports (grid-template-rows: subgrid) {
+    .package-plan {
+      grid-template-rows: subgrid;
+      grid-row: span 6;
+      row-gap: 0;
+    }
+  }
+
+  .package-heading {
+    align-self: start;
+  }
+
+  .package-heading h4 {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--s3);
+    min-width: 0;
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: 32px;
+    font-weight: 600;
+    letter-spacing: var(--tracking-heading);
+    line-height: 1.15;
+    text-wrap: balance;
+    overflow-wrap: anywhere;
+  }
+
+  .package-family {
+    padding: 4px 9px;
+    border-radius: 6px;
+    background: var(--dc-yellow);
+    color: var(--dc-ink);
+    font-family: var(--font-body);
+    font-size: var(--dc-text-meta);
+    font-weight: 600;
+    letter-spacing: 0;
+    line-height: 1.4;
+  }
+
+  .package-tier {
+    max-width: 100%;
+  }
+
+  .package-price {
+    display: flex;
+    align-items: baseline;
+    gap: var(--s2);
+    margin-top: var(--s4);
+    font-size: clamp(36px, 3.2vw, 40px);
+    font-weight: 700;
+    letter-spacing: var(--tracking-heading);
+    line-height: 1.1;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .package-currency {
     color: var(--dc-muted);
     font-size: var(--dc-text-small);
+    font-weight: 500;
+    letter-spacing: 0;
+  }
+
+  .package-description {
+    margin-top: var(--s2);
+    color: var(--dc-muted);
+    font-size: var(--dc-text-small);
+    line-height: 1.5;
+    text-wrap: pretty;
+  }
+
+  .package-highlights {
+    display: grid;
+    align-content: start;
+    gap: var(--s3);
+    margin-block: var(--s5);
+    color: var(--dc-ink);
+    font-size: var(--dc-text-small);
     line-height: 1.55;
+  }
+
+  .package-highlights li {
+    position: relative;
+    padding-left: 22px;
+  }
+
+  .package-highlights li::before {
+    position: absolute;
+    top: 0.5em;
+    left: 0;
+    width: 9px;
+    height: 5px;
+    color: var(--dc-pink);
+    border-bottom: 1.5px solid currentColor;
+    border-left: 1.5px solid currentColor;
+    transform: rotate(-45deg);
+    content: '';
+  }
+
+  .package-allocation {
+    padding-top: var(--s4);
+    border-top: 1px solid var(--dc-rule);
+  }
+
+  .package-passes {
+    font-size: var(--dc-text-small);
+    font-weight: 600;
+    line-height: 1.5;
+  }
+
+  .package-qualification {
+    margin-top: var(--s3);
+    color: var(--dc-muted);
+    font-size: var(--dc-text-meta);
+    line-height: 1.55;
+  }
+
+  .package-enquiry {
+    position: relative;
+    display: flex;
+    isolation: isolate;
+    min-height: var(--dc-control-height);
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--s3);
+    margin-top: var(--s5);
+    padding: var(--s2) var(--s3);
+    border: 1px solid var(--dc-ticket-action-outline);
+    border-radius: 6px;
+    background: var(--dc-paper-light);
+    color: var(--dc-ink);
+    font-size: var(--dc-text-small);
+    font-weight: 600;
+    transition: transform 140ms var(--dc-ease);
+  }
+
+  .package-enquiry::before {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    background: color-mix(in oklch, var(--dc-yellow) 26%, var(--dc-paper-light));
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 160ms var(--dc-ease);
+    content: '';
+  }
+
+  .package-enquiry:focus-visible::before,
+  .package-enquiry:active::before {
+    opacity: 1;
+  }
+
+  .package-enquiry > span:first-child {
+    color: var(--dc-pink);
+    transition: transform 160ms var(--dc-ease);
+  }
+
+  .custom-sponsorship {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: var(--s6);
+    padding-block: var(--s6);
+    border-block: 1px solid var(--dc-rule);
+  }
+
+  .custom-sponsorship > div {
+    max-width: 620px;
+  }
+
+  .custom-sponsorship .section-caption {
+    margin-bottom: var(--s2);
+  }
+
+  .custom-sponsorship h3 {
+    font-size: var(--dc-text-card);
+    letter-spacing: -0.025em;
+    line-height: 1.3;
+    text-wrap: balance;
+  }
+
+  .custom-sponsorship > div > p:last-child {
+    margin-top: var(--s4);
+    color: var(--dc-muted);
+    font-size: var(--dc-text-small);
+    line-height: 1.65;
+  }
+
+  .custom-sponsorship .sponsor-button {
+    margin-top: 0;
+    border: 1px solid var(--dc-rule);
+    background: var(--dc-paper-light);
+    font-size: var(--dc-text-small);
+  }
+
+  .custom-sponsorship .sponsor-button span {
+    color: var(--dc-pink);
+  }
+
+  .past-sponsors-section {
+    padding-block: 16px 88px;
+  }
+
+  .past-sponsors-intro {
+    max-width: 620px;
+    margin-bottom: 34px;
+  }
+
+  .past-sponsors-intro h2 {
+    font-size: clamp(34px, 4vw, 48px);
+  }
+
+  .past-sponsors-intro > p:last-child {
+    margin-top: 18px;
+    color: var(--dc-muted);
+    line-height: 1.65;
+  }
+
+  .past-sponsors-list {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 24px;
+  }
+
+  .past-sponsors-list a {
+    position: relative;
+    display: grid;
+    grid-template-rows: 88px auto;
+    gap: 16px;
+    height: 100%;
+    padding: 18px;
+    border-top: 1px solid var(--dc-rule);
+    font-size: var(--dc-text-small);
+    font-weight: 600;
+  }
+
+  .past-sponsor-logo {
+    display: grid;
+    height: 88px;
+    padding: 12px 20px;
+    place-items: center;
+    border-radius: 6px;
+    background: var(--dc-paper-light);
+  }
+
+  .past-sponsor-logo img {
+    width: 100%;
+    height: 64px;
+    object-fit: contain;
+  }
+
+  .past-sponsor-arrow {
+    position: absolute;
+    right: 18px;
+    bottom: 18px;
+    color: var(--dc-pink);
+  }
+
+  .past-sponsor-logo + span {
+    padding-right: 24px;
   }
 
   .faq-section {
@@ -1641,6 +1950,7 @@ const sponsors = (await getCollection('partners')).filter((partner) => sponsorId
   }
 
   .checkout-dialog {
+    isolation: isolate;
     width: min(100% - 32px, 520px);
     max-height: calc(100dvh - 32px);
     margin: auto;
@@ -1662,24 +1972,49 @@ const sponsors = (await getCollection('partners')).filter((partner) => sponsorId
 
   .checkout-panel {
     position: relative;
-    isolation: isolate;
+    z-index: 1;
     max-height: calc(100dvh - 32px);
-    padding: clamp(26px, 5vw, 42px);
-    border-radius: 12px;
-    background: var(--dc-paper);
     overflow-x: hidden;
     overflow-y: auto;
+    overflow-anchor: none;
+    scrollbar-gutter: stable;
   }
 
-  .checkout-panel > :not(.ticket-illustration):not(.checkout-dismiss) {
+  .checkout-surface {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    border-radius: inherit;
+    background: var(--dc-paper);
+    transform-origin: top;
+    pointer-events: none;
+  }
+
+  .checkout-art {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    border-radius: inherit;
+    pointer-events: none;
+  }
+
+  .checkout-content {
+    position: relative;
+    padding: clamp(26px, 5vw, 42px);
+  }
+
+  .checkout-content > :not(.checkout-dismiss) {
     position: relative;
     z-index: 1;
   }
 
-  .checkout-panel .ticket-illustration {
+  .checkout-art .ticket-illustration {
+    top: 50%;
+    bottom: auto;
     width: 90%;
     max-width: none;
     opacity: 0.1;
+    transform: translateY(-50%);
   }
 
   .checkout-dialog[data-ticket-featured='true'] .ticket-illustration {
@@ -1737,9 +2072,10 @@ const sponsors = (await getCollection('partners')).filter((partner) => sponsorId
 
   .checkout-ticket-name {
     margin-top: 6px;
+    font-family: var(--font-display);
     font-size: var(--dc-text-subtitle);
-    font-weight: 700;
-    letter-spacing: -0.035em;
+    font-weight: 600;
+    letter-spacing: var(--tracking-heading);
   }
 
   .checkout-ticket-price {
@@ -1789,6 +2125,143 @@ const sponsors = (await getCollection('partners')).filter((partner) => sponsorId
     text-align: center;
   }
 
+  .devcon-page [hidden] {
+    display: none !important;
+  }
+
+  .checkout-buyer-fields {
+    display: grid;
+    gap: 8px;
+    margin-top: 24px;
+  }
+
+  .checkout-buyer-fields label, .checkout-coupon-content > label {
+    font-size: var(--dc-text-small);
+    font-weight: 600;
+  }
+
+  .checkout-buyer-fields label:not(:first-child) {
+    margin-top: 8px;
+  }
+
+  .checkout-buyer-form input {
+    width: 100%;
+    min-width: 0;
+    min-height: 46px;
+    padding: 10px 12px;
+    border: 1px solid var(--dc-rule);
+    border-radius: 6px;
+    background: var(--dc-paper-light);
+    color: var(--dc-ink);
+    font: inherit;
+    font-size: var(--dc-text-body);
+    caret-color: var(--dc-pink);
+  }
+
+  .checkout-buyer-form input:focus {
+    border-color: var(--dc-ink);
+    outline: 1px solid var(--dc-ink);
+    outline-offset: 0;
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--dc-pink) 8%, transparent);
+  }
+
+  .checkout-buyer-form input[aria-invalid='true'] {
+    border-color: var(--dc-pink);
+  }
+
+  .checkout-buyer-form input[aria-invalid='true']:focus {
+    outline-color: var(--dc-pink);
+  }
+
+  .checkout-privacy-note {
+    margin-top: 6px;
+    color: var(--dc-muted);
+    font-size: var(--dc-text-meta);
+    line-height: 1.6;
+  }
+
+  .checkout-coupon {
+    position: relative;
+    margin-top: 14px;
+  }
+
+  .checkout-coupon summary {
+    min-height: 48px;
+    font-size: var(--dc-text-small);
+  }
+
+  .checkout-coupon-content, .checkout-after-coupon {
+    display: flow-root;
+  }
+
+  .checkout-coupon[data-coupon-open='false'] summary span {
+    transform: rotate(0);
+  }
+
+  .checkout-coupon-content > label {
+    display: block;
+    margin-block: 4px 8px;
+  }
+
+  .checkout-coupon-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .checkout-coupon-controls input {
+    flex: 1;
+    text-transform: uppercase;
+  }
+
+  .checkout-coupon-controls button {
+    min-height: 46px;
+    padding-inline: 10px;
+    border: 1px solid var(--dc-rule);
+    border-radius: 6px;
+    background: var(--dc-paper-light);
+    font-size: var(--dc-text-small);
+    font-weight: 600;
+  }
+
+  .checkout-coupon-controls button:disabled {
+    color: var(--dc-muted);
+    cursor: not-allowed;
+  }
+
+  [data-checkout-coupon-status] {
+    margin-top: 10px;
+    color: var(--dc-muted);
+    font-size: var(--dc-text-small);
+    line-height: 1.55;
+  }
+
+  .checkout-quote {
+    display: grid;
+    gap: 10px;
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid var(--dc-rule);
+    font-size: var(--dc-text-small);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .checkout-quote > div {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+  }
+
+  .checkout-quote dd {
+    text-align: right;
+  }
+
+  .checkout-total {
+    font-size: var(--dc-text-body);
+    font-weight: 700;
+  }
+
   a:focus-visible, button:focus-visible, summary:focus-visible {
     outline: 3px solid var(--dc-pink);
     outline-offset: 5px;
@@ -1798,7 +2271,53 @@ const sponsors = (await getCollection('partners')).filter((partner) => sponsorId
     outline-color: var(--dc-ticket-action-outline);
   }
 
+  @media (forced-colors: active) {
+    .package-enquiry:focus-visible {
+      outline-color: Highlight;
+    }
+
+    .sponsorship-download::before {
+      border-color: Highlight;
+      background: Canvas;
+      box-shadow: none;
+    }
+
+    .sponsorship-download:focus-visible {
+      outline-color: Highlight;
+    }
+
+    .checkout-buyer-form input:focus {
+      outline: 2px solid Highlight;
+      outline-offset: 2px;
+      box-shadow: none;
+    }
+
+    .checkout-buyer-form input[aria-invalid='true']:focus {
+      outline-color: Highlight;
+    }
+  }
+
   @media (hover: hover) and (pointer: fine) {
+    .package-enquiry:hover::before {
+      opacity: 1;
+    }
+
+    .package-enquiry:hover > span:first-child {
+      transform: translate(2px, -2px);
+    }
+
+    .sponsorship-download:hover {
+      transform: translateY(-1px);
+    }
+
+    .sponsorship-download:hover::before {
+      opacity: 1;
+    }
+
+    .sponsorship-download:hover > span {
+      transform: translate(2px, -2px);
+    }
+
     .section-nav a:hover, .mobile-section-nav a:hover {
       color: var(--dc-pink);
     }
@@ -1822,6 +2341,16 @@ const sponsors = (await getCollection('partners')).filter((partner) => sponsorId
 
   .button:active, .ticket-buy-button:not(:disabled):active, .checkout-close:active {
     transform: scale(0.96);
+  }
+
+  .sponsorship-download:active {
+    transform: scale(0.97);
+    transition: transform 100ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .package-enquiry:active {
+    transform: scale(0.97);
+    transition: transform 100ms cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   @media (max-width: 1000px) {
@@ -1853,7 +2382,7 @@ const sponsors = (await getCollection('partners')).filter((partner) => sponsorId
     }
 
     .sponsors-section {
-      gap: 40px;
+      column-gap: 40px;
     }
 
     .ticket-card {
@@ -1871,6 +2400,20 @@ const sponsors = (await getCollection('partners')).filter((partner) => sponsorId
   }
 
   @media (max-width: 960px) {
+    .package-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .custom-sponsorship {
+      grid-template-columns: minmax(0, 1fr);
+      justify-items: start;
+    }
+
+    .past-sponsors-list {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+
     .site-header {
       min-height: 68px;
       gap: 12px;
@@ -1929,6 +2472,46 @@ const sponsors = (await getCollection('partners')).filter((partner) => sponsorId
   }
 
   @media (max-width: 760px) {
+    .past-sponsors-list {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .past-sponsors-list a {
+      grid-template-columns: minmax(0, 150px) minmax(0, 1fr);
+      grid-template-rows: auto;
+      align-items: center;
+      gap: 18px;
+      padding-inline: 0;
+    }
+
+    .past-sponsor-arrow {
+      right: 0;
+      bottom: auto;
+    }
+
+    .package-grid {
+      grid-template-columns: minmax(0, 1fr);
+      gap: var(--s4);
+    }
+
+    .package-plan {
+      padding: var(--s5);
+    }
+
+    .packages-intro {
+      grid-template-columns: minmax(0, 1fr);
+      justify-items: start;
+      gap: var(--s5);
+    }
+
+    .packages-intro h3 {
+      max-width: none;
+    }
+
+    .sponsorship-download {
+      max-width: 100%;
+    }
+
     .page-shell {
       width: min(100% - 40px, 580px);
     }
@@ -2148,7 +2731,7 @@ const sponsors = (await getCollection('partners')).filter((partner) => sponsorId
 
     .sponsors-section {
       grid-template-columns: minmax(0, 1fr);
-      gap: 36px;
+      gap: var(--s6);
       padding-block: 12px 0;
     }
 
@@ -2191,9 +2774,17 @@ const sponsors = (await getCollection('partners')).filter((partner) => sponsorId
 
     .checkout-panel {
       max-height: calc(100dvh - max(16px, env(safe-area-inset-top)));
-      padding: 26px calc(20px + env(safe-area-inset-right)) calc(24px + env(safe-area-inset-bottom)) calc(20px + env(safe-area-inset-left));
-      border-radius: 12px 12px 0 0;
       overscroll-behavior: contain;
+    }
+
+    .checkout-art .ticket-illustration {
+      top: auto;
+      bottom: 78px;
+      transform: none;
+    }
+
+    .checkout-content {
+      padding: 26px calc(20px + env(safe-area-inset-right)) calc(24px + env(safe-area-inset-bottom)) calc(20px + env(safe-area-inset-left));
     }
 
     .checkout-dismiss {
@@ -2212,6 +2803,12 @@ const sponsors = (await getCollection('partners')).filter((partner) => sponsorId
 
     .button:active, .ticket-buy-button:not(:disabled):active, .checkout-close:active,
     .button:hover, .ticket-buy-button:not(:disabled):hover, .sponsor-item a:hover .sponsor-visit {
+      transform: none;
+    }
+
+    .sponsorship-download:is(:hover, :active),
+    .sponsorship-download:is(:hover, :focus-visible) > span,
+    .package-enquiry:active, .package-enquiry:hover > span:first-child {
       transform: none;
     }
 

@@ -27,7 +27,7 @@ const isExternal = (url?: string) => Boolean(url && url.startsWith('http'));
 
     <div class="programs-header">
       <span class="eyebrow">Programs</span>
-      <h2 class="heading-serif programs-heading">What we do</h2>
+      <h2 class="heading-display programs-heading">What we do</h2>
       <p class="programs-sub">Community-built programs, open to everyone. No barriers.</p>
     </div>
 
@@ -44,7 +44,7 @@ const isExternal = (url?: string) => Boolean(url && url.startsWith('http'));
               {statusLabel[activity.data.status]}
             </span>
           </div>
-          <h3 class="heading-serif program-title">
+          <h3 class="heading-display program-title">
             {activity.data.link ? (
               <a
                 href={activity.data.link}

@@ -189,3 +189,103 @@ module must be a served, same-origin asset. Verify the output includes checkout,
 FAQ, and mobile-menu initialization, then confirm card selection in Arc.
 Source/VM checks alone do not catch a blocked production script. Keep the CSP
 intact; do not add `unsafe-inline` or bypass the sandbox's origin restrictions.
+
+### 2026-10-10: Purchaser details and quoted coupons
+
+The checkout collects a purchaser name and email without requiring an EMS login.
+The browser sends those fields only in the initialization POST body; it does not
+put them in URLs, browser storage, or logs. EMS stores them in the isolated
+Owner-visible test checkout record. Paystack continues to receive the configured
+test buyer email, not the visitor's identity. No ticket email is sent.
+
+The catalog must advertise `accepts_coupon: true`. The browser then requests a
+server quote using `{ tier_key, coupon_code? }` at POST `/quote`, including when
+no coupon is entered. Quote responses supply the base, discount, final amount,
+quantity, and normalized `coupon_applied` value. Quotes do not reserve coupon
+capacity. The optional coupon disclosure supports applying and removing one
+code; invalid, expired, ineligible, and unavailable codes show bounded messages.
+
+Name, email, and coupon inputs use a compact ink focus edge, a faint pink halo,
+and a pink caret instead of the page's wider action-link focus outline. Invalid
+coupon fields retain their pink error edge. Forced-colors mode uses a system
+highlight outline; native browser autocomplete and keyboard behavior remain intact.
+
+The coupon disclosure keeps its native details/summary keyboard behavior while
+the fields fade and slide over 180ms. The clipping and scroll viewport stays at
+the larger endpoint size for that transition; a separate decorative paper
+surface translates and scales to bridge the modal's visible size. The selected
+masked photo lives in an independent clipped layer, outside both the stretching
+paper and the scroll viewport. Its width-derived 5:4 geometry and crop do not
+change when the coupon toggles. Desktop anchoring follows the dialog's fixed
+centre; the mobile drawer keeps the original 78px bottom anchor. Photo opacity,
+radial mask, and grayscale treatment are unchanged. Text and
+controls translate without scaling. Recentring and bottom-sheet anchoring move
+the scroll viewport itself, not the content inside it, so that movement does not
+create a temporary internal scrollbar when both endpoint layouts fit. Only a
+real scroll-position clamp contributes an internal content translation; the
+panel retains `overflow-y: auto` for genuinely constrained screens. The total
+and payment button use local
+transform-only FLIP motion; no height is animated. Closing fields remain in
+normal flow and become inert until the timeline finishes, when the native
+closed state and natural viewport size are committed together.
+
+Rapid toggles [reverse the running timeline](https://developer.mozilla.org/en-US/docs/Web/API/Animation/reverse)
+instead of rebuilding from a snapped layout. Destination measurements restore
+the live scroll position, and content translation bridges any final scroll clamp.
+Scroll anchoring is disabled and a stable scrollbar gutter prevents width changes.
+Coupon errors open the same disclosure. Reduced motion, viewport resizing,
+scroll/touch gestures, checkout-content changes, and modal closure settle the
+latest requested state and clear the temporary viewport size and animations.
+The modal's own entrance/exit transform is not changed by the disclosure.
+
+### 2026-10-10: Stable checkout photo during coupon disclosure
+
+Separated the selected ticket photo from the resizing paper surface so coupon
+opening, closing, and reversal no longer stretch it. The existing five-animation
+timeline and native scrolling remain unchanged. Built-markup checks require an
+empty paper layer and a separate, non-interactive photo layer behind the form.
+
+POST `/initialize` sends only the tier, UUID request key, trimmed purchaser name,
+normalized email, and optional coupon. It never sends client amounts. Changing
+buyer, coupon, or tier input invalidates in-flight work and clears the request
+key; unchanged retries retain their UUID. Closing the drawer prevents stale
+responses from updating it or redirecting. Every request has a 15-second timeout.
+Bounded `finished` or `cart_conflict` responses clear the UUID and require a new
+quote; `in_progress` and uncertain network failures retain it to avoid duplicates.
+
+The client checks integer amount arithmetic, tier quantity, coupon/discount
+consistency, and the Paystack HTTPS destination before redirecting. If the server
+initialization returns changed amounts, the updated total is shown for another
+explicit Continue action. A changed coupon is never silently substituted.
+
+Verification now accepts `refund_required` as a needs-attention outcome. The
+confirmation page shows a support reference and expected checkout total without
+a success receipt or admission claim. Verified receipts include the original
+ticket total and any coupon discount. Legacy verification responses without any
+quote fields remain supported as undiscounted records; partial or inconsistent
+quote summaries are rejected. Test mode guards and live-payment flags remain
+unchanged. Deploying this client alone does not apply the new EMS migration.
+
+#### Repeatable website verification
+
+From the website repository, run:
+
+```sh
+pnpm build && pnpm exec node scripts/check-devcon26-checkout.mjs
+```
+
+The script bundles the existing client with Astro's installed esbuild dependency
+and exercises it in Node with a fake DOM and mocked requests. It covers quote
+validation, bounded coupon errors, stale responses, request-key retry rules,
+changed server totals, safe redirects, and needs-attention confirmation states.
+Disclosure checks cover the stable viewport and decorative surface endpoints,
+desktop/mobile positioning, scrolled-panel clamp continuity, transform-only
+motion, reversal in both directions, validation-driven reopening, content and
+modal cleanup, resize/scroll interruption, and live reduced-motion changes.
+It also checks the built sponsorship content, historical partner order, and CSP
+hashes. The published and built PDF must match the approved SHA-256 recorded in
+the script; no Downloads folder or external source file is required.
+
+These checks neither call the payment API nor replace browser layout, native
+form validation, or Paystack round-trip verification. No dependency or separate
+test runner is added.

@@ -29,7 +29,7 @@ const colorClass: Record<string, string> = {
 
     <div class="hero-top">
       <span class="eyebrow">{hero.eyebrow}</span>
-      <h1 class="heading-serif hero-headline">{hero.headline}</h1>
+      <h1 class="heading-display hero-headline">{hero.headline}</h1>
       <div class="hero-ctas">
         <a
           href={slackUrl}
@@ -88,8 +88,10 @@ const colorClass: Record<string, string> = {
 
   .hero-headline {
     font-size: clamp(var(--text-3xl), 7vw, var(--text-5xl));
+    font-weight: 700;
     margin-bottom: var(--s7);
-    letter-spacing: -0.01em;
+    letter-spacing: -0.03em;
+    text-wrap: balance;
   }
 
   .hero-ctas {

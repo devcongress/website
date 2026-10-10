@@ -34,6 +34,14 @@ const checkoutApiOrigin = import.meta.env.PUBLIC_DEVCON26_API_ORIGIN || 'https:/
         <p class="no-script">JavaScript is required to verify this payment. Enable it and reload this page, or contact <a href="mailto:hello@devcongress.org">hello@devcongress.org</a> for help. No success is confirmed on this page without verification.</p>
       </noscript>
 
+      <section class="payment-attention" data-payment-attention hidden aria-label="Payment review details">
+        <p>Keep this reference handy when contacting the event team.</p>
+        <dl>
+          <div><dt>Payment reference</dt><dd data-attention-reference></dd></div>
+          <div><dt>Expected checkout total</dt><dd data-attention-amount></dd></div>
+        </dl>
+      </section>
+
       <div class="confirmation-content" data-payment-receipt hidden>
         <section class="payment-receipt" aria-labelledby="summary-title">
           <div class="receipt-photo" aria-hidden="true">
@@ -47,6 +55,14 @@ const checkoutApiOrigin = import.meta.env.PUBLIC_DEVCON26_API_ORIGIN || 'https:/
             <div class="amount-detail">
               <dt>Payment amount</dt>
               <dd data-payment-amount></dd>
+            </div>
+            <div>
+              <dt>Ticket total</dt>
+              <dd data-payment-base></dd>
+            </div>
+            <div data-payment-discount-row hidden>
+              <dt>Coupon discount <span data-payment-coupon></span></dt>
+              <dd data-payment-discount></dd>
             </div>
             <div class="ticket-detail">
               <dt>Ticket selection</dt>
@@ -128,6 +144,36 @@ const checkoutApiOrigin = import.meta.env.PUBLIC_DEVCON26_API_ORIGIN || 'https:/
 
   [hidden] {
     display: none !important;
+  }
+
+  .payment-attention {
+    max-width: 720px;
+    margin-block: 30px;
+    padding: 24px;
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    background: var(--yellow-bg);
+  }
+
+  .payment-attention p {
+    color: var(--text-mid);
+  }
+
+  .payment-attention dl {
+    display: grid;
+    gap: 18px;
+    margin-top: 24px;
+  }
+
+  .payment-attention dt {
+    font-size: var(--text-sm);
+    color: var(--text-mid);
+  }
+
+  .payment-attention dd {
+    margin-top: 5px;
+    font-weight: 600;
+    overflow-wrap: anywhere;
   }
 
   .page-shell {
@@ -223,11 +269,11 @@ const checkoutApiOrigin = import.meta.env.PUBLIC_DEVCON26_API_ORIGIN || 'https:/
   }
 
   h1 {
-    font-family: var(--font-serif);
+    font-family: var(--font-display);
     font-size: clamp(36px, 5vw, 58px);
-    font-weight: 400;
+    font-weight: 600;
     line-height: var(--leading-tight);
-    letter-spacing: -0.01em;
+    letter-spacing: var(--tracking-display);
     text-wrap: balance;
   }
 
@@ -393,11 +439,11 @@ const checkoutApiOrigin = import.meta.env.PUBLIC_DEVCON26_API_ORIGIN || 'https:/
 
   .next-steps h2 {
     margin-bottom: 12px;
-    font-family: var(--font-serif);
+    font-family: var(--font-display);
     font-size: clamp(28px, 3vw, 38px);
-    font-weight: 400;
+    font-weight: 600;
     line-height: var(--leading-tight);
-    letter-spacing: -0.025em;
+    letter-spacing: var(--tracking-display);
   }
 
   .next-steps h2 em {

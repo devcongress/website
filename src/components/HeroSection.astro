@@ -11,10 +11,10 @@ interface Hero {
 interface Props {
   hero: Hero;
   slackUrl: string;
-  paystackUrl: string;
+  supportUrl: string;
   youtubeEmbedUrl: string;
 }
-const { hero, slackUrl, paystackUrl, youtubeEmbedUrl } = Astro.props;
+const { hero, slackUrl, supportUrl, youtubeEmbedUrl } = Astro.props;
 
 const colorClass: Record<string, string> = {
   pink:    'btn-primary',
@@ -40,9 +40,10 @@ const colorClass: Record<string, string> = {
           {hero.cta_primary.text}
         </a>
         <a
-          href={paystackUrl}
+          href={supportUrl}
           target="_blank"
           rel="noopener noreferrer"
+          data-support-checkout
           class={`btn ${colorClass[hero.cta_secondary.color]} btn-hero`}
         >
           {hero.cta_secondary.text}

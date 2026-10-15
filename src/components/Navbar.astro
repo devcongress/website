@@ -1,10 +1,10 @@
 ---
 interface Props {
   slackUrl: string;
-  paystackUrl: string;
+  supportUrl: string;
 }
 
-const { slackUrl, paystackUrl } = Astro.props;
+const { slackUrl, supportUrl } = Astro.props;
 ---
 
 <header class="navbar">
@@ -20,7 +20,7 @@ const { slackUrl, paystackUrl } = Astro.props;
     </nav>
 
     <div class="navbar-actions">
-      <a href={paystackUrl} target="_blank" rel="noopener noreferrer" class="btn btn-outline">
+      <a href={supportUrl} target="_blank" rel="noopener noreferrer" data-support-checkout class="btn btn-outline">
         Support Us
       </a>
       <a href={slackUrl} target="_blank" rel="noopener noreferrer" class="btn btn-primary">
@@ -40,7 +40,7 @@ const { slackUrl, paystackUrl } = Astro.props;
       <a href="/#events">Events</a>
     </nav>
     <div class="mobile-actions">
-      <a href={paystackUrl} target="_blank" rel="noopener noreferrer" class="btn btn-outline">Support Us</a>
+      <a href={supportUrl} target="_blank" rel="noopener noreferrer" data-support-checkout class="btn btn-outline">Support Us</a>
       <a href={slackUrl} target="_blank" rel="noopener noreferrer" class="btn btn-primary">Join Slack</a>
     </div>
   </div>

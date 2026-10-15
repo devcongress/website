@@ -11,6 +11,7 @@ import MeetupsSection from '../components/MeetupsSection.astro';
 import AdminsSection from '../components/AdminsSection.astro';
 import PartnersSection from '../components/PartnersSection.astro';
 import DonateSection from '../components/DonateSection.astro';
+import SupportCheckout from '../components/SupportCheckout.astro';
 import { getEvents } from '../lib/events';
 
 const siteEntries = await getCollection('site');
@@ -24,13 +25,13 @@ const events      = await getEvents();
 <Base>
   <Navbar
     slackUrl={site.community_slack_url}
-    paystackUrl={site.paystack_url}
+    supportUrl={site.support_url}
   />
   <main>
     <HeroSection
       hero={site.hero}
       slackUrl={site.community_slack_url}
-      paystackUrl={site.paystack_url}
+      supportUrl={site.support_url}
       youtubeEmbedUrl={site.youtube_embed_url}
     />
     <StatsBar stats={site.stats} />
@@ -40,6 +41,7 @@ const events      = await getEvents();
     <MeetupsSection events={events} />
     <AdminsSection admins={admins} />
     <PartnersSection partners={partners} />
-    <DonateSection paystackUrl={site.paystack_url} donate={site.donate_section} />
+    <DonateSection supportUrl={site.support_url} donate={site.donate_section} />
   </main>
+  <SupportCheckout />
 </Base>

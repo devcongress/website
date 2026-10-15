@@ -104,7 +104,7 @@ const site = defineCollection({
   loader: file('./content/site.yaml'),
   schema: z.object({
     community_slack_url: z.string().url(),
-    paystack_url: z.string().url(),
+    support_url: z.string().url(),
     youtube_embed_url: z.string().url(),
     stats: z.array(z.object({
       value: z.string(),

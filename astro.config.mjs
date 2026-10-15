@@ -18,12 +18,12 @@ export default defineConfig({
         "img-src 'self' data: blob: https:",
         "font-src 'self' https://fonts.gstatic.com",
         "connect-src 'self' https://em.devcongress.org https://dvevcongress.goatcounter.com https://gc.zgo.at https://challenges.cloudflare.com",
-        "frame-src https://www.youtube-nocookie.com https://www.youtube.com https://challenges.cloudflare.com",
+        "frame-src https://pages.inttegro.com https://www.youtube-nocookie.com https://www.youtube.com https://challenges.cloudflare.com",
         "worker-src 'self' blob:",
         'upgrade-insecure-requests',
       ],
       scriptDirective: {
-        resources: ["'self'", 'https://gc.zgo.at', 'https://challenges.cloudflare.com'],
+        resources: ["'self'", 'https://gc.zgo.at', 'https://challenges.cloudflare.com', 'https://js.inttegro.com'],
       },
       styleDirective: {
         resources: [

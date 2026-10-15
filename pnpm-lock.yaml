@@ -12,6 +12,12 @@ importers:
 
   .:
     dependencies:
+      '@inttegro/inttegro-sdk':
+        specifier: 13.0.0
+        version: 13.0.0
+      '@inttegro/js':
+        specifier: 0.2.0
+        version: 0.2.0
       astro:
         specifier: ^7.3.2
         version: 7.3.2(@emnapi/core@2.0.0-alpha.3)(@emnapi/runtime@2.0.0-alpha.3)
@@ -730,6 +736,14 @@ packages:
     cpu: [x64]
     os: [win32]
 
+  '@inttegro/inttegro-sdk@13.0.0':
+    resolution: {integrity: sha512-53dvz0EoiSmtVX0omINu9QPnztRU22Z9Ei/uDKria4CU+doKY4mMNKHhm6NGyCxOr5sfnpAeSYHynHviBl562Q==}
+    engines: {node: '>=24'}
+
+  '@inttegro/js@0.2.0':
+    resolution: {integrity: sha512-u1IjAYfaD4EM66uLXEM/yVn8ozd04Q1jRbPm8L3DLaiIdwrdrVpSXR63ts4rP4VO7oIsnGP+XdhepR/MF4pPug==}
+    engines: {node: '>=18'}
+
   '@jridgewell/resolve-uri@3.1.2':
     resolution: {integrity: sha512-bRISgCIjP20/tbWSPWMEi54QVPRZExkuD9lJL+UIxUKtwVJA8wW1Trb1jMs1RFXo1CBTNZ/5hpC9QvmKWdopKw==}
     engines: {node: '>=6.0.0'}
@@ -746,6 +760,10 @@ packages:
     peerDependencies:
       '@emnapi/core': ^1.7.1 || ^2.0.0-alpha.4
       '@emnapi/runtime': ^1.7.1 || ^2.0.0-alpha.4
+
+  '@opentelemetry/api@1.9.1':
+    resolution: {integrity: sha512-gLyJlPHPZYdAk1JENA9LeHejZe1Ti77/pTeFm/nMXmQH/HFZlcS/O2XJB+L8fkbrNSqhdtlvjBVjxwUYanNH5Q==}
+    engines: {node: '>=8.0.0'}
 
   '@oslojs/encoding@1.1.0':
     resolution: {integrity: sha512-70wQhgYmndg4GCPxPPxPGevRKqTIJ2Nh4OkiMWmDAVYsTQ+Ta7Sq+rPevXyXGdzr30/qZBnyOalCszoMxlyldQ==}
@@ -2171,6 +2189,12 @@ snapshots:
   '@img/sharp-win32-x64@0.35.4':
     optional: true
 
+  '@inttegro/inttegro-sdk@13.0.0':
+    dependencies:
+      '@opentelemetry/api': 1.9.1
+
+  '@inttegro/js@0.2.0': {}
+
   '@jridgewell/resolve-uri@3.1.2': {}
 
   '@jridgewell/sourcemap-codec@1.6.0': {}
@@ -2193,6 +2217,8 @@ snapshots:
       '@emnapi/runtime': 2.0.0-alpha.3
       '@tybys/wasm-util': 0.10.3
     optional: true
+
+  '@opentelemetry/api@1.9.1': {}
 
   '@oslojs/encoding@1.1.0': {}
 

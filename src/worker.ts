@@ -22,6 +22,8 @@ const SOCIAL_CARD_IMAGE_ROUTE = /^\/devcon26\/cards\/([A-Za-z0-9_-]{22,80})\/ima
 const SOCIAL_CARD_PREVIEW_ROUTE = /^\/devcon26\/cards\/([A-Za-z0-9_-]{22,80})\/preview\.svg\/?$/;
 const CALENDAR_PATH = '/events/calendar.ics';
 const EVENT_SHELL_PATH = '/events/';
+const SUPPORT_PATHS = new Set(['/support', '/support/', '/donate', '/donate/']);
+const SUPPORT_URL = 'https://pages.inttegro.com/buy/sale_eLiPUNAEjfeHZOX4VHQPuy0oJWQT6n0g7Bdof5rr';
 const EVENT_READINESS_PARAM = 'readiness';
 const CALENDAR_CACHE_SECONDS = 60;
 const READINESS_CACHE_SECONDS = 30;
@@ -31,6 +33,10 @@ const READINESS_CACHE_MARKER = '1';
 export default {
   async fetch(request: Request, env: Env, context: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
+
+    if (SUPPORT_PATHS.has(url.pathname)) {
+      return Response.redirect(SUPPORT_URL, 307);
+    }
 
     if (url.pathname === CALENDAR_PATH) {
       if (!isReadableMethod(request.method)) return methodNotAllowed();

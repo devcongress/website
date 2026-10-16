@@ -26,7 +26,7 @@ const events      = await getEvents();
     <HeroSection
       hero={site.hero}
       slackUrl={site.community_slack_url}
-      paystackUrl={site.paystack_url}
+      donationPath={site.donation_path}
       youtubeEmbedUrl={site.youtube_embed_url}
     />
     <StatsBar stats={site.stats} />
@@ -37,6 +37,6 @@ const events      = await getEvents();
     <MeetupsSection events={events} />
     <AdminsSection admins={admins} />
     <PartnersSection partners={partners} />
-    <DonateSection paystackUrl={site.paystack_url} donate={site.donate_section} />
+    <DonateSection donationPath={site.donation_path} donate={site.donate_section} />
   </main>
 </Base>

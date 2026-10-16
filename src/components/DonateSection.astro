@@ -9,11 +9,11 @@ interface DonateSectionContent {
 }
 
 interface Props {
-  paystackUrl: string;
+  donationPath: string;
   donate: DonateSectionContent;
 }
 
-const { paystackUrl, donate } = Astro.props;
+const { donationPath, donate } = Astro.props;
 ---
 
 <section class="donate-section" id="donate">
@@ -29,7 +29,7 @@ const { paystackUrl, donate } = Astro.props;
           {donate.body}
         </p>
         <div class="donate-actions">
-          <a href={paystackUrl} target="_blank" rel="noopener noreferrer" class="btn btn-primary donate-cta">
+          <a href={donationPath} class="btn btn-primary donate-cta">
             {donate.cta_text}
           </a>
         </div>

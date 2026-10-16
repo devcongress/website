@@ -1,0 +1,1438 @@
+---
+import Base from '../../layouts/Base.astro';
+
+const checkoutApiOrigin = import.meta.env.PUBLIC_DEVCON26_API_ORIGIN || 'https://em.devcongress.org';
+---
+
+<Base title="Payment confirmation | DevCon26" description="Your DevCon26 payment summary and event details." noindex={true} showFooter={false}>
+  <a slot="skip-link" class="skip-link" href="#payment-main">Skip to payment confirmation</a>
+  <div class="payment-page" data-payment-confirmation data-checkout-api-origin={checkoutApiOrigin} data-payment-state="loading">
+
+    <main class="page-shell" id="payment-main">
+      <div class="payment-status" data-payment-status role="status" aria-live="polite" aria-busy="true">
+        <div class="status-intro">
+          <p class="confirmation-label">DevCon26 <span>Good company awaits.</span></p>
+          <h1 data-payment-title>Checking your payment.</h1>
+          <p class="status-copy" data-payment-copy>Just a moment while we confirm your payment with Paystack.</p>
+        </div>
+        <div class="confirmation-seal" aria-hidden="true">
+          <svg viewBox="0 0 100 100" fill="none" focusable="false">
+            <path d="m50 2 10 12 15-3 3 15 14 7-7 14 5 15-15 5-5 15-15-5-14 7-7-14-15-3 3-15L2 50l12-10-3-15 15-3 7-14 14 7Z" fill="currentColor" />
+            <path d="m32 49 12 12 24-25" stroke="var(--text)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+          <span>Payment received</span>
+        </div>
+      </div>
+      <noscript>
+        <p class="no-script">JavaScript is required to verify this payment. Enable it and reload this page, or contact <a href="mailto:hello@devcongress.org">hello@devcongress.org</a> for help. No success is confirmed on this page without verification.</p>
+      </noscript>
+
+      <section class="payment-attention" data-payment-attention hidden aria-label="Payment review details">
+        <p>Keep this reference handy when contacting the event team.</p>
+        <dl>
+          <div><dt>Payment reference</dt><dd data-attention-reference></dd></div>
+          <div><dt>Expected checkout total</dt><dd data-attention-amount></dd></div>
+        </dl>
+      </section>
+
+      <div class="confirmation-content" data-payment-receipt hidden>
+        <section class="payment-receipt" aria-labelledby="summary-title">
+          <div class="receipt-surface" data-receipt-surface aria-hidden="true"></div>
+          <div class="receipt-masthead">
+            <a class="receipt-brand" href="/devcon26/" aria-label="DevCon26 event page">DevCon26</a>
+            <span>Payment record</span>
+          </div>
+          <div class="receipt-photo" aria-hidden="true">
+            <img src="/images/devcon26/ticket-solo.webp" data-payment-photo alt="" width="640" height="512" decoding="async" />
+          </div>
+          <div class="receipt-heading">
+            <div>
+              <p class="receipt-kicker">DevCongress Annual Conference</p>
+              <h2 id="summary-title" tabindex="-1">Payment confirmed</h2>
+            </div>
+          </div>
+          <dl class="payment-details">
+            <div class="amount-detail">
+              <dt>Payment amount</dt>
+              <dd data-payment-amount></dd>
+            </div>
+            <div>
+              <dt>Ticket total</dt>
+              <dd data-payment-base></dd>
+            </div>
+            <div data-payment-fee-row hidden>
+              <dt>Payment processing fee</dt>
+              <dd data-payment-fee></dd>
+            </div>
+            <div data-payment-discount-row hidden>
+              <dt>Coupon discount <span data-payment-coupon></span></dt>
+              <dd data-payment-discount></dd>
+            </div>
+            <div class="ticket-detail">
+              <dt>Ticket selection</dt>
+              <dd data-payment-ticket></dd>
+            </div>
+            <div>
+              <dt>Selected for</dt>
+              <dd data-payment-quantity></dd>
+            </div>
+            <div class="reference-detail">
+              <dt>Payment reference</dt>
+              <dd data-payment-reference></dd>
+            </div>
+            <div>
+              <dt>Payment provider</dt>
+              <dd>Paystack</dd>
+            </div>
+          </dl>
+          <div class="receipt-stub">
+            <button class="print-button" data-payment-print type="button" hidden>Print or save payment record <span aria-hidden="true">↗</span></button>
+            <p class="receipt-caption">Payment record only. Not an admission ticket.</p>
+          </div>
+        </section>
+
+        <section class="next-steps" aria-labelledby="social-card-title">
+          <div class="social-card-editor" data-social-card-preview hidden>
+          <p class="social-card-kicker">A little something to share</p>
+          <h2 id="social-card-title">I’m attending <em>DevCon26.</em></h2>
+          <p class="social-card-intro">One card per person. Make yours now or come back later.</p>
+          <ol class="social-stepper" aria-label="Card creation progress">
+            <li data-social-step-indicator="0">1. Choose card</li>
+            <li data-social-step-indicator="1">2. Personalize</li>
+            <li data-social-step-indicator="2">3. Share</li>
+          </ol>
+          <h3 class="social-step-title" data-social-step-title tabindex="-1">Choose your card</h3>
+          <div class="social-seat-picker" data-social-seat-picker data-social-step="0">
+            <div class="social-seat-picker-heading">
+              <p>Choose a card</p>
+              <span class="social-seat-count" data-social-seat-count></span>
+              <button class="social-seat-shuffle" data-social-seat-shuffle type="button">
+                <span aria-hidden="true">↻</span> Shuffle cards
+              </button>
+            </div>
+            <div class="social-card-seats" data-social-seat-list aria-label="Choose a card to personalize"></div>
+          </div>
+          <div class="social-preview-step" data-social-step="2" hidden>
+          <article class="social-ticket" data-social-ticket aria-label="DevCon26 social card preview">
+            <canvas data-social-ticket-canvas width="1080" height="1350" aria-label="See you at DevCon26 social card"></canvas>
+            <span class="sr-only" data-social-ticket-name>Your name here</span>
+          </article>
+          </div>
+          <div class="social-card-fields" data-social-step="1" hidden>
+            <label for="social-ticket-name">Name on this card</label>
+            <input id="social-ticket-name" data-social-ticket-name-input type="text" maxlength="60" autocomplete="name" placeholder="Your name" />
+            <label class="social-photo-button" for="social-ticket-photo-input">
+              <span data-social-photo-label>Choose a photo</span>
+              <img data-social-photo-thumbnail alt="" hidden />
+              <span aria-hidden="true">＋</span>
+            </label>
+            <input id="social-ticket-photo-input" data-social-ticket-photo-input type="file" accept="image/jpeg,image/png,image/webp,image/avif" />
+          </div>
+          <p class="social-card-status" data-social-card-preview-status role="status" aria-live="polite">Sandbox preview only — not an admission ticket. This preview is not sent or saved.</p>
+          </div>
+          <button class="download-card-button" data-social-card-resume type="button" hidden>Continue making your cards</button>
+          <div class="venue-note">
+            <p class="venue-label">The place to meet</p>
+            <h3>Ghana Digital<br />Center<span aria-hidden="true">.</span><span class="venue-former-name">(formerly Accra Digital Center)</span></h3>
+            <p class="venue-address">Accra, Ghana</p>
+            <p class="venue-date">19 December 2026</p>
+            <a class="venue-directions" href="https://www.google.com/maps/search/?api=1&query=Accra%20Digital%20Centre%2C%20Accra%2C%20Ghana" target="_blank" rel="noopener noreferrer">Find the venue <span aria-hidden="true">↗</span><span class="sr-only"> (opens in a new tab)</span></a>
+          </div>
+        </section>
+      </div>
+
+      <div class="confirmation-actions">
+        <div class="payment-actions">
+          <button class="action-button retry-button" data-payment-retry type="button" hidden>Check payment status <span aria-hidden="true">↗</span></button>
+          <a class="action-button event-button" href="/devcon26/">Back to DevCon26 <span aria-hidden="true">↗</span></a>
+          <a class="support-link" href="mailto:hello@devcongress.org?subject=DevCon26%20payment">Need a hand? Contact us <span aria-hidden="true">↗</span></a>
+        </div>
+        <div class="social-step-navigation" data-social-navigation hidden>
+          <button class="share-card-button" data-social-card-share type="button" hidden>Share my card <span aria-hidden="true">↗</span></button>
+          <button class="download-card-button" data-social-card-download type="button" hidden>Download image</button>
+          <button class="action-button social-back-button" data-social-step-back type="button"><span aria-hidden="true">←</span> Back</button>
+          <button class="social-card-later" data-social-card-later type="button">Do this later <span aria-hidden="true">↗</span></button>
+          <button class="share-card-button" data-social-step-next type="button">Continue</button>
+        </div>
+      </div>
+    </main>
+    <dialog class="social-leave-dialog" data-social-leave-dialog aria-labelledby="social-leave-title" aria-describedby="social-leave-copy">
+      <h2 id="social-leave-title">Finish your cards later?</h2>
+      <p id="social-leave-copy" data-social-leave-copy></p>
+      <div class="social-card-actions">
+        <button class="download-card-button" data-social-leave-cancel type="button" autofocus>Keep editing</button>
+        <button class="share-card-button" data-social-leave-confirm type="button">Leave for now</button>
+      </div>
+    </dialog>
+  </div>
+</Base>
+
+<script>
+  import { initializeDevcon26PaymentConfirmation } from '../../lib/devcon26-payment-confirmation';
+  import { initializeDevcon26SocialCardPreview } from '../../lib/devcon26-social-card-preview';
+
+  const page = document.querySelector('[data-payment-confirmation]');
+
+  if (page instanceof HTMLElement) initializeDevcon26PaymentConfirmation(page, initializeDevcon26SocialCardPreview);
+</script>
+
+<style>
+  .payment-page {
+    --payment-paper: oklch(0.982 0.008 91);
+    --payment-outline: hsl(38, 12%, 46%);
+    --payment-ease: cubic-bezier(0.16, 1, 0.3, 1);
+    padding-bottom: 56px;
+    background: radial-gradient(ellipse at 90% 20%, oklch(0.94 0.06 99 / 0.22), transparent 45%);
+  }
+
+  [hidden] {
+    display: none !important;
+  }
+
+  .payment-attention {
+    max-width: 720px;
+    margin-block: 30px;
+    padding: 24px;
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    background: var(--yellow-bg);
+  }
+
+  .payment-attention p {
+    color: var(--text-mid);
+  }
+
+  .payment-attention dl {
+    display: grid;
+    gap: 18px;
+    margin-top: 24px;
+  }
+
+  .payment-attention dt {
+    font-size: var(--text-sm);
+    color: var(--text-mid);
+  }
+
+  .payment-attention dd {
+    margin-top: 5px;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+  }
+
+  .page-shell {
+    width: min(100% - 64px, 1280px);
+    margin-inline: auto;
+  }
+
+  .payment-header {
+    display: flex;
+    min-height: 90px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+  }
+
+  .brand {
+    display: inline-flex;
+    min-height: 44px;
+    align-items: center;
+  }
+
+  .brand img {
+    width: 136px;
+    height: auto;
+  }
+
+  .header-return {
+    display: inline-flex;
+    min-height: 44px;
+    align-items: center;
+    gap: 12px;
+    font-size: var(--text-sm);
+  }
+
+  .header-return span, .action-button span, .support-link span, .print-button span {
+    color: var(--pink);
+  }
+
+  .payment-status {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 32px;
+    padding-block: 40px 44px;
+  }
+
+  .confirmation-label {
+    display: inline-flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 18px;
+    font-size: var(--text-sm);
+    font-weight: 600;
+  }
+
+  .confirmation-label span {
+    padding-left: 12px;
+    border-left: 1px solid var(--border-light);
+    color: var(--text-mid);
+    font-weight: 400;
+  }
+
+  .confirmation-seal {
+    display: none;
+    flex: 0 0 140px;
+    text-align: center;
+    transform: rotate(7deg);
+  }
+
+  [data-payment-state='verified'] .confirmation-seal {
+    display: block;
+  }
+
+  .confirmation-seal svg {
+    display: block;
+    width: 104px;
+    margin: 0 auto 12px;
+    color: var(--yellow);
+  }
+
+  .confirmation-seal span {
+    font-size: var(--text-xs);
+    font-weight: 600;
+  }
+
+  h1 {
+    font-family: var(--font-display);
+    font-size: clamp(36px, 5vw, 58px);
+    font-weight: 600;
+    line-height: var(--leading-tight);
+    letter-spacing: var(--tracking-display);
+    text-wrap: balance;
+  }
+
+  .status-copy {
+    max-width: 52ch;
+    margin-top: 16px;
+    color: var(--text-mid);
+    font-size: var(--text-lg);
+    line-height: var(--leading-body);
+  }
+
+  .confirmation-content {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 0.95fr);
+    align-items: start;
+    gap: clamp(28px, 4vw, 48px);
+  }
+
+  .payment-receipt {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    padding: 0 28px 28px;
+    border: 1px solid transparent;
+    border-radius: 12px;
+  }
+
+  .receipt-surface {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border: 1px solid oklch(0.84 0.016 91);
+    border-radius: inherit;
+    background: var(--payment-paper);
+    transform-origin: top;
+    pointer-events: none;
+  }
+
+  .payment-receipt::before, .payment-receipt::after {
+    position: absolute;
+    top: 142px;
+    z-index: 2;
+    width: 20px;
+    height: 20px;
+    border: 1px solid oklch(0.84 0.016 91);
+    border-radius: 50%;
+    background: var(--bg);
+    content: '';
+  }
+
+  .payment-receipt::before {
+    left: -11px;
+  }
+
+  .payment-receipt::after {
+    right: -11px;
+  }
+
+  .payment-receipt > :not(.receipt-photo, .receipt-surface) {
+    position: relative;
+    z-index: 1;
+  }
+
+  .receipt-photo {
+    position: absolute;
+    inset: 6% -15% auto 8%;
+    z-index: 0;
+    aspect-ratio: 5 / 4;
+    opacity: 0.09;
+    mix-blend-mode: multiply;
+    mask-image: radial-gradient(ellipse at 60% 52%, #000 24%, transparent 72%);
+    pointer-events: none;
+  }
+
+  .receipt-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: grayscale(0.75);
+  }
+
+  .receipt-masthead {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-inline: -28px;
+    margin-bottom: 24px;
+    padding: 14px 28px 13px;
+    border-bottom: 1px dashed oklch(0.73 0.02 91);
+    color: var(--text-mid);
+    font-size: var(--text-xs);
+    font-weight: 600;
+    letter-spacing: 0.045em;
+    text-transform: uppercase;
+  }
+
+  .receipt-brand {
+    color: var(--text);
+    font-family: var(--font-display);
+    font-size: var(--text-base);
+    font-weight: 600;
+    letter-spacing: var(--tracking-display);
+    text-transform: none;
+  }
+
+  .receipt-heading {
+    display: flex;
+    align-items: start;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+
+  .receipt-kicker {
+    margin-bottom: 4px;
+    color: var(--text-mid);
+    font-size: var(--text-xs);
+    font-weight: 600;
+    letter-spacing: 0.035em;
+    text-transform: uppercase;
+  }
+
+  h2 {
+    font-size: var(--text-lg);
+    font-weight: 700;
+    line-height: var(--leading-snug);
+  }
+
+  .payment-details {
+    display: grid;
+    row-gap: 6px;
+  }
+
+  .payment-details > div {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 24px;
+    padding-block: 8px;
+  }
+
+  .payment-details dt {
+    color: var(--text-mid);
+    font-size: var(--text-sm);
+  }
+
+  .payment-details dd {
+    text-align: right;
+    font-size: var(--text-sm);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .payment-details .ticket-detail, .payment-details .reference-detail, .payment-details .amount-detail {
+    display: block;
+  }
+
+  .ticket-detail dd {
+    margin-top: 4px;
+    font-size: var(--text-2xl);
+    text-align: left;
+    line-height: var(--leading-snug);
+    letter-spacing: -0.025em;
+  }
+
+  .amount-detail dd {
+    margin-top: 5px;
+    font-size: clamp(32px, 3.5vw, 44px);
+    text-align: left;
+    line-height: 1.2;
+    letter-spacing: -0.035em;
+  }
+
+  .payment-details .amount-detail {
+    padding-block: 12px 20px;
+  }
+
+  .payment-details .ticket-detail {
+    margin-top: 16px;
+  }
+
+  .payment-details .reference-detail {
+    margin-top: 12px;
+  }
+
+  .reference-detail dd {
+    margin-top: 6px;
+    text-align: left;
+    overflow-wrap: anywhere;
+    font-size: var(--text-xs);
+    letter-spacing: 0.035em;
+  }
+
+  .receipt-stub {
+    display: grid;
+    gap: 8px;
+    margin-top: 28px;
+    padding-top: 20px;
+    border-top: 1px dashed oklch(0.73 0.02 91);
+  }
+
+  .print-button {
+    display: inline-flex;
+    min-height: 44px;
+    align-items: center;
+    gap: 12px;
+    font-size: var(--text-sm);
+    font-weight: 600;
+  }
+
+  .receipt-caption {
+    color: var(--text-mid);
+    font-size: var(--text-xs);
+  }
+
+  .next-steps {
+    padding-top: 4px;
+  }
+
+  .next-steps h2 {
+    margin-bottom: 12px;
+    font-family: var(--font-display);
+    font-size: clamp(28px, 3vw, 38px);
+    font-weight: 600;
+    line-height: var(--leading-tight);
+    letter-spacing: var(--tracking-display);
+  }
+
+  .next-steps h2 em {
+    color: var(--pink);
+    font-style: normal;
+  }
+
+  .social-card-editor {
+    display: grid;
+    gap: 12px;
+  }
+
+  .social-stepper {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 18px;
+    padding: 0;
+    list-style: none;
+    color: var(--text-mid);
+    font-size: var(--text-xs);
+  }
+
+  .social-stepper [aria-current="step"] {
+    color: var(--pink);
+    font-weight: 700;
+  }
+
+  .social-step-title {
+    margin: 0;
+    font-size: var(--text-base);
+  }
+
+  .social-step-navigation {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px 24px;
+  }
+
+  .social-step-navigation > [data-social-step-next] {
+    margin-left: auto;
+  }
+
+  .social-preview-step {
+    display: grid;
+    justify-items: center;
+    gap: 16px;
+  }
+
+  /* Keep the preview readable; never shrink it with CSS zoom. */
+  .social-preview-step .social-ticket {
+    width: 440px;
+    max-width: 100%;
+  }
+
+  .social-leave-dialog {
+    width: min(440px, calc(100% - 32px));
+    max-height: calc(100dvh - 32px);
+    margin: auto;
+    padding: 24px;
+    border: 1px solid var(--payment-outline);
+    border-radius: 12px;
+    background: var(--payment-paper);
+    color: var(--text);
+  }
+
+  .social-leave-dialog::backdrop {
+    background: oklch(0.2 0.01 91 / 0.45);
+  }
+
+  .social-leave-dialog p {
+    margin-block: 12px 24px;
+    color: var(--text-mid);
+    line-height: var(--leading-body);
+  }
+
+  .social-card-editor button:disabled, .social-step-navigation button:disabled {
+    opacity: 0.5;
+    cursor: wait;
+  }
+
+  .social-card-editor ~ .venue-note {
+    margin-top: 16px;
+  }
+
+  .social-card-editor:not([hidden]) ~ .venue-note {
+    display: none;
+  }
+
+  .social-card-kicker, .social-ticket-eyebrow, .social-ticket-brand span {
+    color: var(--text-mid);
+    font-size: var(--text-xs);
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+  }
+
+  .social-card-intro {
+    max-width: 42ch;
+    color: var(--text-mid);
+    line-height: var(--leading-body);
+  }
+
+  .social-seat-picker {
+    display: grid;
+    gap: 8px;
+  }
+
+  .social-seat-picker-heading {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+  }
+
+  .social-seat-picker-heading > p,
+  .social-seat-count {
+    color: var(--text-mid);
+    font-size: var(--text-xs);
+    font-weight: 700;
+  }
+
+  .social-seat-shuffle {
+    display: inline-flex;
+    min-height: 36px;
+    align-items: center;
+    gap: 7px;
+    margin-left: auto;
+    color: var(--text-mid);
+    font-size: var(--text-xs);
+    font-weight: 700;
+  }
+
+  .social-seat-shuffle span {
+    color: var(--pink);
+    font-size: 20px;
+  }
+
+  .social-card-seats {
+    position: relative;
+    display: grid;
+    min-height: 88px;
+    place-items: center;
+    perspective: 720px;
+    touch-action: pan-y;
+  }
+
+  .social-card-seats :global(.social-seat-button) {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    display: grid;
+    width: min(58%, 220px);
+    min-height: 72px;
+    align-content: space-between;
+    padding: 11px 13px;
+    border: 1px solid var(--payment-outline);
+    border-radius: 8px;
+    background: var(--payment-paper);
+    box-shadow: 3px 3px 0 var(--text);
+    text-align: left;
+    transform-style: preserve-3d;
+    transform-origin: 50% 105%;
+    transition: transform 260ms cubic-bezier(0.16, 1, 0.3, 1), opacity 260ms cubic-bezier(0.16, 1, 0.3, 1);
+    cursor: pointer;
+  }
+
+  .social-card-seats :global(.social-seat-button[aria-pressed="true"]) {
+    border-color: var(--text);
+    background: var(--yellow);
+  }
+
+  .social-card-seats :global(.social-seat-button:focus-visible),
+  .social-seat-shuffle:focus-visible {
+    z-index: 6 !important;
+    outline: 2px solid var(--pink);
+    outline-offset: 2px;
+  }
+
+  .social-card-seats :global(.social-seat-number) {
+    color: var(--text-mid);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .social-card-seats :global(.social-seat-name) {
+    min-width: 0;
+    font-size: var(--text-sm);
+    font-weight: 700;
+    line-height: 1.25;
+    overflow-wrap: normal;
+    word-break: normal;
+    white-space: normal;
+  }
+
+  .social-ticket {
+    display: block;
+    width: min(100%, 420px);
+    aspect-ratio: 4 / 5;
+    margin-inline: auto;
+    overflow: hidden;
+  }
+
+  .social-ticket canvas {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  .social-ticket-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 16px 18px 13px;
+    color: var(--text);
+  }
+
+  .social-ticket-brand {
+    display: grid;
+    gap: 3px;
+    font-size: var(--text-sm);
+    font-weight: 800;
+    letter-spacing: 0.035em;
+  }
+
+  .social-ticket-brand span,
+  .social-ticket-date {
+    color: var(--text);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .social-ticket-date {
+    flex: 0 0 auto;
+    font-size: 10px;
+  }
+
+  .social-ticket-date span { color: var(--pink); }
+
+  .social-ticket-photo {
+    position: relative;
+    min-height: 0;
+    margin-inline: 12px;
+    overflow: hidden;
+    border-radius: 8px;
+    background-color: var(--text);
+    background-image: repeating-linear-gradient(135deg, transparent 0 12px, rgb(245 230 66 / 0.18) 12px 14px);
+  }
+
+  .social-ticket-photo img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+  }
+
+  .social-ticket-photo > span {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    padding: 24px;
+    color: var(--yellow);
+    font-size: var(--text-sm);
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-align: center;
+  }
+
+  .social-ticket-photo.has-photo > span { display: none; }
+
+  .social-ticket-copy {
+    display: grid;
+    align-content: start;
+    gap: 10px;
+    padding: 16px 18px 18px;
+    color: var(--text);
+  }
+
+  .social-ticket-copy h3 {
+    overflow-wrap: anywhere;
+    font-family: var(--font-display);
+    font-size: clamp(30px, 4.2vw, 42px);
+    font-weight: 700;
+    letter-spacing: var(--tracking-display);
+    line-height: 0.98;
+  }
+
+  .social-ticket-copy h3 span { color: var(--pink); }
+  .social-ticket-message { font-size: var(--text-base); font-weight: 700; }
+
+  .social-ticket-footer {
+    margin-top: 4px;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+  }
+
+  .social-card-fields {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: end;
+    gap: 8px 12px;
+  }
+
+  .social-card-fields > label:first-child { font-size: var(--text-xs); font-weight: 700; }
+
+  .social-card-fields > label:first-child,
+  .social-card-fields input[type="text"] {
+    grid-column: 1;
+  }
+
+  .social-card-fields .social-photo-button {
+    grid-column: 2;
+    grid-row: 2;
+  }
+
+  .social-card-fields input[type="text"],
+  .social-card-fields .social-photo-button {
+    box-sizing: border-box;
+    height: 48px;
+    min-height: 48px;
+  }
+
+  .social-card-fields input[type="text"] {
+    padding: 10px 13px;
+    border: 1px solid var(--payment-outline);
+    border-radius: 8px;
+    background: var(--payment-paper);
+  }
+
+  .social-card-fields input[type="text"]:focus,
+  .social-photo-button:has(+ input[type="file"]:focus-visible) {
+    border-color: var(--pink);
+    outline: none;
+    box-shadow: none;
+  }
+
+  .social-card-fields input[type="file"] {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    clip-path: inset(50%);
+  }
+
+  .social-photo-button {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 8px 12px;
+    border: 1px dashed var(--payment-outline);
+    border-radius: 8px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .social-photo-button span:last-of-type { color: var(--pink); font-size: 22px; }
+
+  .social-photo-button img {
+    width: 28px;
+    height: 28px;
+    flex: 0 0 28px;
+    border-radius: 4px;
+    object-fit: cover;
+    object-position: center;
+  }
+
+  .social-card-actions { display: flex; flex-wrap: wrap; gap: 9px; }
+
+  .share-card-button, .download-card-button {
+    min-height: 44px;
+    padding: 10px 15px;
+    border: 1px solid var(--text);
+    border-radius: 8px;
+    font-weight: 700;
+  }
+
+  .share-card-button { background: var(--pink); color: white; }
+  .download-card-button { background: transparent; }
+  .share-card-button:active, .download-card-button:active { transform: scale(.97); }
+  .social-card-status { color: var(--text-mid); font-size: var(--text-xs); line-height: var(--leading-body); }
+  .social-card-later {
+    display: inline-flex;
+    min-height: 48px;
+    align-items: center;
+    gap: 12px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--text-mid);
+    font-size: var(--text-sm);
+    text-decoration: none;
+  }
+
+  .social-step-navigation .social-back-button span {
+    color: inherit;
+  }
+
+  .venue-note {
+    padding: 18px 0 16px;
+  }
+
+  .venue-label {
+    margin-bottom: 12px;
+    color: var(--text-mid);
+    font-size: var(--text-xs);
+  }
+
+  .venue-note h3 {
+    font-size: clamp(28px, 3vw, 38px);
+    font-weight: 700;
+    letter-spacing: -0.035em;
+    line-height: 1.08;
+  }
+
+  .venue-note h3 span[aria-hidden], .venue-directions span[aria-hidden] {
+    color: var(--pink);
+  }
+
+  .venue-address, .venue-date {
+    font-size: var(--text-sm);
+    line-height: 1.7;
+  }
+
+  .venue-date {
+    margin-top: 12px;
+    font-weight: 600;
+  }
+
+  .venue-former-name {
+    display: block;
+    margin-top: 8px;
+    color: var(--text-mid);
+    font-size: var(--text-xs);
+    font-weight: 400;
+    letter-spacing: 0;
+    line-height: 1.7;
+  }
+
+  .venue-directions {
+    display: inline-flex;
+    min-height: 44px;
+    align-items: center;
+    gap: 20px;
+    font-size: var(--text-sm);
+    font-weight: 600;
+  }
+
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .next-step {
+    display: grid;
+    grid-template-columns: 24px minmax(0, 1fr);
+    gap: 16px;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-light);
+  }
+
+  .step-number {
+    padding-top: 2px;
+    color: var(--text-mid);
+    font-size: var(--text-xs);
+    font-weight: 600;
+  }
+
+  h3 {
+    margin-bottom: 6px;
+    font-size: var(--text-base);
+    line-height: var(--leading-snug);
+  }
+
+  .next-step p {
+    color: var(--text-mid);
+    font-size: var(--text-sm);
+    line-height: var(--leading-body);
+  }
+
+  .payment-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px 24px;
+    margin-top: 24px;
+  }
+
+  .action-button {
+    display: inline-flex;
+    min-height: 48px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 28px;
+    padding: 12px 20px;
+    border: 1px solid var(--payment-outline);
+    border-radius: 8px;
+    background: var(--payment-paper);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    line-height: 1.4;
+    transition: transform 120ms var(--payment-ease);
+  }
+
+  .event-button, .retry-button {
+    background: var(--yellow);
+    border-color: transparent;
+  }
+
+  .payment-page:is([data-payment-state='pending'], [data-payment-state='error']) .event-button {
+    background: transparent;
+    border-color: var(--payment-outline);
+  }
+
+  .support-link {
+    display: inline-flex;
+    min-height: 44px;
+    align-items: center;
+    gap: 12px;
+    font-size: var(--text-sm);
+    color: var(--text-mid);
+  }
+
+  .no-script {
+    max-width: 65ch;
+    margin-bottom: 24px;
+  }
+
+  .no-script a {
+    text-decoration: underline;
+  }
+
+  .skip-link {
+    position: fixed;
+    top: 12px;
+    left: 12px;
+    z-index: 110;
+    padding: 12px;
+    background: var(--yellow);
+    transform: translateY(-150%);
+  }
+
+  .skip-link:focus {
+    transform: none;
+  }
+
+  a:focus-visible, button:focus-visible {
+    outline: 3px solid var(--payment-outline);
+    outline-offset: 4px;
+  }
+
+  .action-button:active {
+    transform: scale(0.97);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .action-button:hover {
+      transform: translateY(-2px);
+    }
+
+    .support-link:hover, .print-button:hover, .header-return:hover, .social-card-later:hover {
+      text-decoration: underline;
+      text-underline-offset: 4px;
+    }
+  }
+
+  @media (min-width: 761px) {
+    .confirmation-content {
+      align-items: stretch;
+    }
+
+    .payment-receipt {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .payment-details {
+      flex: 1;
+    }
+
+    .social-card-editor {
+      gap: 8px;
+    }
+
+    .social-card-kicker {
+      display: none;
+    }
+
+    .social-card-intro {
+      font-size: var(--text-sm);
+    }
+
+    .payment-page {
+      padding-bottom: 12px;
+    }
+
+    .payment-header {
+      min-height: 64px;
+    }
+
+    .payment-status {
+      padding-block: 12px 16px;
+    }
+
+    .confirmation-label {
+      margin-bottom: 8px;
+    }
+
+    h1 {
+      font-size: 40px;
+    }
+
+    .status-copy {
+      margin-top: 8px;
+      font-size: var(--text-base);
+    }
+
+    .confirmation-seal svg {
+      width: 64px;
+      margin-bottom: 4px;
+    }
+
+    .receipt-masthead {
+      margin-bottom: 12px;
+      padding-block: 10px;
+    }
+
+    .payment-details > div {
+      padding-block: 4px;
+    }
+
+    .payment-details {
+      row-gap: 2px;
+    }
+
+    .payment-details .amount-detail {
+      padding-block: 6px 10px;
+    }
+
+    .payment-details .ticket-detail, .payment-details .reference-detail {
+      margin-top: 4px;
+    }
+
+    .receipt-stub {
+      margin-top: 12px;
+      padding-top: 10px;
+    }
+
+    .payment-receipt {
+      padding-bottom: 16px;
+    }
+
+    .payment-actions {
+      margin-top: 14px;
+    }
+
+    .next-steps h2 {
+      font-size: 28px;
+      margin-bottom: 0;
+    }
+  }
+
+  @media (min-width: 1281px) {
+    .confirmation-actions {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 0.95fr);
+      gap: clamp(28px, 4vw, 48px);
+      align-items: start;
+      margin-top: 16px;
+    }
+
+    .confirmation-actions .payment-actions {
+      margin-top: 0;
+    }
+
+    .social-step-navigation {
+      display: grid;
+      grid-auto-flow: column;
+      grid-auto-columns: minmax(0, 1fr);
+      gap: 8px;
+    }
+
+    .social-step-navigation > button {
+      box-sizing: border-box;
+      width: 100%;
+      height: 48px;
+      min-height: 48px;
+      justify-content: center;
+      padding: 8px 4px;
+      gap: 6px;
+      font-size: 12px;
+      line-height: 1.2;
+      white-space: normal;
+    }
+
+    .social-step-navigation > [data-social-step-next] {
+      margin-left: 0;
+    }
+  }
+
+  @media (min-width: 761px) and (max-width: 1280px) {
+    .confirmation-content {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .page-shell {
+      max-width: 760px;
+    }
+  }
+
+  @media (max-width: 1280px) {
+    .confirmation-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      margin-top: 16px;
+    }
+
+    .confirmation-actions .social-step-navigation {
+      order: -1;
+    }
+  }
+
+  @media (max-width: 760px) {
+    .social-preview-step .social-ticket {
+      width: min(100%, 400px);
+    }
+
+    .page-shell {
+      width: min(100% - 40px, 580px);
+    }
+
+    .payment-header {
+      min-height: 72px;
+      flex-wrap: wrap;
+      gap: 0 20px;
+      padding-block: 12px;
+    }
+
+    .brand img {
+      width: 116px;
+    }
+
+    .payment-status {
+      padding-block: 24px 28px;
+      gap: 16px;
+    }
+
+    .confirmation-seal {
+      flex-basis: 70px;
+    }
+
+    .confirmation-seal svg {
+      width: 64px;
+    }
+
+    .confirmation-seal span {
+      display: none;
+    }
+
+    .status-copy {
+      font-size: var(--text-base);
+    }
+
+    .confirmation-content {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 32px;
+    }
+
+    .social-card-fields {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .social-card-fields > label:first-child,
+    .social-card-fields input[type="text"],
+    .social-card-fields .social-photo-button {
+      grid-column: 1;
+      grid-row: auto;
+    }
+
+    .payment-receipt {
+      padding: 0 22px 22px;
+    }
+
+    .payment-receipt::before, .payment-receipt::after {
+      top: 132px;
+    }
+
+    .receipt-masthead {
+      margin-inline: -22px;
+      padding-inline: 22px;
+    }
+
+    .payment-details > div {
+      flex-wrap: wrap;
+      gap: 4px 16px;
+    }
+
+    .payment-actions {
+      align-items: stretch;
+      flex-direction: column;
+      margin-top: 28px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :global(html) {
+      scroll-behavior: auto;
+    }
+
+    .action-button {
+      transition: none;
+    }
+
+    .action-button:hover, .action-button:active {
+      transform: none;
+    }
+
+    .social-card-seats :global(.social-seat-button) {
+      transition: none;
+    }
+  }
+
+  @media print {
+    .confirmation-actions {
+      display: none;
+    }
+    .receipt-surface {
+      display: none;
+    }
+
+    @page {
+      size: auto;
+      margin: 14mm;
+    }
+
+    :global(html), :global(body), .payment-page {
+      min-height: 0;
+      background: #fff !important;
+    }
+
+    .payment-header, .payment-status, .payment-attention, .payment-actions, .print-button, .skip-link, .receipt-photo, .next-steps, .no-script {
+      display: none !important;
+    }
+
+    .page-shell {
+      width: 100%;
+    }
+
+    .confirmation-content {
+      display: block;
+    }
+
+    .payment-receipt {
+      display: block;
+      width: 100%;
+      max-width: 150mm;
+      margin: 0 auto;
+      padding: 0 18px 18px;
+      border-color: #222;
+      border-radius: 0;
+      background: #fff;
+      break-inside: avoid;
+      page-break-inside: avoid;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    .payment-receipt::before, .payment-receipt::after, .receipt-photo {
+      display: none;
+    }
+
+    .receipt-masthead {
+      margin-inline: -18px;
+      padding-inline: 18px;
+      border-bottom-color: #777;
+    }
+
+    .receipt-stub {
+      border-top-color: #777;
+    }
+
+  }
+</style>

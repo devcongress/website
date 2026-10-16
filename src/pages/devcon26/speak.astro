@@ -1,0 +1,540 @@
+---
+import Base from '../../layouts/Base.astro';
+import { EVENT_SUBMISSION_TURNSTILE_SITE_KEY } from '../../lib/events';
+const apiOrigin = import.meta.env.PUBLIC_DEVCON26_API_ORIGIN || 'https://em.devcongress.org';
+---
+
+<Base title="Apply to speak | DevCon26" description="Share something useful with the DevCon26 community. Apply to speak at our annual conference." showFooter={false}>
+  <main class="speaker-page" data-speaker-page data-api-origin={apiOrigin}>
+    <div class="page-heading">
+      <div><p class="eyebrow">DevCon26 · Call for Speakers</p><h1>Something worth <em>sharing?</em></h1></div>
+      <p class="intro">Bring your experience, your experiments, and your perspective to the community.</p>
+    </div>
+    <p id="cfp-status" data-cfp-status role="status" tabindex="-1">Checking the Call for Speakers…</p>
+    <form data-cfp-form novalidate hidden>
+      <ol class="stepper" aria-label="Application steps">
+        {['About you', 'Your session', 'Proposal details'].map((label, index) => (
+          <li data-step-label={index} aria-current={index === 0 ? 'step' : undefined}>
+            <span class="step-number" data-step-number aria-hidden="true">{index + 1}</span><span>{label}</span>
+          </li>
+        ))}
+      </ol>
+      <section class="step-panel" data-step="0" aria-labelledby="about-heading">
+        <h2 id="about-heading">About you</h2>
+        <div class="field-grid">
+        <label>Your name<input name="speaker_name" maxlength="120" autocomplete="name" required /></label>
+        <label>Email<input name="speaker_email" type="email" maxlength="254" autocomplete="email" required /></label>
+        <label class="full-width">Short bio<textarea name="bio" maxlength="4000" rows="4" required></textarea></label>
+        </div>
+        <div class="actions"><span>Step 1 of 3</span><button type="button" data-next="1">Continue →</button></div>
+      </section>
+      <section class="step-panel" data-step="1" aria-labelledby="session-heading" hidden>
+        <h2 id="session-heading">Your session</h2>
+        <label>Session title<input name="title" maxlength="200" required /></label>
+        <div class="field-grid">
+          {[['topic', 'Topic track', 'Choose a track'], ['session_type', 'Session type', 'Choose a format']].map(([name, label, placeholder]) => (
+            <div class="choice-field" data-choice={name}>
+              <label id={`${name}-label`} for={`${name}-trigger`}>{label}</label>
+              <input type="hidden" name={name} />
+              <button class="choice-trigger" id={`${name}-trigger`} type="button" aria-labelledby={`${name}-label ${name}-value`} aria-controls={`${name}-options`} aria-expanded="false" aria-haspopup="listbox">
+                <span id={`${name}-value`} data-choice-value>{placeholder}</span><span aria-hidden="true">⌄</span>
+              </button>
+              <div class="choice-options" id={`${name}-options`} role="listbox" aria-labelledby={`${name}-label`} hidden></div>
+            </div>
+          ))}
+        </div>
+        <div class="actions"><button class="secondary" type="button" data-back="0">← Back</button><span>Step 2 of 3</span><button type="button" data-next="2">Continue →</button></div>
+      </section>
+      <section class="step-panel" data-step="2" aria-labelledby="details-heading" hidden>
+        <h2 id="details-heading">Proposal details</h2>
+        <div class="field-grid">
+          <label>Abstract<textarea name="abstract" rows="5" maxlength="12000" aria-describedby="abstract-limit" required></textarea><small id="abstract-limit" data-abstract-limit></small></label>
+          <label>Learning outcomes<textarea name="learning_outcomes" rows="5" required placeholder="One outcome per line" aria-describedby="outcomes-hint"></textarea><small id="outcomes-hint">Add 3–5 outcomes, one per line. Up to 300 characters each.</small></label>
+        </div>
+        <div class="submit-footer">
+        <div class="cf-turnstile" data-size="compact" data-sitekey={EVENT_SUBMISSION_TURNSTILE_SITE_KEY} data-action="cfp_submission"></div>
+        <div class="actions"><button class="secondary" type="button" data-back="1">← Back</button><span>Step 3 of 3</span><button type="submit">Submit proposal ↗</button></div>
+        </div>
+      </section>
+    </form>
+    <noscript>Enable JavaScript to complete your speaker application.</noscript>
+  </main>
+  <script is:inline src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+</Base>
+
+<script>
+  const page = document.querySelector<HTMLElement>('[data-speaker-page]')!;
+  const form = page.querySelector<HTMLFormElement>('[data-cfp-form]')!;
+  const status = page.querySelector<HTMLElement>('[data-cfp-status]')!;
+  const endpoint = new URL('/api/cfp/conferences/2026', page.dataset.apiOrigin);
+  let abstractLimit = 300;
+  let busy = false;
+  let currentStep = 0;
+  const closeChoices: Array<() => void> = [];
+
+  function setupChoice(name: string, choices: string[]) {
+    const root = form.querySelector<HTMLElement>(`[data-choice="${name}"]`)!;
+    const input = root.querySelector<HTMLInputElement>('input')!;
+    const trigger = root.querySelector<HTMLButtonElement>('.choice-trigger')!;
+    const menu = root.querySelector<HTMLElement>('[role="listbox"]')!;
+    let search = '';
+    let lastKeyAt = 0;
+
+    const close = () => {
+      menu.hidden = true;
+      trigger.setAttribute('aria-expanded', 'false');
+    };
+    closeChoices.push(close);
+
+    const options = choices.map((value) => {
+      const option = document.createElement('button');
+      option.type = 'button';
+      option.tabIndex = -1;
+      option.setAttribute('role', 'option');
+      option.setAttribute('aria-selected', 'false');
+      option.textContent = value.replaceAll('_', ' ');
+      option.addEventListener('click', () => {
+        input.value = value;
+        trigger.querySelector('[data-choice-value]')!.textContent = option.textContent;
+        trigger.removeAttribute('aria-invalid');
+        trigger.removeAttribute('aria-describedby');
+        options.forEach((item) => item.setAttribute('aria-selected', String(item === option)));
+        close();
+        trigger.focus();
+      });
+      menu.append(option);
+      return option;
+    });
+
+    function open(last = false) {
+      closeChoices.forEach((closeMenu) => closeMenu());
+      menu.hidden = false;
+      trigger.setAttribute('aria-expanded', 'true');
+      const selected = choices.indexOf(input.value);
+      options[selected >= 0 ? selected : last ? options.length - 1 : 0]?.focus();
+    }
+
+    trigger.addEventListener('click', () => menu.hidden ? open() : close());
+    trigger.addEventListener('keydown', (event) => {
+      if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+        event.preventDefault();
+        open(event.key === 'ArrowUp');
+      }
+    });
+    menu.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' || event.key === 'Tab') {
+        if (event.key === 'Escape') event.preventDefault();
+        close();
+        trigger.focus();
+        return;
+      }
+      const index = options.indexOf(document.activeElement as HTMLButtonElement);
+      let next = index;
+
+      if (event.key === 'ArrowDown') next = (index + 1) % options.length;
+      else if (event.key === 'ArrowUp') next = (index - 1 + options.length) % options.length;
+      else if (event.key === 'Home') next = 0;
+      else if (event.key === 'End') next = options.length - 1;
+      else if (event.key.length === 1 && event.key !== ' ') {
+        search = Date.now() - lastKeyAt > 600 ? event.key : search + event.key;
+        lastKeyAt = Date.now();
+        next = options.findIndex((option) => option.textContent!.toLowerCase().startsWith(search.toLowerCase()));
+      } else return;
+      event.preventDefault();
+      options[next]?.focus();
+    });
+    document.addEventListener('pointerdown', (event) => {
+      if (!root.contains(event.target as Node)) close();
+    });
+    root.addEventListener('focusout', (event) => {
+      if (!root.contains(event.relatedTarget as Node)) close();
+    });
+  }
+
+  function showStep(step: number) {
+    closeChoices.forEach((close) => close());
+    status.textContent = 'Applications are open. Your proposal goes directly to the annual conference review team.';
+    currentStep = step;
+    form.querySelectorAll<HTMLElement>('[data-step]').forEach((panel) => { panel.hidden = Number(panel.dataset.step) !== step; });
+    form.querySelectorAll<HTMLElement>('[data-step-label]').forEach((label) => {
+      const completed = Number(label.dataset.stepLabel) < step;
+      label.classList.toggle('completed', completed);
+      label.querySelector('[data-step-number]')!.textContent = completed ? '✓' : String(Number(label.dataset.stepLabel) + 1);
+      if (Number(label.dataset.stepLabel) === step) label.setAttribute('aria-current', 'step');
+      else label.removeAttribute('aria-current');
+    });
+    form.querySelector<HTMLInputElement | HTMLTextAreaElement>(`[data-step="${step}"] input, [data-step="${step}"] textarea`)?.focus();
+  }
+
+  function validateStep(step: number): boolean {
+    const fields = [...form.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>(`[data-step="${step}"] input:not([type="hidden"]), [data-step="${step}"] textarea`)];
+    const invalid = fields.find((field) => !field.checkValidity());
+
+    if (invalid) {
+      showStep(step);
+      invalid.reportValidity();
+      return false;
+    }
+    if (step === 1) {
+      for (const root of form.querySelectorAll<HTMLElement>('[data-choice]')) {
+        if (!root.querySelector<HTMLInputElement>('input')!.value) {
+          showStep(step);
+          const trigger = root.querySelector<HTMLButtonElement>('button')!;
+          trigger.setAttribute('aria-invalid', 'true');
+          trigger.setAttribute('aria-describedby', 'cfp-status');
+          status.textContent = `Choose a ${root.dataset.choice === 'topic' ? 'topic track' : 'session format'} to continue.`;
+          trigger.focus();
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+
+  form.querySelectorAll<HTMLButtonElement>('[data-next]').forEach((button) => {
+    button.addEventListener('click', () => {
+      if (validateStep(currentStep)) showStep(Number(button.dataset.next));
+    });
+  });
+  form.querySelectorAll<HTMLButtonElement>('[data-back]').forEach((button) => {
+    button.addEventListener('click', () => showStep(Number(button.dataset.back)));
+  });
+
+  async function loadCall() {
+    try {
+      const response = await fetch(endpoint, { credentials: 'omit', cache: 'no-store', signal: AbortSignal.timeout(12000) });
+
+      if (response.status === 404) {
+        status.textContent = 'The Call for Speakers is not open right now. Please check back soon.';
+        return;
+      }
+      if (!response.ok) throw new Error('unavailable');
+      const call = await response.json();
+
+      if (call.call_scope !== 'annual_conference' || !Array.isArray(call.topic_tracks) || !Array.isArray(call.session_types)) throw new Error('invalid');
+      for (const [name, choices] of [['topic', call.topic_tracks], ['session_type', call.session_types]] as const) {
+        if (!choices.length || choices.some((choice: unknown) => typeof choice !== 'string')) throw new Error('invalid');
+        setupChoice(name, choices);
+      }
+      abstractLimit = Number(call.abstract_word_limit) || 300;
+      form.querySelector('[data-abstract-limit]')!.textContent = `Up to ${abstractLimit} words.`;
+      status.textContent = 'Applications are open. Your proposal goes directly to the annual conference review team.';
+      form.hidden = false;
+    } catch {
+      status.textContent = 'The application could not be loaded. Please refresh to try again.';
+    }
+  }
+
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    if (busy) return;
+    if (currentStep < 2) {
+      if (validateStep(currentStep)) showStep(currentStep + 1);
+      return;
+    }
+    for (let step = 0; step < 3; step++) {
+      if (!validateStep(step)) return;
+    }
+    const data = new FormData(form);
+    const outcomes = String(data.get('learning_outcomes')).split('\n').map((line) => line.trim()).filter(Boolean);
+    const abstract = String(data.get('abstract')).trim();
+    const token = String(data.get('cf-turnstile-response') ?? '');
+
+    if (outcomes.length < 3 || outcomes.length > 5 || outcomes.some((line) => line.length > 300)) {
+      status.textContent = 'Add 3–5 learning outcomes, each no longer than 300 characters.';
+      status.focus();
+      return;
+    }
+    if (abstract.split(/\s+/).length > abstractLimit || !token) {
+      status.textContent = !token ? 'Complete the human verification first.' : `Keep your abstract within ${abstractLimit} words.`;
+      status.focus();
+      return;
+    }
+    busy = true;
+    form.querySelectorAll<HTMLButtonElement>('button').forEach((button) => { button.disabled = true; });
+    status.textContent = 'Submitting your proposal…';
+
+    try {
+      const response = await fetch(endpoint, {
+        method: 'POST', credentials: 'omit', headers: { 'Content-Type': 'application/json' }, signal: AbortSignal.timeout(20000),
+        body: JSON.stringify({
+          speaker_name: data.get('speaker_name'), speaker_email: data.get('speaker_email'), bio: data.get('bio'),
+          title: data.get('title'), topic: data.get('topic'), session_type: data.get('session_type'), abstract,
+          learning_outcomes: outcomes, turnstile_token: token, turnstile_action: 'cfp_submission',
+        }),
+      });
+      const body = await response.json();
+
+      if (response.status !== 202 || body.accepted !== true) throw new Error(body.error || 'Unable to submit. Please try again.');
+      status.textContent = body.message;
+      form.hidden = true;
+    } catch (error) {
+      status.textContent = error instanceof Error ? error.message : 'Unable to submit. Please try again.';
+      (window as unknown as { turnstile?: { reset: () => void } }).turnstile?.reset();
+    } finally {
+      busy = false;
+      form.querySelectorAll<HTMLButtonElement>('button').forEach((button) => { button.disabled = false; });
+      status.focus();
+    }
+  });
+  void loadCall();
+</script>
+
+<style>
+  .speaker-page {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 16px 24px;
+  }
+  .page-heading {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    margin-bottom: 12px;
+  }
+  .eyebrow {
+    font-size: 13px;
+    margin: 0;
+  }
+  h1 {
+    font-size: clamp(30px, 3.5vw, 48px);
+    line-height: 1.05;
+    margin: 8px 0;
+  }
+  h1 em {
+    color: #ed008c;
+    font-style: normal;
+  }
+  .intro {
+    font-size: 16px;
+    max-width: 600px;
+    line-height: 1.6;
+  }
+  form {
+    width: 100%;
+    margin-top: 16px;
+  }
+  .stepper {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+    list-style: none;
+    padding: 0;
+    margin: 0 0 16px;
+  }
+  .stepper li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid #d6d2c8;
+    font-size: 15px;
+    color: #666;
+    min-width: 0;
+  }
+  .step-number {
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    flex-shrink: 0;
+    border: 1px solid #d6d2c8;
+    border-radius: 50%;
+  }
+  .stepper li.completed {
+    border-color: #111;
+    color: #111;
+  }
+  .stepper li.completed .step-number {
+    background: #f8ee3e;
+    border-color: #111;
+  }
+  .stepper li[aria-current="step"] {
+    color: #ed008c;
+    font-weight: 700;
+    border-color: #ed008c;
+  }
+  [aria-current="step"] .step-number {
+    background: #ed008c;
+    color: #fff;
+    border-color: #ed008c;
+  }
+  .step-panel {
+    display: grid;
+    gap: 12px;
+    min-width: 0;
+    border: 1px solid #d6d2c8;
+    border-radius: 12px;
+    padding: 16px;
+    background: #fbf9f3;
+  }
+  h2 {
+    font-size: 24px;
+    font-weight: 700;
+    margin: 0;
+  }
+  .field-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+  }
+  .full-width {
+    grid-column: 1 / -1;
+  }
+  label {
+    display: grid;
+    gap: 8px;
+    font-weight: 600;
+    min-width: 0;
+  }
+  input, textarea, select {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 12px;
+    border: 1px solid #8c8270;
+    border-radius: 8px;
+    background: #fbf9f3;
+    font: inherit;
+  }
+  input:focus, textarea:focus, select:focus {
+    border-color: #ed008c;
+    outline: 2px solid #ed008c;
+    outline-offset: 2px;
+  }
+  textarea {
+    resize: none;
+    line-height: 1.5;
+  }
+  small {
+    font-size: 13px;
+    font-weight: 400;
+    color: #666;
+  }
+  .choice-field {
+    position: relative;
+    min-width: 0;
+    display: grid;
+    gap: 8px;
+  }
+  .choice-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    width: 100%;
+    text-align: left;
+    background: #fbf9f3;
+    border-color: #8c8270;
+    font-weight: 400;
+  }
+  .choice-options {
+    position: absolute;
+    top: calc(100% + 6px);
+    inset-inline: 0;
+    z-index: 20;
+    padding: 6px;
+    border: 1px solid #111;
+    border-radius: 8px;
+    background: #fbf9f3;
+    box-shadow: 4px 4px 0 #111;
+    max-height: min(240px, 35svh);
+    overflow-y: auto;
+  }
+  .choice-options :global([role="option"]) {
+    display: block;
+    width: 100%;
+    min-height: 44px;
+    padding: 10px 12px;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    text-align: left;
+    font: inherit;
+    color: #111;
+    cursor: pointer;
+  }
+  .choice-options :global([role="option"]:focus-visible),
+  .choice-options :global([role="option"]:hover),
+  .choice-options :global([aria-selected="true"]) {
+    background: #fff8a8;
+    outline: 2px solid #ed008c;
+    outline-offset: -2px;
+  }
+  button:focus-visible {
+    outline: 2px solid #ed008c;
+    outline-offset: 3px;
+  }
+  .choice-trigger[aria-invalid="true"] {
+    border-color: #b42318;
+  }
+  .cf-turnstile {
+    width: 164px;
+    justify-self: center;
+  }
+  .submit-footer {
+    display: grid;
+    grid-template-columns: 164px minmax(0, 1fr);
+    align-items: center;
+    gap: 24px;
+  }
+  button {
+    min-height: 48px;
+    padding: 12px 20px;
+    border: 1px solid #111;
+    border-radius: 8px;
+    background: #f8ee3e;
+    font: inherit;
+    font-weight: 700;
+  }
+  button:disabled {
+    opacity: .5;
+  }
+  .actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .actions span {
+    font-size: 13px;
+    color: #666;
+  }
+  .secondary {
+    background: transparent;
+  }
+  @media (max-width: 700px) {
+    .page-heading, .field-grid, .submit-footer {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .page-heading {
+      gap: 0;
+    }
+    .speaker-page {
+      padding: 20px 16px;
+    }
+    .step-panel {
+      padding: 16px 12px;
+    }
+    .stepper {
+      gap: 8px;
+    }
+    .stepper li {
+      flex-direction: column;
+      align-items: flex-start;
+      font-size: 12px;
+      gap: 6px;
+    }
+    .actions span {
+      display: none;
+    }
+    .actions button:last-child {
+      margin-left: auto;
+    }
+  }
+  [hidden] {
+    display: none !important;
+  }
+</style>

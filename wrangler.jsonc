@@ -10,7 +10,7 @@
   "assets": {
     "directory": "./dist",
     "binding": "ASSETS",
-    "run_worker_first": ["/events/*"],
+    "run_worker_first": ["/events/*", "/devcon26/cards/*"],
     "html_handling": "auto-trailing-slash"
   }
 }

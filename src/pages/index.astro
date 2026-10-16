@@ -1,12 +1,12 @@
 ---
 import { getCollection } from 'astro:content';
 import Base from '../layouts/Base.astro';
-import Navbar from '../components/Navbar.astro';
 import HeroSection from '../components/HeroSection.astro';
 import StatsBar from '../components/StatsBar.astro';
 import MissionSection from '../components/MissionSection.astro';
 import RolesMarquee from '../components/RolesMarquee.astro';
 import ProgramsSection from '../components/ProgramsSection.astro';
+import Devcon26Feature from '../components/Devcon26Feature.astro';
 import MeetupsSection from '../components/MeetupsSection.astro';
 import AdminsSection from '../components/AdminsSection.astro';
 import PartnersSection from '../components/PartnersSection.astro';
@@ -22,10 +22,6 @@ const events      = await getEvents();
 ---
 
 <Base>
-  <Navbar
-    slackUrl={site.community_slack_url}
-    paystackUrl={site.paystack_url}
-  />
   <main>
     <HeroSection
       hero={site.hero}
@@ -37,6 +33,7 @@ const events      = await getEvents();
     <MissionSection mission={site.mission_section} slackUrl={site.community_slack_url} />
     <RolesMarquee roles={site.roles} />
     <ProgramsSection activities={activities} />
+    <Devcon26Feature />
     <MeetupsSection events={events} />
     <AdminsSection admins={admins} />
     <PartnersSection partners={partners} />

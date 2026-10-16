@@ -81,14 +81,9 @@ function sharedLinkLabel(value: string): string {
 <Base title={`${d.name} — DevCongress`} description={d.description}>
 
   <!-- Nav -->
-  <header class="mnav">
-    <div class="container mnav-inner">
-      <a href="/" class="mnav-logo">
-        <img src="/images/logo.png" alt="DevCongress" height="36" />
-      </a>
-      <a href="/events/" class="mnav-back">← All events</a>
-    </div>
-  </header>
+  <nav class="container event-return" aria-label="Event navigation">
+    <a href="/events/" class="mnav-back">← All events</a>
+  </nav>
 
   <main>
 
@@ -100,7 +95,7 @@ function sharedLinkLabel(value: string): string {
           <span class={`meetup-status status-${status}`}>
             {status === 'live' ? '● Live now' : status === 'upcoming' ? 'Upcoming' : 'Past'}
           </span>
-          <h1 class="heading-serif meetup-title">{d.name}</h1>
+          <h1 class="heading-display meetup-title">{d.name}</h1>
           <div class="meetup-hero-meta">
             <span data-utc={d.start} data-display="datetime">{formatDate(d.start)} · {formatTime(d.start)}</span>
             {d.location.url
@@ -164,7 +159,7 @@ function sharedLinkLabel(value: string): string {
         <div class="container">
           <div class="reg-card card">
             <div class="reg-copy">
-              <h2 class="heading-serif reg-heading">Join us at this meetup</h2>
+              <h2 class="heading-display reg-heading">Join us at this meetup</h2>
               <p class="reg-meta"><span data-utc={d.start} data-display="datetime">{formatDate(d.start)} · {formatTime(d.start)}</span></p>
               <p class="reg-location">📍 {d.location.name}</p>
             </div>
@@ -200,7 +195,7 @@ function sharedLinkLabel(value: string): string {
       <div class="speakers-section">
         <div class="container">
           <span class="eyebrow">Speakers</span>
-          <h2 class="heading-serif section-heading">Who's speaking</h2>
+          <h2 class="heading-display section-heading">Who's speaking</h2>
           <ul class="speakers-grid">
             {d.speakers.map((speaker) => (
               <li class="speaker-card card">
@@ -256,7 +251,7 @@ function sharedLinkLabel(value: string): string {
               <span class="tz-switch-label" data-tz-label="local">My Time</span>
             </div>
           </div>
-          <h2 class="heading-serif section-heading">
+          <h2 class="heading-display section-heading">
             {status === 'past' ? `How the ${schedulePeriod} went` : `How the ${schedulePeriod} will go`}
           </h2>
           <ol class="schedule-list">
@@ -363,7 +358,7 @@ function sharedLinkLabel(value: string): string {
       <div class="videos-section">
         <div class="container">
           <span class="eyebrow">Recordings</span>
-          <h2 class="heading-serif section-heading">Watch the talks</h2>
+          <h2 class="heading-display section-heading">Watch the talks</h2>
           <ul class="videos-grid">
             {d.videos.map((video) => (
               <li class="video-card card">
@@ -397,13 +392,18 @@ function sharedLinkLabel(value: string): string {
 </Base>
 
 <style>
-  /* ── Nav ──────────────────────────────────────────────── */
-  .mnav {
-    position: sticky; top: 0; z-index: 100;
-    background: var(--bg); border-bottom: 2px solid var(--black);
-    padding-block: var(--s4);
+  .event-return {
+    padding-block: 12px;
   }
-  .mnav-inner { display: flex; align-items: center; justify-content: space-between; }
+
+  .event-return .mnav-back {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+
+  /* ── Nav ──────────────────────────────────────────────── */
+
   .mnav-back  { font-size: var(--text-sm); font-weight: 500; color: var(--text-mid); transition: color 150ms ease; }
   .mnav-back:hover { color: var(--pink); }
 
@@ -609,7 +609,13 @@ function sharedLinkLabel(value: string): string {
 
   .schedule-top { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--s3); flex-wrap: wrap; }
 
-  .schedule-title { font-family: var(--font-serif); font-size: var(--text-lg); color: var(--text); line-height: var(--leading-snug); }
+  .schedule-title {
+    font-family: var(--font-display);
+    font-size: var(--text-lg);
+    font-weight: 600;
+    color: var(--text);
+    line-height: var(--leading-snug);
+  }
 
   .schedule-type {
     font-size: var(--text-xs); font-weight: 700; text-transform: uppercase;

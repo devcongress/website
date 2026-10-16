@@ -27,7 +27,7 @@ const headlineParts = parseEmphasis(mission.headline);
 
       <div class="mission-left">
         <span class="eyebrow">{mission.eyebrow}</span>
-        <h2 class="heading-serif mission-headline">
+        <h2 class="heading-display mission-headline">
           {headlineParts.map((part) =>
             part.plain
               ? part.text
@@ -131,7 +131,8 @@ const headlineParts = parseEmphasis(mission.headline);
   .mission-item:hover { background: var(--yellow-bg); }
 
   .mission-num {
-    font-family: var(--font-serif);
+    font-family: var(--font-display);
+    font-weight: 700;
     font-size: var(--text-xl);
     color: var(--pink);
     line-height: 1.2;
@@ -141,7 +142,8 @@ const headlineParts = parseEmphasis(mission.headline);
   .mission-content { display: flex; flex-direction: column; gap: var(--s2); }
 
   .mission-item-heading {
-    font-family: var(--font-serif);
+    font-family: var(--font-display);
+    font-weight: 600;
     font-size: var(--text-xl);
     line-height: var(--leading-snug);
     color: var(--text);

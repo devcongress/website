@@ -46,11 +46,11 @@
     eyebrow: "Africa's tech community"
     headline: "Where Africa's builders connect, collaborate and grow."
     cta_primary:
-      text: "Join us on Slack"
-      color: "pink"
+      text: "Get DevCon26 tickets"
+      color: "yellow"
     cta_secondary:
-      text: "Support the Mission"
-      color: "outline"
+      text: "Join the community"
+      color: "pink"
     video_label: "dev:congress{}; — community highlight"
     video_live: "● Live Community"
 

@@ -48,11 +48,6 @@ const externalAction = action?.href.startsWith('http') ?? false;
 ---
 
 <Base title={`${event.title} — DevCongress`} description={event.summary}>
-  <header class="mnav">
-    <div class="container mnav-inner">
-      <a href="/" class="mnav-logo"><img src="/images/logo.png" alt="DevCongress" height="36" /></a>
-    </div>
-  </header>
 
   <main data-event-detail data-event-slug={event.slug}>
     <section class="event-hero" aria-labelledby="event-title">
@@ -60,7 +55,7 @@ const externalAction = action?.href.startsWith('http') ?? false;
       <div class="event-hero-overlay" aria-hidden="true"></div>
       <div class="container event-hero-content">
         <span class={`event-status-badge status-${status}`} data-event-status>{statusLabel}</span>
-        <h1 class="heading-serif event-hero-title" id="event-title">{event.title}</h1>
+        <h1 class="heading-display event-hero-title" id="event-title">{event.title}</h1>
         <p class="event-hero-meta">
           <time datetime={event.startsAt} data-event-time>{formatDate(event.startsAt, event.timezone)} · {formatTime(event.startsAt, event.timezone)}</time>
           <span aria-hidden="true">•</span>
@@ -177,8 +172,7 @@ const externalAction = action?.href.startsWith('http') ?? false;
 </script>
 
 <style>
-  .mnav { position: sticky; top: 0; z-index: 100; padding-block: var(--s4); background: var(--bg); border-bottom: 2px solid var(--black); }
-  .mnav-inner { display: flex; align-items: center; justify-content: space-between; }
+
   .event-detail-back { color: var(--text-mid); font-size: var(--text-sm); font-weight: 700; text-decoration: underline; text-underline-offset: 4px; }
   .event-detail-back:hover { color: var(--pink); }
   .event-hero { position: relative; display: flex; min-height: clamp(30rem, 66vw, 48rem); align-items: flex-end; overflow: hidden; border-bottom: 2px solid var(--black); background: var(--black); color: #fff; isolation: isolate; }

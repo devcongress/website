@@ -42,7 +42,7 @@ const statusConfig = {
     <div class="meetups-header">
       <span class="eyebrow">Events</span>
       <div class="meetups-title-row">
-        <h2 class="heading-serif meetups-heading">Where we show up</h2>
+        <h2 class="heading-display meetups-heading">Where we show up</h2>
         <div class="meetups-actions">
           <a href="/events/" class="btn btn-outline meetups-all-btn">
             All Events →
@@ -83,7 +83,7 @@ const statusConfig = {
                   <time datetime={event.startsAt}>{formatDate(event.startsAt)}</time>
                   <span class="meetup-location" title={event.venueName ?? event.locationType}>{event.venueName ?? event.locationType.replaceAll('_', ' ')}</span>
                 </div>
-                <h3 class="heading-serif meetup-name" title={event.title}>{event.title}</h3>
+                <h3 class="heading-display meetup-name" title={event.title}>{event.title}</h3>
                 <p class="meetup-desc">{event.summary}</p>
                 {directAction && (
                   <div class="meetup-card-actions">
@@ -181,7 +181,7 @@ const statusConfig = {
         meta.append(date, location);
 
         const title = document.createElement('h3');
-        title.className = 'heading-serif meetup-name';
+        title.className = 'heading-display meetup-name';
         title.title = event.title;
         title.textContent = event.title;
 

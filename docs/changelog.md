@@ -2,6 +2,16 @@
 
 ## 2026-10-16
 
+- Make the registration receipt accurately acknowledge a request, not confirmed
+  admission or email delivery. Explain that duplicate and cancelled registrations
+  remain unchanged, link to the event team for recovery, and identify the sharing
+  card as a preview rather than a ticket. Preserve public duplicate privacy.
+
+- Restore the live site navbar alignment and dark-text/pink-underline hover on
+  both public and DevCon26 pages, retaining the current fonts and route links.
+  Restore the 68px frame, 40px logo, 960px mobile breakpoint, and stacked mobile
+  actions while retaining keyboard and guarded-navigation behavior.
+
 - Use the homepage's physical badge artwork for personalized registration,
   attendee, and speaker cards, retaining photo adjustment and prominent names.
   Align the role opposite the real logo in one footer row and match public SVG

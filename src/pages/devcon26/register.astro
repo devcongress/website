@@ -44,7 +44,7 @@ const localTesting = import.meta.env.DEV && isLoopback(apiOrigin) && isLoopback(
       <p data-registration-result role="status" tabindex="-1"></p>
       <a data-paid-checkout href="/devcon26/checkout/?tier=regular" hidden>Continue to Regular ticket checkout ↗</a>
       <div data-registration-success hidden>
-        <p>Thank you for registering for DevCon26.</p>
+        <p>We’ve received your DevCon26 registration request.</p>
         <dl class="registration-receipt" aria-label="Registration summary">
           <div><dt>Name submitted</dt><dd data-receipt-name></dd></div>
           <div><dt>Email submitted</dt><dd data-receipt-email></dd></div>
@@ -52,7 +52,9 @@ const localTesting = import.meta.env.DEV && isLoopback(apiOrigin) && isLoopback(
           <div><dt>Registration</dt><dd>Free</dd></div>
           <div><dt>Submission</dt><dd class="receipt-status">Received</dd></div>
         </dl>
-        <p class="small">Check your email for confirmation or waitlist status. Confirmed attendees receive an admission QR for entry.</p>
+        <p class="small">If a new registration was created, its confirmation or waitlist email will be queued. This receipt does not confirm admission or email delivery.</p>
+        <p class="small">Already registered? Your existing registration is unchanged, and repeat submissions do not send another email. A cancelled registration stays cancelled. <a href="mailto:hello@devcongress.org">Contact the event team</a> to request recovery or help with a missing email.</p>
+        <p class="small">The sharing card below is a preview, not an admission ticket.</p>
         <a class="return-link" href="/devcon26/">Back to DevCon26 ↗</a>
       </div>
       <noscript>Enable JavaScript to register, or contact the event team for help.</noscript>
@@ -131,7 +133,7 @@ const localTesting = import.meta.env.DEV && isLoopback(apiOrigin) && isLoopback(
       page.dataset.registrationComplete = 'true';
       const title = page.querySelector<HTMLElement>('[data-registration-title]')!;
 
-      title.textContent = 'Registration received.';
+      title.textContent = 'Request received.';
       title.setAttribute('aria-level', '1');
       page.querySelector<HTMLElement>('[data-receipt-name]')!.textContent = String(data.get('name') ?? '');
       page.querySelector<HTMLElement>('[data-receipt-email]')!.textContent = String(data.get('email') ?? '');

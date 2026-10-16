@@ -47,6 +47,9 @@ original video remains below the composition, with its embed and styling
 unchanged. Hero actions use compact 46px minimum heights, 15px labels, and 2px
 borders.
 
+The shared navbar follows the live site's left-aligned links after the logo,
+right-aligned actions, 68px frame, and 40px logo. Hover darkens link text and
+reveals a pink underline; current typography and route-specific links are retained.
 The existing 960px navigation breakpoint is preserved. A compact desktop rule
 between 961px and 1100px leaves room for the additional link. New links have
 44px-or-larger touch targets and explicit focus indicators. New motion uses only

@@ -11,7 +11,9 @@ import MeetupsSection from '../components/MeetupsSection.astro';
 import AdminsSection from '../components/AdminsSection.astro';
 import PartnersSection from '../components/PartnersSection.astro';
 import DonateSection from '../components/DonateSection.astro';
+import InttegroDonationCheckout from '../components/InttegroDonationCheckout.astro';
 import { getEvents } from '../lib/events';
+import { DONATION_CHECKOUT_MODE } from '../lib/features';
 
 const siteEntries = await getCollection('site');
 const site        = siteEntries[0]!.data;
@@ -19,14 +21,16 @@ const admins      = await getCollection('admins');
 const activities  = await getCollection('activities');
 const partners    = await getCollection('partners');
 const events      = await getEvents();
+const useDonationModal = DONATION_CHECKOUT_MODE === 'modal';
 ---
 
-<Base>
+<Base useDonationModal={useDonationModal}>
   <main>
     <HeroSection
       hero={site.hero}
       slackUrl={site.community_slack_url}
       donationPath={site.donation_path}
+      useDonationModal={useDonationModal}
       youtubeEmbedUrl={site.youtube_embed_url}
     />
     <StatsBar stats={site.stats} />
@@ -37,6 +41,16 @@ const events      = await getEvents();
     <MeetupsSection events={events} />
     <AdminsSection admins={admins} />
     <PartnersSection partners={partners} />
-    <DonateSection donationPath={site.donation_path} donate={site.donate_section} />
+    <DonateSection
+      donationPath={site.donation_path}
+      useDonationModal={useDonationModal}
+      donate={site.donate_section}
+    />
   </main>
+  {useDonationModal && (
+    <InttegroDonationCheckout
+      purchaseIntentId={site.inttegro_purchase_intent_id}
+      fallbackPath={site.donation_path}
+    />
+  )}
 </Base>

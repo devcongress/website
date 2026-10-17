@@ -1,0 +1,136 @@
+---
+import Base from '../../../layouts/Base.astro';
+import Devcon26VerifiedBadge from '../../../components/Devcon26VerifiedBadge.astro';
+
+const apiOrigin = import.meta.env.PUBLIC_DEVCON26_API_ORIGIN || (import.meta.env.DEV ? 'http://localhost:5173' : 'https://em.devcongress.org');
+---
+
+<Base
+  title="Your DevCon26 social card"
+  description="Create an optional DevCon26 social card to download or share."
+  showFooter={false}
+  noindex={true}
+  analytics={false}
+>
+  <main class="social-card-page" data-social-card-page data-social-card-api-origin={apiOrigin}>
+    <div class="social-card-header">
+      <p>DevCon26 · 19 December 2026</p>
+    </div>
+
+    <section class="social-card-shell" aria-labelledby="social-card-title">
+      <div class="social-card-intro">
+        <p class="eyebrow">Optional social card</p>
+        <h1 id="social-card-title">Make your DevCon26 card.</h1>
+        <p>Choose a photo, download your card, or publish an optional public link. Your ticket, email, payment, and private link never appear on the card.</p>
+        <p class="social-card-status" data-social-card-status role="status" aria-live="polite">Opening your card…</p>
+      </div>
+
+      <div data-social-card-content hidden>
+        <nav class="social-card-seats" data-social-card-seats hidden aria-label="Cards for each ticket">
+          <p>Each ticket has its own optional card. You can finish any of them later using this email link.</p>
+          <div data-social-card-seat-list></div>
+        </nav>
+
+        <Devcon26VerifiedBadge />
+
+        <form class="social-card-controls" data-social-card-form novalidate>
+          <fieldset>
+            <legend>Your card name</legend>
+            <label for="social-card-display-name">Name on the card</label>
+            <div class="name-row">
+              <input id="social-card-display-name" data-social-card-display-name type="text" maxlength="120" autocomplete="name" />
+              <button class="quiet-action" data-social-card-save-name type="button">Save name</button>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>Photo</legend>
+            <label class="photo-upload" for="social-card-photo-input"><span>Choose a photo</span><input id="social-card-photo-input" data-social-card-file type="file" accept="image/avif,image/jpeg,image/png,image/webp" /></label>
+            <p class="field-hint">JPEG, PNG, WebP, or AVIF. A square or portrait photo works best.</p>
+          </fieldset>
+
+          <fieldset data-social-card-crop-controls disabled>
+            <legend>Position your photo</legend>
+            <label>Horizontal <input data-social-card-crop-x type="range" min="0" max="100" value="50" /></label>
+            <label>Vertical <input data-social-card-crop-y type="range" min="0" max="100" value="50" /></label>
+            <label>Zoom <input data-social-card-crop-scale type="range" min="1" max="2.5" step="0.01" value="1" /></label>
+            <button class="quiet-action" data-social-card-save-crop type="button">Use this photo</button>
+          </fieldset>
+
+          <div class="social-card-actions">
+            <button class="primary-action" data-social-card-download type="button">Download card</button>
+            <button class="secondary-action" data-social-card-publish type="button" hidden>Publish public link</button>
+            <button class="quiet-action danger-action" data-social-card-revoke type="button" hidden>Revoke public link</button>
+          </div>
+          <div class="share-panel" data-social-card-share hidden>
+            <p>Your public card is live.</p>
+            <a data-social-card-share-link target="_blank" rel="noreferrer"></a>
+            <button class="quiet-action" data-social-card-copy-link type="button">Copy link</button>
+          </div>
+        </form>
+      </div>
+
+      <section class="invalid-link" data-social-card-error hidden aria-labelledby="invalid-social-card-title">
+        <p class="eyebrow">Private link</p>
+        <h2 id="invalid-social-card-title">This card link isn’t available.</h2>
+        <p>It may have expired, been replaced, or been opened without its private link. Return to the email that invited you to create your card.</p>
+        <a href="/devcon26/">Back to DevCon26</a>
+      </section>
+    </section>
+  </main>
+</Base>
+
+<script>
+  import { initializeDevcon26SocialCard } from '../../../lib/devcon26-social-card';
+
+  const page = document.querySelector<HTMLElement>('[data-social-card-page]');
+
+  if (page) initializeDevcon26SocialCard(page);
+</script>
+
+<style>
+  .social-card-page :global([hidden]) { display: none !important; }
+  .social-card-page { min-height: 100dvh; padding: 24px; background: #f5f2e8; }
+  .social-card-header, .social-card-shell { width: min(100%, 1050px); margin-inline: auto; }
+  .social-card-header { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding-bottom: clamp(36px, 8vw, 90px); }
+  .social-card-header p { font-size: 13px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+  .social-card-shell { display: grid; grid-template-columns: minmax(0, .88fr) minmax(0, 1fr); gap: clamp(36px, 7vw, 88px); align-items: center; padding-bottom: 64px; }
+  .social-card-intro h1 { max-width: 10ch; font-size: clamp(46px, 7vw, 82px); line-height: .92; letter-spacing: -.055em; }
+  .social-card-intro > p:not(.eyebrow):not(.social-card-status) { max-width: 42ch; margin-top: 20px; color: var(--text-mid); font-size: 18px; line-height: 1.45; }
+  .social-card-status { min-height: 1.5em; margin-top: 24px; color: var(--text-mid); font-weight: 700; }
+  [data-social-card-content] { display: grid; gap: 28px; }
+  .social-card-seats { display: grid; gap: 12px; }
+  .social-card-seats > p { color: var(--text-mid); line-height: 1.4; }
+  [data-social-card-seat-list] { display: flex; flex-wrap: wrap; gap: 8px; }
+  .social-card-seat { min-height: 40px; padding: 8px 13px; border: 1px solid #777; border-radius: 6px; background: transparent; font-weight: 700; }
+  .social-card-seat[aria-pressed="true"] { border-color: #111; background: var(--yellow); }
+  .name-row { display: flex; align-items: center; gap: 10px; }
+  .name-row input { width: min(100%, 28rem); min-height: 44px; padding: 9px 12px; border: 1px solid #777; border-radius: 6px; background: #fff; }
+  .social-card-controls { display: grid; gap: 24px; }
+  .social-card-controls fieldset { display: grid; gap: 11px; padding: 18px; border: 2px solid var(--black); border-radius: 8px; background: #fff; }
+  .social-card-controls legend { padding-inline: 5px; font-size: 14px; font-weight: 800; }
+  .social-card-controls label { display: grid; gap: 6px; font-size: 14px; font-weight: 700; }
+  .social-card-controls input[type='range'] { width: 100%; accent-color: var(--pink); }
+  .photo-upload { display: flex !important; align-items: center; justify-content: center; min-height: 48px; border: 2px dashed var(--black); border-radius: 6px; background: var(--yellow-bg); text-align: center; }
+  .photo-upload input { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; clip-path: inset(50%); }
+  .photo-upload:focus-within { outline: 3px solid #bfacd8; outline-offset: 3px; }
+  .field-hint { color: var(--text-mid); font-size: 13px; line-height: 1.35; }
+  .social-card-actions { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+  .primary-action, .secondary-action, .quiet-action { min-height: 44px; border-radius: 999px; padding: 10px 18px; font-weight: 800; transition: transform 100ms cubic-bezier(.4,0,.2,1), box-shadow 180ms cubic-bezier(.16,1,.3,1), background-color 180ms cubic-bezier(.16,1,.3,1); }
+  .primary-action { border: 2px solid #111; background: var(--pink); box-shadow: 3px 3px 0 #111; color: #fff; }
+  .secondary-action { border: 2px solid #111; background: var(--yellow); box-shadow: 3px 3px 0 #111; color: #111; }
+  .quiet-action { border: 2px solid #111; background: transparent; color: #111; }
+  .danger-action { border-color: #9a174d; color: #9a174d; }
+  .primary-action:active, .secondary-action:active, .quiet-action:active { transform: scale(.97); box-shadow: none; }
+  .primary-action:focus-visible, .secondary-action:focus-visible, .quiet-action:focus-visible, .invalid-link a:focus-visible { outline: 3px solid #bfacd8; outline-offset: 3px; }
+  .share-panel { display: grid; gap: 8px; padding: 18px; border: 2px solid #111; border-radius: 8px; background: #fff; }
+  .share-panel p { font-weight: 800; }
+  .share-panel a { overflow-wrap: anywhere; text-decoration: underline; text-underline-offset: 3px; }
+  .invalid-link { max-width: 550px; padding: 28px; border: 2px solid #111; border-radius: 8px; background: #fff; box-shadow: 5px 5px 0 #111; }
+  .invalid-link h2 { font-size: 42px; line-height: .98; }
+  .invalid-link p:not(.eyebrow) { margin-top: 14px; color: var(--text-mid); }
+  .invalid-link a { display: inline-flex; margin-top: 22px; font-weight: 800; text-decoration: underline; text-underline-offset: 4px; }
+  @media (hover: hover) and (pointer: fine) { .primary-action:hover, .secondary-action:hover, .quiet-action:hover { transform: translate(-2px, -2px); box-shadow: 5px 5px 0 #111; } }
+  @media (max-width: 780px) { .social-card-page { padding: 20px; } .social-card-header { padding-bottom: 42px; } .social-card-header p { display: none; } .social-card-shell { grid-template-columns: 1fr; } .social-card-intro h1 { max-width: 11ch; } }
+  @media (prefers-reduced-motion: reduce) { .primary-action, .secondary-action, .quiet-action { transition: none; } }
+</style>

@@ -35,20 +35,12 @@ const statusConfig = {
   title="Events — DevCongress"
   description="DevCongress events, upcoming, live, and past. Find recordings, photos, speakers, and schedules."
 >
-  <header class="mnav">
-    <div class="container mnav-inner">
-      <a href="/" class="mnav-logo">
-        <img src="/images/logo.png" alt="DevCongress" height="36" />
-      </a>
-      <a href="/" class="mnav-back">← Home</a>
-    </div>
-  </header>
 
   <main>
     <div class="page-header">
       <div class="container">
         <span class="eyebrow">Events</span>
-        <h1 class="heading-serif page-title">Where we show up</h1>
+        <h1 class="heading-display page-title">Where we show up</h1>
         <p class="page-sub">
           {sorted.length} event{sorted.length !== 1 ? 's' : ''} and counting.
         </p>
@@ -76,7 +68,7 @@ const statusConfig = {
                   <time datetime={meetup.data.start}>{formatDate(meetup.data.start)}</time>
                   <span class="meetup-location" title={meetup.data.location.label ?? meetup.data.location.name}>{meetup.data.location.label ?? meetup.data.location.name}</span>
                 </div>
-                <h2 class="heading-serif meetup-name" title={meetup.data.name}>
+                <h2 class="heading-display meetup-name" title={meetup.data.name}>
                   <a href={`/meetups/${meetup.slug}/`}>{meetup.data.name}</a>
                 </h2>
                 <p class="meetup-desc">{meetup.data.description}</p>
@@ -93,12 +85,7 @@ const statusConfig = {
 </Base>
 
 <style>
-  .mnav {
-    position: sticky; top: 0; z-index: 100;
-    background: var(--bg); border-bottom: 2px solid var(--black);
-    padding-block: var(--s4);
-  }
-  .mnav-inner { display: flex; align-items: center; justify-content: space-between; }
+
   .mnav-back  { font-size: var(--text-sm); font-weight: 500; color: var(--text-mid); transition: color 150ms; }
   .mnav-back:hover { color: var(--pink); }
 

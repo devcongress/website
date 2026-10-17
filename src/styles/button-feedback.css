@@ -1,0 +1,119 @@
+/* Keep actionable controls consistent without suggesting disabled ones work. */
+body :is(a[href], button, [role='button'], input[type='button'], input[type='submit'], input[type='reset']):not(:disabled):not([aria-disabled='true']) {
+  cursor: pointer;
+}
+
+body :is(a, button, [role='button'], input):is(:disabled, [aria-disabled='true']) {
+  cursor: not-allowed;
+}
+
+/* Shared raised-button feedback. Navigation links and disclosure controls
+   retain their own interactions rather than acquiring button shadows. */
+body :is(
+  .btn, .nav-button, .button, .ticket-buy-button, .action-button,
+  .primary-action, .secondary-action, .quiet-action,
+  .share-card-button, .download-card-button, .social-photo-button,
+  .registration-page button, .speaker-page button, .checkout-page button
+) {
+  position: relative;
+  isolation: isolate;
+  transition: transform 160ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+/* Fade a pre-painted shadow instead of snapping or animating box-shadow. */
+body :is(
+  .btn, .nav-button, .button, .ticket-buy-button, .action-button,
+  .primary-action, .secondary-action, .quiet-action,
+  .share-card-button, .download-card-button, .social-photo-button,
+  .registration-page button, .speaker-page button, .checkout-page button
+)::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  box-shadow: var(--shadow-solid);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 160ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  body :is(
+    .btn, .nav-button, .button, .ticket-buy-button, .action-button,
+    .primary-action, .secondary-action, .quiet-action,
+    .share-card-button, .download-card-button, .social-photo-button,
+    .registration-page button, .speaker-page button, .checkout-page button
+  ):not(:disabled):not([aria-disabled='true']):hover {
+    transform: translate(-1px, -1px);
+    box-shadow: none;
+  }
+
+  body :is(
+    .btn, .nav-button, .button, .ticket-buy-button, .action-button,
+    .primary-action, .secondary-action, .quiet-action,
+    .share-card-button, .download-card-button, .social-photo-button,
+    .registration-page button, .speaker-page button, .checkout-page button
+  ):not(:disabled):not([aria-disabled='true']):hover::after {
+    opacity: 1;
+  }
+}
+
+body :is(
+  .btn, .nav-button, .button, .ticket-buy-button, .action-button,
+  .primary-action, .secondary-action, .quiet-action,
+  .share-card-button, .download-card-button, .social-photo-button,
+  .registration-page button, .speaker-page button, .checkout-page button
+):not(:disabled):not([aria-disabled='true']):active {
+  transform: scale(0.98);
+  box-shadow: none;
+  transition-duration: 100ms;
+}
+
+body :is(
+  .btn, .nav-button, .button, .ticket-buy-button, .action-button,
+  .primary-action, .secondary-action, .quiet-action,
+  .share-card-button, .download-card-button, .social-photo-button,
+  .registration-page button, .speaker-page button, .checkout-page button
+):not(:disabled):not([aria-disabled='true']):active::after {
+  opacity: 0;
+  transition-duration: 100ms;
+}
+
+body :is(
+  .btn, .nav-button, .button, .ticket-buy-button, .action-button,
+  .primary-action, .secondary-action, .quiet-action,
+  .share-card-button, .download-card-button, .social-photo-button,
+  .registration-page button, .speaker-page button, .checkout-page button
+):focus-visible {
+  transition: none;
+  transform: none !important;
+}
+
+body :is(
+  .btn, .nav-button, .button, .ticket-buy-button, .action-button,
+  .primary-action, .secondary-action, .quiet-action,
+  .share-card-button, .download-card-button, .social-photo-button,
+  .registration-page button, .speaker-page button, .checkout-page button
+):focus-visible::after {
+  transition: none;
+}
+
+@media (hover: none), (pointer: coarse) {
+  body .btn:hover {
+    transform: none;
+    box-shadow: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body :is(
+    .btn, .nav-button, .button, .ticket-buy-button, .action-button,
+    .primary-action, .secondary-action, .quiet-action,
+    .share-card-button, .download-card-button, .social-photo-button,
+    .registration-page button, .speaker-page button, .checkout-page button
+  ) {
+    transition: none;
+    transform: none !important;
+  }
+}

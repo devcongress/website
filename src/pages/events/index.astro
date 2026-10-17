@@ -88,23 +88,18 @@ const calendarEvents = events.map((event) => {
   title="Events — DevCongress"
   description="DevCongress events, upcoming, live, and past. Find community meetups, workshops, hackathons, and conferences."
 >
-  <header class="mnav">
-    <div class="container mnav-inner">
-      <a href="/" class="mnav-logo">
-        <img src="/images/logo.png" alt="DevCongress" height="36" />
-      </a>
-      <a href="/" class="mnav-back">← Home</a>
-    </div>
-  </header>
 
-  <main data-calendar-events={JSON.stringify(calendarEvents)}>
+  <main
+    data-calendar-events={JSON.stringify(calendarEvents)}
+    data-event-snapshot={JSON.stringify(events)}
+  >
     <section class="event-detail-view" id="event-detail-view" aria-labelledby="event-detail-title" hidden>
       <div class="event-detail-hero">
         <img id="event-detail-cover" class="event-detail-hero-image" alt="" fetchpriority="high" hidden />
         <div class="event-detail-hero-overlay" aria-hidden="true"></div>
         <div class="container event-detail-hero-content">
           <span class="event-status-badge" id="event-detail-status"></span>
-          <h1 class="heading-serif event-detail-title" id="event-detail-title">Loading event…</h1>
+          <h1 class="heading-display event-detail-title" id="event-detail-title">Loading event…</h1>
           <p class="event-detail-meta" id="event-detail-meta"></p>
         </div>
       </div>
@@ -126,7 +121,7 @@ const calendarEvents = events.map((event) => {
     <div class="page-header" id="events-page-header">
       <div class="container">
         <span class="eyebrow">Events</span>
-        <h1 class="heading-serif page-title" id="events-page-title">Where we show up</h1>
+        <h1 class="heading-display page-title" id="events-page-title">Where we show up</h1>
         <div class="page-heading-row">
           <p class="page-sub" id="events-page-sub">
             {events.length} event{events.length !== 1 ? 's' : ''} and counting.
@@ -307,7 +302,7 @@ const calendarEvents = events.map((event) => {
                   <time datetime={event.startsAt}>{formatDate(event.startsAt, event.timezone)}</time>
                   <span class="event-location" title={getLocation(event)}>{getLocation(event)}</span>
                 </div>
-                <h2 class="heading-serif event-name" title={event.title}>{event.title}</h2>
+                <h2 class="heading-display event-name" title={event.title}>{event.title}</h2>
                 <p class="event-desc">{event.summary}</p>
                 {directAction && (
                   <div class="event-card-actions">
@@ -333,7 +328,7 @@ const calendarEvents = events.map((event) => {
           <div class="calendar-toolbar">
             <div>
               <span class="calendar-kicker">Community calendar</span>
-              <h2 class="heading-serif calendar-month" id="calendar-month-label">Month</h2>
+              <h2 class="heading-display calendar-month" id="calendar-month-label">Month</h2>
               <p class="calendar-month-summary" id="calendar-month-summary"></p>
             </div>
             <div class="calendar-navigation" aria-label="Calendar navigation">
@@ -364,7 +359,7 @@ const calendarEvents = events.map((event) => {
           <div class="calendar-day-popover-header">
             <div>
               <span class="calendar-day-popover-count" id="calendar-day-popover-count"></span>
-              <h3 class="heading-serif calendar-day-popover-title" id="calendar-day-popover-title"></h3>
+              <h3 class="heading-display calendar-day-popover-title" id="calendar-day-popover-title"></h3>
             </div>
             <button class="calendar-day-popover-close" type="button" aria-label="Close day events">
               <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
@@ -397,6 +392,17 @@ const calendarEvents = events.map((event) => {
     try {
       const parsed = JSON.parse(raw);
       return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  })();
+
+  const eventSnapshot = (() => {
+    const raw = document.querySelector('[data-event-snapshot]')?.getAttribute('data-event-snapshot');
+    if (!raw) return [];
+    try {
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed as WebsiteEvent[] : [];
     } catch {
       return [];
     }
@@ -449,7 +455,7 @@ const calendarEvents = events.map((event) => {
   let calendarCopyStateTimer = null;
   let calendarCopyRequestVersion = 0;
   let routeRequestVersion = 0;
-  const liveEventDetails = new Map<string, WebsiteEvent>();
+  const liveEventDetails = new Map(eventSnapshot.map((event) => [event.slug, event]));
   const eventDetailRequests = new Map();
 
   const today = new Date();
@@ -607,7 +613,7 @@ const calendarEvents = events.map((event) => {
     meta.append(date, location);
 
     const title = document.createElement('h2');
-    title.className = 'heading-serif event-name';
+    title.className = 'heading-display event-name';
     title.title = event.title;
     title.textContent = event.title;
     const summary = document.createElement('p');
@@ -911,8 +917,7 @@ const calendarEvents = events.map((event) => {
   }
 
   function fetchEventForRoute(slug) {
-    const liveEvent = liveEventDetails.get(slug);
-    if (liveEvent) return Promise.resolve(liveEvent);
+    const eventSnapshot = liveEventDetails.get(slug);
 
     const cached = eventDetailRequests.get(slug);
     if (cached) return cached;
@@ -924,6 +929,7 @@ const calendarEvents = events.map((event) => {
       })
       .catch((error) => {
         eventDetailRequests.delete(slug);
+        if (eventSnapshot) return eventSnapshot;
         throw error;
       });
     eventDetailRequests.set(slug, request);
@@ -1330,12 +1336,7 @@ const calendarEvents = events.map((event) => {
 </script>
 
 <style>
-  .mnav {
-    position: sticky; top: 0; z-index: 100;
-    background: var(--bg); border-bottom: 2px solid var(--black);
-    padding-block: var(--s4);
-  }
-  .mnav-inner { display: flex; align-items: center; justify-content: space-between; }
+
   .mnav-back { font-size: var(--text-sm); font-weight: 500; color: var(--text-mid); transition: color 150ms; }
   .mnav-back:hover { color: var(--pink); }
 
@@ -2020,7 +2021,7 @@ const calendarEvents = events.map((event) => {
       border: 2px solid var(--black); border-radius: 8px; background: var(--yellow); line-height: 1;
     }
     :global(.agenda-weekday) { color: var(--text-mid); font-size: 0.62rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; }
-    :global(.agenda-day) { margin-top: 4px; font-family: var(--font-serif); font-size: 1.45rem; font-weight: 700; }
+    :global(.agenda-day) { margin-top: 4px; font-family: var(--font-display); font-size: 1.45rem; font-weight: 700; }
     :global(.agenda-content) { display: flex; min-width: 0; flex-direction: column; gap: 5px; }
     :global(.agenda-event-title) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--text-sm); font-weight: 800; }
     :global(.agenda-event-meta) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-muted); font-size: 0.7rem; }

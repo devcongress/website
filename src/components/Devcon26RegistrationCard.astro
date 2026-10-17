@@ -1,0 +1,325 @@
+<section data-registration-card data-card-context="registration" hidden>
+          <div class="social-card-editor" data-social-card-preview hidden>
+          <p class="social-card-kicker">Optional · A little something to share</p>
+          <h2 id="social-card-title">Make your DevCon26 card.</h2>
+          <p class="social-card-intro">Add your name and photo, then preview and share.</p>
+          <ol class="social-stepper" aria-label="Card creation progress">
+            <li data-social-step-indicator="0">1. Choose card</li>
+            <li data-social-step-indicator="1">2. Personalize</li>
+            <li data-social-step-indicator="2">3. Share</li>
+          </ol>
+          <h3 class="social-step-title" data-social-step-title tabindex="-1">Choose your card</h3>
+          <div class="social-seat-picker" data-social-seat-picker data-social-step="0">
+            <div class="social-seat-picker-heading">
+              <p>Choose a card</p>
+              <span class="social-seat-count" data-social-seat-count></span>
+              <button class="social-seat-shuffle" data-social-seat-shuffle type="button">
+                <span aria-hidden="true">↻</span> Shuffle cards
+              </button>
+            </div>
+            <div class="social-card-seats" data-social-seat-list aria-label="Choose a card to personalize"></div>
+          </div>
+          <div class="social-preview-step" data-social-step="2" hidden>
+          <div class="preview-toolbar">
+            <p>Preview & share</p>
+            <button type="button" data-photo-adjust>Adjust photo</button>
+          </div>
+          <article class="social-ticket" data-social-ticket aria-label="DevCon26 social card preview">
+            <canvas data-social-ticket-canvas width="1080" height="1350" aria-label="See you at DevCon26 social card"></canvas>
+            <span class="sr-only" data-social-ticket-name>Your name here</span>
+          </article>
+          </div>
+          <div class="social-card-fields" data-social-step="1" hidden>
+            <label for="social-ticket-name">Name on this card</label>
+            <input id="social-ticket-name" data-social-ticket-name-input type="text" maxlength="60" autocomplete="name" placeholder="Your name" />
+            <label class="social-photo-button" for="social-ticket-photo-input">
+              <span data-social-photo-label>Choose a photo</span>
+              <img data-social-photo-thumbnail alt="" hidden />
+              <span aria-hidden="true">＋</span>
+            </label>
+            <input class="sr-only" id="social-ticket-photo-input" data-social-ticket-photo-input type="file" accept="image/jpeg,image/png,image/webp,image/avif" />
+          </div>
+          <p class="social-card-status" data-social-card-preview-status role="status" aria-live="polite">Sandbox preview only — not an admission ticket. This preview is not sent or saved.</p>
+          </div>
+          <button class="download-card-button" data-social-card-resume type="button" hidden>Continue making your card</button>
+        <div class="social-step-navigation" data-social-navigation hidden>
+          <button class="action-button social-back-button" data-social-step-back type="button"><span aria-hidden="true">←</span> Back</button>
+          <button class="download-card-button" data-social-card-download type="button" hidden>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 3v12m-5-5 5 5 5-5M5 16v4h14v-4" /></svg>
+            Download image
+          </button>
+          <button class="share-card-button" data-social-card-share type="button" hidden>Share my card <span aria-hidden="true">↗</span></button>
+          <button class="social-card-later" data-social-card-later type="button">Do this later <span aria-hidden="true">↗</span></button>
+          <button class="share-card-button" data-social-step-next type="button">Continue</button>
+        </div>
+    <dialog class="photo-adjust-dialog" data-photo-dialog aria-labelledby="photo-adjust-title" aria-describedby="photo-adjust-help">
+      <h2 id="photo-adjust-title">Adjust your photo</h2>
+      <p id="photo-adjust-help">Move and zoom your photo to fit the card. Changes apply to your preview and download.</p>
+      <canvas data-photo-adjust-canvas width="1080" height="1350" aria-label="Adjusted card preview"></canvas>
+      <div class="photo-adjust-controls">
+        <label for="photo-zoom">Zoom</label>
+        <input id="photo-zoom" data-photo-crop="zoom" type="range" min="1" max="2.5" step="0.01" value="1" />
+        <label for="photo-x">Horizontal position</label>
+        <input id="photo-x" data-photo-crop="x" type="range" min="0" max="1" step="0.01" value="0.5" />
+        <label for="photo-y">Vertical position</label>
+        <input id="photo-y" data-photo-crop="y" type="range" min="0" max="1" step="0.01" value="0.18" />
+      </div>
+      <div class="social-card-actions">
+        <button type="button" data-photo-reset>Reset photo</button>
+        <button class="share-card-button" type="button" data-photo-done>Done</button>
+      </div>
+      <p class="social-card-status" data-photo-adjust-status role="status"></p>
+    </dialog>
+    <dialog class="social-leave-dialog" data-social-leave-dialog aria-labelledby="social-leave-title" aria-describedby="social-leave-copy">
+      <h2 id="social-leave-title">Finish your cards later?</h2>
+      <p id="social-leave-copy" data-social-leave-copy></p>
+      <div class="social-card-actions">
+        <button class="download-card-button" data-social-leave-cancel type="button" autofocus>Keep editing</button>
+        <button class="share-card-button" data-social-leave-confirm type="button">Leave for now</button>
+      </div>
+    </dialog>
+
+</section>
+<style>
+  [hidden] {
+    display: none !important;
+  }
+  section {
+    min-width: 0;
+    padding: 28px;
+    border: 1px solid #d6d2c8;
+    border-radius: 12px;
+    background: #fbf9f3;
+  }
+  .social-card-kicker {
+    margin: 0 0 8px;
+    font-size: 13px;
+    color: #666;
+  }
+  h2 {
+    margin: 0 0 12px;
+    font-size: 28px;
+    line-height: 1.15;
+  }
+  .social-card-intro {
+    margin: 0;
+    line-height: 1.5;
+  }
+  .social-step-title {
+    font-size: 20px;
+    margin: 0 0 16px;
+  }
+  .social-stepper {
+    display: flex;
+    gap: 12px;
+    margin: 24px 0;
+    padding: 0;
+    list-style: none;
+  }
+  .social-stepper li {
+    flex: 1;
+    padding-bottom: 10px;
+    border-bottom: 3px solid #d6d2c8;
+    font-size: 14px;
+  }
+  [aria-current="step"] {
+    color: #ed008c;
+    font-weight: 700;
+    border-bottom-color: #ed008c !important;
+  }
+  .social-card-fields {
+    display: grid;
+    gap: 12px;
+  }
+  .social-card-fields input[type="text"] {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 14px;
+    border: 1px solid #8c8270;
+    border-radius: 8px;
+    font: inherit;
+  }
+  .social-card-fields input:focus {
+    outline: none;
+    border-color: #ed008c;
+  }
+  .social-photo-button {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px;
+    border: 1px dashed #8c8270;
+    border-radius: 8px;
+    cursor: pointer;
+    box-shadow: none;
+  }
+  .social-photo-button:has(+ input:focus-visible) {
+    outline: 2px solid #ed008c;
+    outline-offset: 3px;
+  }
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+  }
+  .social-photo-button img {
+    width: 48px;
+    height: 48px;
+    object-fit: cover;
+  }
+  .social-ticket {
+    margin: 0 auto;
+    width: min(100%, clamp(220px, calc(80svh - 328px), 400px));
+  }
+  canvas {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+  .social-step-navigation, .social-card-actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 20px;
+  }
+  .social-step-navigation {
+    justify-content: center;
+  }
+  button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 48px;
+    padding: 12px 18px;
+    border: 1px solid #111;
+    border-radius: 8px;
+    font: inherit;
+    cursor: pointer;
+  }
+  button svg {
+    flex-shrink: 0;
+  }
+  .share-card-button {
+    background: #ed008c;
+    color: white;
+  }
+  .social-card-status {
+    margin: 16px 0 0;
+    font-size: 14px;
+    line-height: 1.6;
+    color: #666;
+  }
+  [data-card-step="2"] .social-card-intro,
+  [data-card-step="2"] .social-card-kicker,
+  [data-card-step="2"] .social-card-later {
+    display: none;
+  }
+  [data-card-step="2"] .social-stepper {
+    margin: 12px 0;
+  }
+  section[data-card-step="2"] {
+    padding: 20px;
+  }
+  [data-card-step="2"] .social-step-title {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    margin: -1px;
+  }
+  [data-card-step="2"] .social-card-status {
+    margin-top: 12px;
+    text-align: center;
+  }
+  [data-card-step="2"] .social-step-navigation {
+    margin-top: 12px;
+  }
+  [data-card-step="2"] h2 {
+    font-size: 24px;
+  }
+  .preview-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  .preview-toolbar p {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 700;
+  }
+  .preview-toolbar button {
+    min-height: 40px;
+    padding: 6px 10px;
+    font-size: 14px;
+  }
+  .photo-adjust-dialog {
+    position: fixed;
+    inset: 0;
+    margin: auto;
+    width: min(480px, calc(100vw - 32px));
+    max-height: calc(100svh - 32px);
+    overflow-y: auto;
+  }
+  @media (min-width: 1000px) {
+    .photo-adjust-dialog {
+      left: max(16px, calc(50vw - 526px));
+      right: auto;
+      width: 440px;
+      margin-inline: 0;
+    }
+  }
+  .photo-adjust-dialog > p {
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .photo-adjust-dialog canvas {
+    width: min(100%, 180px, 26svh);
+    margin: 16px auto;
+  }
+  .photo-adjust-controls {
+    display: grid;
+    grid-template-columns: 130px minmax(0, 1fr);
+    align-items: center;
+    gap: 8px 16px;
+    font-size: 14px;
+  }
+  .photo-adjust-controls input {
+    width: 100%;
+    min-width: 0;
+    height: 32px;
+    accent-color: #ed008c;
+  }
+  @media (min-width: 801px) and (max-height: 800px) {
+    .social-step-navigation button {
+      padding: 10px 12px;
+      font-size: 14px;
+    }
+  }
+  @media (max-width: 600px) {
+    section {
+      padding: 20px;
+    }
+  }
+  dialog {
+    max-width: 480px;
+    border: 1px solid #8c8270;
+    border-radius: 12px;
+    padding: 24px;
+    background: #fbf9f3;
+  }
+  dialog::backdrop {
+    background: rgb(0 0 0 / .3);
+  }
+</style>
+

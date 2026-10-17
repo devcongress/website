@@ -1,0 +1,366 @@
+---
+import Base from '../../layouts/Base.astro';
+import Devcon26RegistrationCard from '../../components/Devcon26RegistrationCard.astro';
+import { EVENT_SUBMISSION_TURNSTILE_SITE_KEY } from '../../lib/events';
+const apiOrigin = import.meta.env.PUBLIC_DEVCON26_API_ORIGIN || (import.meta.env.DEV ? 'http://localhost:5173' : 'https://em.devcongress.org');
+const isLoopback = (value: string) => {
+  const url = new URL(value);
+
+  return ['http:', 'https:'].includes(url.protocol) && ['localhost', '127.0.0.1', '[::1]'].includes(url.hostname);
+};
+const localTesting = import.meta.env.DEV && isLoopback(apiOrigin) && isLoopback(Astro.url.origin);
+---
+
+<Base title="Register for DevCon26" description="A day of technology, community, and ideas in Accra. Register for DevCon26." showFooter={false}>
+  <main class="registration-page" data-registration-page data-api-origin={apiOrigin} data-local-testing={localTesting ? 'true' : 'false'}>
+    <section class="registration-intro">
+      <p class="eyebrow">DevCon26 · Accra</p>
+      <h1>Your place in<br /><em>the community.</em></h1>
+      <p>No account. Just your name and email. We’ll email your admission QR when your place is confirmed.</p>
+    </section>
+    <div class="registration-flow">
+    <section class="registration-panel" aria-labelledby="register-title">
+      <div class="registration-heading">
+      <h2 id="register-title" data-registration-title tabindex="-1">Register for DevCon26</h2>
+      <div class="registration-check" aria-hidden="true">
+        <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+          <path fill="#f8ee3e" stroke-width="1.5" d="M32 3C37 0 39 8 44 7C50 5 49 14 54 16C60 17 56 24 60 28C65 33 57 36 58 41C60 47 51 47 49 52C48 58 41 54 37 59C33 64 29 57 24 58C18 60 17 52 12 51C6 50 10 42 5 39C0 35 7 30 5 25C3 19 11 18 12 13C13 7 21 11 24 6C27 1 29 5 32 3Z" />
+          <path stroke-width="4" d="m21 32 8 8 15-18" />
+        </svg>
+      </div>
+      </div>
+      <p data-registration-availability role="status">Checking registration…</p>
+      <form data-registration-form>
+        <fieldset disabled>
+          <legend class="sr-only">Your details</legend>
+          <label for="registration-name">Your name</label>
+          <input id="registration-name" name="name" autocomplete="name" maxlength="120" required />
+          <label for="registration-email">Email address</label>
+          <input id="registration-email" name="email" type="email" autocomplete="email" maxlength="254" required />
+          {!localTesting && <div class="cf-turnstile" data-sitekey={EVENT_SUBMISSION_TURNSTILE_SITE_KEY} data-action="conference_registration"></div>}
+          <button type="submit">Register for DevCon26 ↗</button>
+        </fieldset>
+      </form>
+      <p data-registration-result role="status" tabindex="-1"></p>
+      <a data-paid-checkout href="/devcon26/checkout/?tier=regular" hidden>Continue to Regular ticket checkout ↗</a>
+      <div data-registration-success hidden>
+        <p>We’ve received your DevCon26 registration request.</p>
+        <dl class="registration-receipt" aria-label="Registration summary">
+          <div><dt>Name submitted</dt><dd data-receipt-name></dd></div>
+          <div><dt>Email submitted</dt><dd data-receipt-email></dd></div>
+          <div><dt>Event</dt><dd>DevCon26</dd></div>
+          <div><dt>Registration</dt><dd>Free</dd></div>
+          <div><dt>Submission</dt><dd class="receipt-status">Received</dd></div>
+        </dl>
+        <p class="small">If a new registration was created, its confirmation or waitlist email will be queued. This receipt does not confirm admission or email delivery.</p>
+        <p class="small">Already registered? Your existing registration is unchanged, and repeat submissions do not send another email. A cancelled registration stays cancelled. <a href="mailto:hello@devcongress.org">Contact the event team</a> to request recovery or help with a missing email.</p>
+        <p class="small">The sharing card below is a preview, not an admission ticket.</p>
+        <a class="return-link" href="/devcon26/">Back to DevCon26 ↗</a>
+      </div>
+      <noscript>Enable JavaScript to register, or contact the event team for help.</noscript>
+    </section>
+    <Devcon26RegistrationCard />
+    </div>
+  </main>
+  {!localTesting && <script is:inline src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>}
+</Base>
+
+<script>
+  import { DEVCON26_REGISTRATION_API, DEVCON26_REGISTRATION_ACTION, parseRegistrationMode } from '../../lib/devcon26-registration-contract';
+  import { initializeDevcon26SocialCardPreview } from '../../lib/devcon26-social-card-preview';
+
+  const page = document.querySelector<HTMLElement>('[data-registration-page]')!;
+  const form = page.querySelector<HTMLFormElement>('[data-registration-form]')!;
+  const fields = form.querySelector('fieldset')!;
+  const submitButton = form.querySelector<HTMLButtonElement>('button[type="submit"]')!;
+  const idleButtonLabel = submitButton.textContent;
+  const availability = page.querySelector<HTMLElement>('[data-registration-availability]')!;
+  const result = page.querySelector<HTMLElement>('[data-registration-result]')!;
+  const endpoint = new URL(DEVCON26_REGISTRATION_API, page.dataset.apiOrigin);
+
+  async function loadRegistration() {
+    try {
+      const response = await fetch(endpoint, { credentials: 'omit', cache: 'no-store', signal: AbortSignal.timeout(12000) });
+      const state = response.ok ? parseRegistrationMode(await response.json()) : null;
+
+      if (!state) throw new Error('unavailable');
+      if (state.mode === 'paid') {
+        availability.textContent = 'Regular ticket booking is open.';
+        page.querySelector<HTMLElement>('[data-paid-checkout]')!.hidden = false;
+        form.hidden = true;
+      } else if (state.mode === 'closed') {
+        availability.textContent = 'Registration is not open right now. Please check back soon.';
+      } else {
+        availability.textContent = state.waitlist ? 'Places are currently full. Register to join the waitlist.' : 'Free registration. One person per email.';
+        fields.disabled = false;
+      }
+    } catch {
+      availability.textContent = 'Registration could not be loaded. Please refresh to try again.';
+    }
+  }
+
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    if (fields.disabled || !form.reportValidity()) return;
+    const data = new FormData(form);
+    const token = String(data.get('cf-turnstile-response') ?? '');
+
+    if (!token && page.dataset.localTesting !== 'true') {
+      result.dataset.state = 'error';
+      result.textContent = 'Please complete the human verification first.';
+      result.focus();
+      return;
+    }
+
+    fields.disabled = true;
+    submitButton.textContent = 'Submitting your registration…';
+    submitButton.setAttribute('aria-busy', 'true');
+    result.textContent = '';
+    delete result.dataset.state;
+
+    try {
+      const response = await fetch(endpoint, {
+        method: 'POST', credentials: 'omit', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: data.get('name'), email: data.get('email'), turnstile_token: token, turnstile_action: DEVCON26_REGISTRATION_ACTION }),
+        signal: AbortSignal.timeout(20000),
+      });
+      const body = await response.json();
+
+      if (response.status !== 202 || body.accepted !== true) throw new Error(body.error || 'Unable to register. Please try again.');
+      form.hidden = true;
+      availability.hidden = true;
+      result.textContent = '';
+      page.dataset.registrationComplete = 'true';
+      const title = page.querySelector<HTMLElement>('[data-registration-title]')!;
+
+      title.textContent = 'Request received.';
+      title.setAttribute('aria-level', '1');
+      page.querySelector<HTMLElement>('[data-receipt-name]')!.textContent = String(data.get('name') ?? '');
+      page.querySelector<HTMLElement>('[data-receipt-email]')!.textContent = String(data.get('email') ?? '');
+      page.querySelector<HTMLElement>('[data-registration-success]')!.hidden = false;
+      const card = page.querySelector<HTMLElement>('[data-registration-card]')!;
+
+      card.hidden = false;
+      initializeDevcon26SocialCardPreview(card, 1);
+      const cardName = card.querySelector<HTMLInputElement>('[data-social-ticket-name-input]')!;
+
+      cardName.value = String(data.get('name') ?? '');
+      cardName.dispatchEvent(new Event('input'));
+      title.focus();
+    } catch (error) {
+      result.dataset.state = 'error';
+      result.textContent = error instanceof Error ? error.message : 'Unable to register. Please try again.';
+      fields.disabled = false;
+      result.focus();
+      (window as unknown as { turnstile?: { reset: () => void } }).turnstile?.reset();
+    } finally {
+      submitButton.textContent = idleButtonLabel;
+      submitButton.removeAttribute('aria-busy');
+    }
+  });
+
+  void loadRegistration();
+</script>
+
+<style>
+  .registration-page {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 24px;
+  }
+
+  .registration-intro {
+    max-width: 680px;
+    margin-bottom: 40px;
+  }
+  .eyebrow {
+    font-size: 14px;
+    font-weight: 700;
+  }
+  h1 {
+    font-size: clamp(36px, 6vw, 68px);
+    line-height: 1.08;
+    margin: 16px 0 24px;
+  }
+  h1 em {
+    color: #ed008c;
+    font-style: normal;
+  }
+  .registration-intro > p:last-child {
+    font-size: 20px;
+    line-height: 1.6;
+  }
+  .registration-panel {
+    max-width: 620px;
+    padding: 28px;
+    border: 1px solid #d6d2c8;
+    border-radius: 12px;
+    background: #fbf9f3;
+  }
+  .registration-flow {
+    display: grid;
+    gap: 32px;
+    align-items: start;
+  }
+  .registration-flow > * {
+    min-width: 0;
+  }
+  [data-registration-complete="true"] .registration-intro {
+    display: none;
+  }
+  [data-registration-complete="true"] .registration-flow {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
+  }
+  [data-registration-success] p {
+    margin: 16px 0;
+    line-height: 1.6;
+  }
+  .registration-check {
+    display: none;
+    width: 44px;
+    height: 44px;
+    flex: 0 0 44px;
+    color: #111;
+    place-items: center;
+  }
+  .registration-check svg {
+    width: 44px;
+    height: 44px;
+  }
+  .registration-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+  .registration-heading h2 {
+    margin-bottom: 0;
+    min-width: 0;
+    flex: 1;
+  }
+  [data-registration-complete="true"] .registration-check {
+    display: grid;
+  }
+  .registration-receipt {
+    margin: 24px 0;
+    padding: 16px 0;
+    border-top: 1px dashed #c7c1b5;
+    border-bottom: 1px dashed #c7c1b5;
+  }
+  .registration-receipt > div {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr);
+    align-items: baseline;
+    gap: 16px;
+    padding: 8px 0;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .registration-receipt dt {
+    color: #666;
+  }
+  .registration-receipt dd {
+    min-width: 0;
+    margin: 0;
+    text-align: right;
+    overflow-wrap: anywhere;
+    font-weight: 600;
+  }
+  .receipt-status {
+    color: #a90065;
+  }
+  .return-link {
+    display: inline-block;
+    margin-top: 12px;
+    font-weight: 600;
+  }
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+  }
+  .registration-panel h2 {
+    margin-top: 0;
+    font-size: 28px;
+  }
+  fieldset {
+    display: grid;
+    gap: 12px;
+    border: 0;
+    padding: 0;
+    margin: 24px 0 0;
+  }
+  label {
+    font-weight: 600;
+  }
+  input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 14px;
+    border: 1px solid #8c8270;
+    border-radius: 8px;
+    background: transparent;
+    font: inherit;
+  }
+  input:focus {
+    border-color: #ed008c;
+    outline: none;
+    box-shadow: none;
+  }
+  button {
+    min-height: 52px;
+    padding: 14px 20px;
+    border: 1px solid #111;
+    border-radius: 8px;
+    color: #111;
+    background: #f8ee3e;
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  fieldset:disabled {
+    opacity: .55;
+  }
+  .cf-turnstile {
+    display: flex;
+    justify-content: center;
+    min-width: 0;
+  }
+  [data-registration-result] {
+    text-align: center;
+    margin: 12px 0 0;
+  }
+  [data-registration-result]:empty {
+    display: none;
+  }
+  [data-registration-result][data-state="error"] {
+    color: #b42318;
+  }
+  .small {
+    font-size: 14px;
+    line-height: 1.6;
+    color: #666;
+  }
+  [hidden] {
+    display: none !important;
+  }
+  @media (max-width: 800px) {
+    [data-registration-complete="true"] .registration-flow {
+      grid-template-columns: minmax(0, 1fr);
+      padding-top: 0;
+      gap: 20px;
+    }
+  }
+  @media (max-width: 600px) {
+
+    .registration-panel {
+      padding: 20px;
+    }
+  }
+</style>

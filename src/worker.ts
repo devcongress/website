@@ -1,6 +1,13 @@
 /// <reference types="@cloudflare/workers-types" />
 
+import { renderPublicBadgePage, renderPublicBadgeSvg } from './lib/devcon26-public-badge';
+import { PHYSICAL_BADGE_PATH } from './lib/devcon26-digital-badge';
 import { createEventsCalendar } from './lib/event-calendar';
+import {
+  fetchLiveDevcon26SocialCard,
+  fetchLiveDevcon26SocialCardImage,
+  isDevcon26SocialCardSlug,
+} from './lib/live-devcon26-social-cards';
 import { fetchLivePublicEvent, fetchLivePublicEvents } from './lib/live-public-events';
 
 interface Env {
@@ -10,6 +17,9 @@ interface Env {
 }
 
 const EVENT_ROUTE = /^\/events\/([a-zA-Z0-9][a-zA-Z0-9_-]{0,239})\/?$/;
+const SOCIAL_CARD_ROUTE = /^\/devcon26\/cards\/([A-Za-z0-9_-]{22,80})\/?$/;
+const SOCIAL_CARD_IMAGE_ROUTE = /^\/devcon26\/cards\/([A-Za-z0-9_-]{22,80})\/image\/?$/;
+const SOCIAL_CARD_PREVIEW_ROUTE = /^\/devcon26\/cards\/([A-Za-z0-9_-]{22,80})\/preview\.svg\/?$/;
 const CALENDAR_PATH = '/events/calendar.ics';
 const EVENT_SHELL_PATH = '/events/';
 const EVENT_READINESS_PARAM = 'readiness';
@@ -27,6 +37,27 @@ export default {
       return serveLiveCalendar(request, context);
     }
 
+    const socialCardImageMatch = url.pathname.match(SOCIAL_CARD_IMAGE_ROUTE);
+
+    if (socialCardImageMatch) {
+      if (!isReadableMethod(request.method)) return methodNotAllowed();
+      return serveLiveSocialCardImage(request, socialCardImageMatch[1]);
+    }
+
+    const socialCardPreviewMatch = url.pathname.match(SOCIAL_CARD_PREVIEW_ROUTE);
+
+    if (socialCardPreviewMatch) {
+      if (!isReadableMethod(request.method)) return methodNotAllowed();
+      return serveLiveSocialCardPreview(request, env, socialCardPreviewMatch[1]);
+    }
+
+    const socialCardMatch = url.pathname.match(SOCIAL_CARD_ROUTE);
+
+    if (socialCardMatch) {
+      if (!isReadableMethod(request.method)) return methodNotAllowed();
+      return serveLiveSocialCardPage(request, socialCardMatch[1]);
+    }
+
     const eventMatch = url.pathname.match(EVENT_ROUTE);
     if (eventMatch && eventMatch[1] !== 'index' && eventMatch[1] !== 'submit') {
       if (url.searchParams.get(EVENT_READINESS_PARAM) === '1') {
@@ -40,6 +71,121 @@ export default {
     return env.ASSETS.fetch(request);
   },
 };
+
+async function serveLiveSocialCardPage(request: Request, slug: string): Promise<Response> {
+  if (!isDevcon26SocialCardSlug(slug)) return notFound();
+
+  try {
+    const card = await fetchLiveDevcon26SocialCard(slug);
+
+    if (!card) return notFound();
+    const url = new URL(request.url);
+    const pageUrl = `${url.origin}/devcon26/cards/${encodeURIComponent(slug)}`;
+    const body = renderPublicBadgePage(card, pageUrl);
+
+    return responseForMethod(new Response(body, {
+      headers: {
+        ...cacheHeaders(300),
+        'Content-Type': 'text/html; charset=utf-8',
+      },
+    }), request.method);
+  } catch (error) {
+    console.error(JSON.stringify({ event: 'public_social_card_lookup_failed', slug, error_name: error instanceof Error ? error.name : 'Error' }));
+    return serviceUnavailable('Social card temporarily unavailable');
+  }
+}
+
+async function serveLiveSocialCardPreview(request: Request, env: Env, slug: string): Promise<Response> {
+  if (!isDevcon26SocialCardSlug(slug)) return notFound();
+
+  try {
+    const card = await fetchLiveDevcon26SocialCard(slug);
+
+    if (!card) return notFound();
+    const logoResponse = await env.ASSETS.fetch(new Request(new URL('/images/logo.png', request.url)));
+    const logo = await publicImageDataUrl(logoResponse, 512 * 1024);
+    const backingResponse = await env.ASSETS.fetch(new Request(new URL(PHYSICAL_BADGE_PATH, request.url)));
+    const backing = await publicImageDataUrl(backingResponse, 5 * 1024 * 1024);
+    let photo = '';
+
+    if (card.photo_available) {
+      const response = await fetchLiveDevcon26SocialCardImage(slug);
+
+      if (!response) return notFound();
+      photo = await publicImageDataUrl(response, 5 * 1024 * 1024);
+    }
+    const svg = renderPublicBadgeSvg(card, photo, logo, backing);
+
+    return responseForMethod(new Response(svg, {
+      headers: {
+        ...cacheHeaders(300),
+        'Content-Type': 'image/svg+xml; charset=utf-8',
+      },
+    }), request.method);
+  } catch (error) {
+    console.error(JSON.stringify({ event: 'public_social_card_preview_lookup_failed', slug, error_name: error instanceof Error ? error.name : 'Error' }));
+    return serviceUnavailable('Social card preview temporarily unavailable');
+  }
+}
+
+async function serveLiveSocialCardImage(request: Request, slug: string): Promise<Response> {
+  if (!isDevcon26SocialCardSlug(slug)) return notFound();
+
+  try {
+    const image = await fetchLiveDevcon26SocialCardImage(slug);
+
+    if (!image) return notFound();
+    const contentType = image.headers.get('Content-Type');
+
+    if (!contentType?.startsWith('image/')) return serviceUnavailable('Social card image temporarily unavailable');
+    return responseForMethod(new Response(image.body, {
+      headers: {
+        ...cacheHeaders(300),
+        'Content-Type': contentType,
+      },
+    }), request.method);
+  } catch (error) {
+    console.error(JSON.stringify({ event: 'public_social_card_image_lookup_failed', slug, error_name: error instanceof Error ? error.name : 'Error' }));
+    return serviceUnavailable('Social card image temporarily unavailable');
+  }
+}
+
+async function publicImageDataUrl(response: Response, maxBytes: number): Promise<string> {
+  const type = response.headers.get('Content-Type')?.split(';')[0];
+
+  if (!response.ok || !type || !['image/png', 'image/jpeg', 'image/webp', 'image/avif'].includes(type) || !response.body) {
+    throw new Error('Public badge image unavailable');
+  }
+  const reader = response.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let size = 0;
+
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+
+      if (done) break;
+      size += value.byteLength;
+      if (size > maxBytes) {
+        await reader.cancel();
+        throw new Error('Public badge image too large');
+      }
+      chunks.push(value);
+    }
+  } finally {
+    reader.releaseLock();
+  }
+
+  let binary = '';
+
+  for (const chunk of chunks) {
+    for (let offset = 0; offset < chunk.length; offset += 8192) {
+      binary += String.fromCharCode(...chunk.subarray(offset, offset + 8192));
+    }
+  }
+
+  return `data:${type};base64,${btoa(binary)}`;
+}
 
 async function serveLiveEventShell(request: Request, env: Env, slug: string): Promise<Response> {
   try {
@@ -205,6 +351,16 @@ function methodNotAllowed(): Response {
     status: 405,
     headers: {
       Allow: 'GET, HEAD',
+      'Cache-Control': 'no-store',
+      'X-Content-Type-Options': 'nosniff',
+    },
+  });
+}
+
+function notFound(): Response {
+  return new Response('Not found', {
+    status: 404,
+    headers: {
       'Cache-Control': 'no-store',
       'X-Content-Type-Options': 'nosniff',
     },

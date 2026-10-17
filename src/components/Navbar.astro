@@ -5,43 +5,49 @@ interface Props {
 }
 
 const { slackUrl, paystackUrl } = Astro.props;
+const conference = Astro.url.pathname.startsWith('/devcon26/');
+const guardNavigation = Astro.url.pathname.replace(/\/$/, '') === '/events/submit';
+const links = conference ? [
+  { href: '/devcon26/#about', label: 'About' },
+  { href: '/devcon26/#the-day', label: 'The day' },
+  { href: '/devcon26/#speakers', label: 'Speakers' },
+  { href: '/devcon26/#tickets', label: 'Register' },
+  { href: '/devcon26/#faqs', label: 'FAQs' },
+] : [
+  { href: '/#community', label: 'Community' },
+  { href: '/#programs', label: 'Programs' },
+  { href: '/#events', label: 'Events' },
+  { href: '/devcon26/', label: 'DevCon26' },
+];
 ---
 
-<header class="navbar">
+<header class="navbar" data-site-navbar>
   <div class="container navbar-inner">
-    <a href="/" class="navbar-logo" aria-label="DevCongress home">
-      <img src="/images/logo.png" alt="dev:congress{};" height="40" />
+    <a href="/" class="navbar-logo" aria-label="DevCongress home" data-confirm-navigation={guardNavigation || undefined}>
+      <img src="/images/logo.png" alt="DevCongress" height="32" />
     </a>
-
-    <nav class="navbar-links" aria-label="Primary">
-      <a href="/#community">Community</a>
-      <a href="/#programs">Programs</a>
-      <a href="/#events">Events</a>
+    <nav class="navbar-links" aria-label={conference ? 'DevCon26 sections' : 'Primary'}>
+      {links.map((link) => (
+        <a href={link.href} aria-current={Astro.url.pathname === link.href ? 'page' : undefined} data-confirm-navigation={guardNavigation || undefined}><span class="nav-link-label">{link.label}</span></a>
+      ))}
     </nav>
-
     <div class="navbar-actions">
-      <a href={paystackUrl} target="_blank" rel="noopener noreferrer" class="btn btn-outline">
-        Support Us
-      </a>
-      <a href={slackUrl} target="_blank" rel="noopener noreferrer" class="btn btn-primary">
-        Join Slack
-      </a>
+      <a href={paystackUrl} target="_blank" rel="noopener noreferrer" class="nav-button nav-support">Support Us</a>
+      <a href={slackUrl} target="_blank" rel="noopener noreferrer" class="nav-button nav-slack">Join Slack</a>
     </div>
-
-    <button class="burger" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-menu">
+    <button class="nav-toggle" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="site-mobile-menu">
       <span></span><span></span><span></span>
     </button>
   </div>
-
-  <div class="mobile-menu" id="mobile-menu" aria-hidden="true">
-    <nav>
-      <a href="/#community">Community</a>
-      <a href="/#programs">Programs</a>
-      <a href="/#events">Events</a>
+  <div class="mobile-menu" id="site-mobile-menu" aria-hidden="true" inert>
+    <nav aria-label={conference ? 'DevCon26 mobile sections' : 'Mobile navigation'}>
+      {links.map((link) => (
+        <a href={link.href} aria-current={Astro.url.pathname === link.href ? 'page' : undefined} data-confirm-navigation={guardNavigation || undefined}><span class="nav-link-label">{link.label}</span><span aria-hidden="true">↗</span></a>
+      ))}
     </nav>
     <div class="mobile-actions">
-      <a href={paystackUrl} target="_blank" rel="noopener noreferrer" class="btn btn-outline">Support Us</a>
-      <a href={slackUrl} target="_blank" rel="noopener noreferrer" class="btn btn-primary">Join Slack</a>
+      <a href={paystackUrl} target="_blank" rel="noopener noreferrer" class="nav-button nav-support">Support Us</a>
+      <a href={slackUrl} target="_blank" rel="noopener noreferrer" class="nav-button nav-slack">Join Slack</a>
     </div>
   </div>
 </header>
@@ -62,167 +68,336 @@ const { slackUrl, paystackUrl } = Astro.props;
     height: 68px;
   }
 
-  .navbar-logo img { height: 40px; width: auto; }
+  .navbar-logo {
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
+    min-height: 44px;
+  }
 
-  .navbar-links {
+  .navbar-logo img {
+    width: auto;
+    height: 40px;
+  }
+
+  .navbar-links, .navbar-actions {
     display: flex;
     align-items: center;
     gap: var(--s6);
+  }
+
+  .navbar-links {
     margin-left: var(--s4);
     margin-right: auto;
   }
 
   .navbar-links a {
-    font-size: var(--text-sm);
-    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    font-size: 16px;
+    font-weight: 600;
     color: var(--text-mid);
-    transition: color 150ms ease;
-    position: relative;
+    white-space: nowrap;
   }
-  .navbar-links a::after {
+
+  .navbar-links a[aria-current='page'] {
+    color: var(--pink);
+  }
+
+  .nav-link-label {
+    position: relative;
+    line-height: 1.2;
+  }
+
+  .nav-link-label::after {
     content: '';
     position: absolute;
+    inset-inline: 0;
     bottom: -3px;
-    left: 0; right: 0;
     height: 2px;
     background: var(--pink);
     transform: scaleX(0);
-    transform-origin: left;
-    transition: transform 200ms ease;
+    transform-origin: left center;
+    transition: transform 180ms cubic-bezier(0.16, 1, 0.3, 1);
   }
-  .navbar-links a:hover { color: var(--text); }
-  .navbar-links a:hover::after { transform: scaleX(1); }
+
+  .navbar a:focus-visible .nav-link-label::after {
+    transform: scaleX(1);
+    transition: none;
+  }
 
   .navbar-actions {
-    display: flex;
-    align-items: center;
+    flex-shrink: 0;
     gap: var(--s3);
   }
-  .navbar-actions .btn { padding-inline: var(--s4); }
-  @media (hover: hover) and (pointer: fine) {
-    .navbar-actions .btn:hover { transform: translateX(-2px); }
-    .navbar-actions .btn:active { transform: translate(0, 0); }
+
+  .nav-button {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 44px;
+    padding: 10px var(--s4);
+    border: 2px solid var(--black);
+    border-radius: var(--r-full);
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.2;
+    white-space: nowrap;
+    transition: transform 120ms cubic-bezier(0.4, 0, 0.2, 1);
   }
 
-  .burger {
-    display: none;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 5px;
-    width: 42px;
-    height: 42px;
-    padding: var(--s2);
-    margin-left: auto;
+  .nav-support {
+    color: var(--text);
+    background: transparent;
   }
-  .burger span {
-    display: block;
-    width: 22px;
+
+  .nav-slack {
+    color: white;
+    background: var(--pink);
+  }
+
+  .navbar :is(a, button):focus-visible {
+    outline: 3px solid var(--pink);
+    outline-offset: 4px;
+  }
+
+  .nav-toggle {
+    display: none;
+    width: 44px;
+    height: 44px;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 5px;
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    transition: transform 120ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .nav-toggle span {
+    width: 20px;
     height: 2px;
     background: var(--black);
-    border-radius: 2px;
-    transition:
-      opacity 120ms cubic-bezier(0.4, 0, 0.2, 1),
-      transform 150ms cubic-bezier(0.4, 0, 0.2, 1);
+    transition: transform 150ms cubic-bezier(0.4, 0, 0.2, 1), opacity 150ms cubic-bezier(0.4, 0, 0.2, 1);
   }
-  .burger[aria-expanded='true'] span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
-  .burger[aria-expanded='true'] span:nth-child(2) { opacity: 0; }
-  .burger[aria-expanded='true'] span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+  .nav-toggle[aria-expanded='true'] span:nth-child(1) {
+    transform: translateY(7px) rotate(45deg);
+  }
+
+  .nav-toggle[aria-expanded='true'] span:nth-child(2) {
+    opacity: 0;
+  }
+
+  .nav-toggle[aria-expanded='true'] span:nth-child(3) {
+    transform: translateY(-7px) rotate(-45deg);
+  }
+
+  .nav-button:active, .nav-toggle:active {
+    transform: scale(0.97);
+  }
 
   .mobile-menu {
     display: none;
-    background: var(--bg-white);
-    border-top: 2px solid var(--black);
-    padding: var(--s5) var(--pad);
   }
-  .mobile-menu nav {
-    display: flex;
-    flex-direction: column;
-    gap: var(--s1);
-    margin-bottom: var(--s4);
-    border-bottom: 1px solid var(--border-light);
-    padding-bottom: var(--s4);
+
+  @media print {
+    .navbar {
+      display: none;
+    }
   }
-  .mobile-menu nav a {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    min-height: 44px;
-    padding-block: var(--s2);
-    font-size: var(--text-base);
-    font-weight: 600;
-    color: var(--text);
+
+  @media (hover: hover) and (pointer: fine) {
+    .navbar-links a:hover, .mobile-menu nav a:hover {
+      color: var(--text);
+    }
+
+    .navbar a:hover .nav-link-label::after {
+      transform: scaleX(1);
+    }
+
+    .navbar .nav-button:hover {
+      transform: translateX(-2px);
+    }
+
+    .navbar .nav-button:active {
+      transform: translate(0, 0);
+    }
   }
-  .mobile-menu nav a::after {
-    content: '→';
-    color: var(--pink);
-    font-size: var(--text-lg);
-    font-weight: 700;
-  }
-  .mobile-actions {
-    display: flex;
-    flex-direction: column;
-    gap: var(--s3);
-    align-items: stretch;
-  }
-  .mobile-actions .btn {
-    justify-content: center;
-    width: 100%;
+
+  @media (min-width: 961px) and (max-width: 1100px) {
+    .navbar-inner {
+      gap: var(--s3);
+    }
+
+    .navbar-links {
+      gap: var(--s4);
+      margin-left: 0;
+    }
   }
 
   @media (max-width: 960px) {
-    .navbar-links, .navbar-actions { display: none; }
-    .burger { display: flex; }
-    .mobile-menu {
+    .navbar-inner {
+      flex-wrap: wrap;
+      gap: var(--s3);
+      height: auto;
+      min-height: 68px;
+    }
+
+    .navbar[data-ready] .navbar-inner {
+      height: 68px;
+    }
+
+    .navbar-links {
+      flex-wrap: wrap;
+      gap: 8px 20px;
+    }
+
+    .navbar[data-ready] .navbar-inner {
+      flex-wrap: nowrap;
+    }
+
+    .navbar[data-ready] :is(.navbar-links, .navbar-actions) {
+      display: none;
+    }
+
+    .navbar[data-ready] .nav-toggle {
+      display: flex;
+      margin-left: auto;
+    }
+
+    .navbar[data-ready] .mobile-menu {
       position: absolute;
       top: 100%;
-      right: 0;
       left: 0;
-      z-index: 1;
+      right: 0;
       display: block;
+      padding: var(--s5) var(--pad);
+      max-height: calc(100dvh - 70px);
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      background: var(--bg-white);
+      border-top: 2px solid var(--black);
+      border-bottom: 2px solid var(--black);
+      box-shadow: 0 12px 20px rgb(17 17 17 / 8%);
       visibility: hidden;
       opacity: 0;
       pointer-events: none;
       transform: translateY(-8px);
-      transition:
-        opacity 200ms cubic-bezier(0.16, 1, 0.3, 1),
-        transform 200ms cubic-bezier(0.16, 1, 0.3, 1),
-        visibility 0s linear 200ms;
+      transition: opacity 180ms cubic-bezier(0.16, 1, 0.3, 1), transform 180ms cubic-bezier(0.16, 1, 0.3, 1), visibility 0s linear 180ms;
     }
-    .mobile-menu.is-open {
+
+    .navbar[data-open='true'] .mobile-menu {
       visibility: visible;
       opacity: 1;
       pointer-events: auto;
       transform: translateY(0);
-      box-shadow: 0 14px 24px rgb(17 17 17 / 16%);
       transition-delay: 0s;
+    }
+
+    .mobile-menu nav {
+      display: flex;
+      flex-direction: column;
+      gap: var(--s1);
+    }
+
+    .mobile-menu nav a {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 44px;
+      padding-block: var(--s2);
+      color: var(--text);
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .mobile-menu nav span[aria-hidden='true'] {
+      color: var(--pink);
+    }
+
+    .mobile-actions {
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      gap: var(--s3);
+      margin-top: var(--s4);
+      padding-top: var(--s4);
+      border-top: 1px solid var(--border-light);
     }
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .mobile-menu, .burger span { transition: none; }
+    .nav-link-label::after {
+      transition: none;
+    }
+
+    .navbar :is(.mobile-menu, .nav-toggle, .nav-toggle span, .nav-button) {
+      transition: none;
+    }
+
+    .navbar .nav-button:is(:hover, :active), .nav-toggle:active {
+      transform: none;
+    }
   }
 </style>
 
 <script>
-  const burger = document.querySelector('.burger') as HTMLButtonElement;
-  const menu   = document.getElementById('mobile-menu');
-  const setMenuOpen = (open: boolean) => {
-    menu?.classList.toggle('is-open', open);
-    burger.setAttribute('aria-expanded', String(open));
-    burger.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
-    menu?.setAttribute('aria-hidden', String(!open));
-  };
+  const header = document.querySelector<HTMLElement>('[data-site-navbar]');
+  const toggle = header?.querySelector<HTMLButtonElement>('.nav-toggle');
+  const menu = header?.querySelector<HTMLElement>('.mobile-menu');
 
-  burger?.addEventListener('click', () => {
-    setMenuOpen(!menu?.classList.contains('is-open'));
-  });
+  if (header && toggle && menu) {
+    const mobile = window.matchMedia('(max-width: 960px)');
 
-  menu?.querySelectorAll('a').forEach((link) => {
-    link.addEventListener('click', () => setMenuOpen(false));
-  });
+    const setOpen = (requested: boolean) => {
+      const open = requested && mobile.matches;
 
-  document.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape') setMenuOpen(false);
-  });
+      header.dataset.open = String(open);
+      toggle.setAttribute('aria-expanded', String(open));
+      toggle.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+      menu.setAttribute('aria-hidden', String(!open));
+      menu.inert = !open;
+    };
+
+    setOpen(false);
+    header.dataset.ready = 'true';
+
+    toggle.addEventListener('click', () => setOpen(header.dataset.open !== 'true'));
+
+    menu.addEventListener('click', (event) => {
+      if (event.target instanceof Element && event.target.closest('a')) {
+        setOpen(false);
+        toggle.focus({ preventScroll: true });
+      }
+    });
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && header.dataset.open === 'true') {
+        setOpen(false);
+        toggle.focus({ preventScroll: true });
+      }
+    });
+
+    document.addEventListener('click', (event) => {
+      if (event.target instanceof Node && !header.contains(event.target)) setOpen(false);
+    });
+
+    header.addEventListener('focusout', (event) => {
+      if (event.relatedTarget instanceof Node && !header.contains(event.relatedTarget)) setOpen(false);
+    });
+
+    mobile.addEventListener('change', () => {
+      const hadFocus = header.contains(document.activeElement);
+
+      setOpen(false);
+
+      if (hadFocus) {
+        const target = mobile.matches ? toggle : header.querySelector<HTMLElement>('.navbar-links a');
+
+        target?.focus({ preventScroll: true });
+      }
+    });
+  }
 </script>

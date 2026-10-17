@@ -1,0 +1,134 @@
+---
+interface Props {
+  role?: 'attendee' | 'speaker';
+  name?: string;
+}
+
+const { role = 'attendee', name = 'Your name' } = Astro.props;
+---
+
+<article class="identity-card" data-social-card-preview data-role={role} aria-label="DevCon26 social card preview">
+  <div class="identity-card-noise" aria-hidden="true"></div>
+  <div class="identity-card-photo" data-social-card-photo aria-hidden="true">
+    <span data-social-card-photo-placeholder>+</span>
+  </div>
+  <div class="identity-card-copy">
+    <p class="identity-card-kicker">DevCon26 · Accra</p>
+    <h2 data-social-card-name>{name}</h2>
+    <p class="identity-card-statement" data-social-card-statement>{role === 'speaker' ? "I'm speaking at DevCon26" : "I'm attending DevCon26"}</p>
+    <p class="identity-card-date">19 December 2026</p>
+  </div>
+  <div class="identity-card-brand" aria-hidden="true">DC<br />26</div>
+</article>
+
+<style>
+  .identity-card {
+    --card-photo: none;
+    --card-photo-x: 50%;
+    --card-photo-y: 50%;
+    --card-photo-scale: 1;
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 92px;
+    min-height: 390px;
+    overflow: hidden;
+    border: 2px solid #111;
+    border-radius: 12px;
+    background: #f5e642;
+    box-shadow: 8px 8px 0 #111;
+    color: #111;
+    isolation: isolate;
+  }
+
+  .identity-card::before {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: linear-gradient(135deg, transparent 56%, rgb(232 17 127 / 0.24) 56% 67%, transparent 67%);
+    content: '';
+  }
+
+  .identity-card-noise {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    opacity: 0.34;
+    background-image: radial-gradient(#111 0.75px, transparent 0.75px);
+    background-size: 5px 5px;
+    mix-blend-mode: soft-light;
+    pointer-events: none;
+  }
+
+  .identity-card-photo {
+    position: absolute;
+    inset: 25px 25px 150px 25px;
+    overflow: hidden;
+    border: 2px solid #111;
+    border-radius: 8px;
+    background-color: #e8117f;
+    background-image: var(--card-photo);
+    background-position: var(--card-photo-x) var(--card-photo-y);
+    background-repeat: no-repeat;
+    background-size: calc(var(--card-photo-scale) * 100%);
+  }
+
+  .identity-card-photo span {
+    display: grid;
+    width: 100%;
+    height: 100%;
+    place-items: center;
+    color: #fff;
+    font-family: var(--font-display);
+    font-size: 74px;
+    line-height: 1;
+  }
+
+  .identity-card.has-photo .identity-card-photo span { display: none; }
+
+  .identity-card-copy {
+    align-self: end;
+    padding: 0 24px 25px;
+  }
+
+  .identity-card-kicker, .identity-card-date {
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .identity-card h2 {
+    max-width: 10ch;
+    margin: 5px 0 8px;
+    font-size: clamp(32px, 7vw, 58px);
+    line-height: 0.92;
+    overflow-wrap: anywhere;
+  }
+
+  .identity-card-statement {
+    max-width: 22ch;
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1.12;
+  }
+
+  .identity-card-date { margin-top: 18px; }
+
+  .identity-card-brand {
+    align-self: end;
+    padding: 0 20px 22px 0;
+    color: #e8117f;
+    font-family: var(--font-display);
+    font-size: 43px;
+    font-weight: 700;
+    line-height: 0.76;
+    letter-spacing: -0.08em;
+    text-align: right;
+    text-shadow: 1px 1px 0 #111;
+  }
+
+  @media (min-width: 640px) {
+    .identity-card { min-height: 448px; }
+    .identity-card-photo { inset-bottom: 170px; }
+  }
+</style>

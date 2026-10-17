@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1350" viewBox="0 0 1080 1350">
+  <title>DevCon26 — Soft yellow arc share-frame proposal</title>
+  <desc>Additional branded backdrop behind the approved rounded attendee card. Transparent card master unchanged. No website change.</desc>
+  
+    <g id="arc-field">
+      <rect width="1080" height="1350" fill="#FFF8A8"/>
+      <g id="cropped-brand-geometry">
+        <circle cx="1060" cy="0" r="240" fill="none" stroke="#E8117F" stroke-width="40"/>
+        <circle cx="0" cy="1350" r="300" fill="#F5E642"/>
+        <circle cx="0" cy="780" r="170" fill="none" stroke="#E8117F" stroke-width="4" opacity="0.55"/>
+      </g>
+      <path id="technical-ticks" d="M800 0 H840 M1060 220 V260" fill="none" stroke="#F5F2E8" stroke-width="3" opacity="0.65"/>
+    </g>
+  
+</svg>

@@ -18,17 +18,19 @@ export default defineConfig({
         "img-src 'self' data: blob: https:",
         "font-src 'self' https://fonts.gstatic.com",
         "connect-src 'self' https://em.devcongress.org https://dvevcongress.goatcounter.com https://gc.zgo.at https://challenges.cloudflare.com",
-        "frame-src https://www.youtube-nocookie.com https://www.youtube.com https://challenges.cloudflare.com",
+        "frame-src https://www.youtube-nocookie.com https://www.youtube.com https://challenges.cloudflare.com https://pages.inttegro.com",
         "worker-src 'self' blob:",
         'upgrade-insecure-requests',
       ],
       scriptDirective: {
-        resources: ["'self'", 'https://gc.zgo.at', 'https://challenges.cloudflare.com'],
+        resources: ["'self'", 'https://gc.zgo.at', 'https://challenges.cloudflare.com', 'https://js.inttegro.com'],
       },
       styleDirective: {
         resources: [
           { resource: "'self'", kind: 'element' },
           { resource: 'https://fonts.googleapis.com', kind: 'element' },
+          // Inttegro's managed modal styles its isolated shadow root at runtime.
+          { resource: "'unsafe-inline'", kind: 'element' },
           { resource: "'unsafe-inline'", kind: 'attribute' },
         ],
       },

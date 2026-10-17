@@ -96,6 +96,21 @@ Events page. Local development can copy `.env.example` to `.env` and opt in
 explicitly. This website flag does not disable direct requests to Events
 Management; the backend needs its own runtime switch for a system-wide shutdown.
 
+## Donation checkout presentation
+
+`PUBLIC_DONATION_CHECKOUT_MODE` selects the build-time donation experience:
+
+- `modal` opens Inttegro Checkout above the DevCongress homepage. This is the
+  preferred experience because donors keep their page context and can return to
+  the site immediately after closing or completing Checkout.
+- `redirect` sends donation links through the stable first-party `/donate` path,
+  which responds with a temporary redirect to the Inttegro-hosted Buy page.
+
+The flag defaults to `redirect` when it is missing or invalid. In modal builds,
+ordinary clicks open Checkout while modified clicks, new tabs, and SDK loading
+failures continue through `/donate`, so the first-party path remains the single
+fallback and shareable donation URL.
+
 ## Cloudflare Workers deployment
 
 Astro still builds a static site-first fallback, while `src/worker.ts` adds a

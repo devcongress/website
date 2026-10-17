@@ -2,9 +2,10 @@
 interface Props {
   slackUrl: string;
   donationPath: string;
+  useDonationModal?: boolean;
 }
 
-const { slackUrl, donationPath } = Astro.props;
+const { slackUrl, donationPath, useDonationModal = false } = Astro.props;
 const conference = Astro.url.pathname.startsWith('/devcon26/');
 const guardNavigation = Astro.url.pathname.replace(/\/$/, '') === '/events/submit';
 const links = conference ? [
@@ -32,7 +33,12 @@ const links = conference ? [
       ))}
     </nav>
     <div class="navbar-actions">
-      <a href={donationPath} class="nav-button nav-support">Support Us</a>
+      <a
+        href={donationPath}
+        class="nav-button nav-support"
+        data-donation-checkout-trigger={useDonationModal ? '' : undefined}
+        aria-haspopup={useDonationModal ? 'dialog' : undefined}
+      >Support Us</a>
       <a href={slackUrl} target="_blank" rel="noopener noreferrer" class="nav-button nav-slack">Join Slack</a>
     </div>
     <button class="nav-toggle" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="site-mobile-menu">
@@ -46,7 +52,12 @@ const links = conference ? [
       ))}
     </nav>
     <div class="mobile-actions">
-      <a href={donationPath} class="nav-button nav-support">Support Us</a>
+      <a
+        href={donationPath}
+        class="nav-button nav-support"
+        data-donation-checkout-trigger={useDonationModal ? '' : undefined}
+        aria-haspopup={useDonationModal ? 'dialog' : undefined}
+      >Support Us</a>
       <a href={slackUrl} target="_blank" rel="noopener noreferrer" class="nav-button nav-slack">Join Slack</a>
     </div>
   </div>

@@ -5,3 +5,8 @@ function isEnabled(value: string | undefined): boolean {
 export const EVENT_SUBMISSIONS_ENABLED = isEnabled(
   import.meta.env.PUBLIC_EVENT_SUBMISSIONS_ENABLED,
 );
+
+export const DONATION_CHECKOUT_MODE =
+  import.meta.env.PUBLIC_DONATION_CHECKOUT_MODE?.trim().toLowerCase() === 'modal'
+    ? 'modal'
+    : 'redirect';

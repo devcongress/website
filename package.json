@@ -15,6 +15,7 @@
     "astro": "astro"
   },
   "dependencies": {
+    "@inttegro/js": "0.5.8",
     "astro": "^7.3.5",
     "zod": "^4.6.5"
   },

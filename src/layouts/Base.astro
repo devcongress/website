@@ -10,6 +10,7 @@ interface Props {
   showFooter?: boolean;
   noindex?: boolean;
   analytics?: boolean;
+  useDonationModal?: boolean;
 }
 const {
   title = "DevCongress | Africa's home for builders",
@@ -17,6 +18,7 @@ const {
   showFooter = true,
   noindex = false,
   analytics = true,
+  useDonationModal = false,
 } = Astro.props;
 
 const siteEntries = await getCollection('site');
@@ -48,7 +50,11 @@ const site        = siteEntries[0]!.data;
   </head>
   <body>
     <slot name="skip-link" />
-    <Navbar slackUrl={site.community_slack_url} donationPath={site.donation_path} />
+    <Navbar
+      slackUrl={site.community_slack_url}
+      donationPath={site.donation_path}
+      useDonationModal={useDonationModal}
+    />
     <slot />
     {showFooter && <FooterSection socials={site.socials} />}
   </body>

@@ -17,9 +17,10 @@ interface Props {
   hero: Hero;
   slackUrl: string;
   donationPath: string;
+  useDonationModal?: boolean;
   youtubeEmbedUrl: string;
 }
-const { hero, slackUrl, donationPath, youtubeEmbedUrl } = Astro.props;
+const { hero, slackUrl, donationPath, useDonationModal = false, youtubeEmbedUrl } = Astro.props;
 
 const colorClass: Record<string, string> = {
   pink:    'btn-primary',
@@ -57,6 +58,8 @@ const colorClass: Record<string, string> = {
           </a>
           <a
             href={donationPath}
+            data-donation-checkout-trigger={useDonationModal ? '' : undefined}
+            aria-haspopup={useDonationModal ? 'dialog' : undefined}
             class="btn btn-outline btn-hero"
           >
             Support us

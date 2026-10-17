@@ -6,7 +6,44 @@ const modalHostSelector = '[data-inttegro-checkout-modal]';
 const modalOpenClass = 'donation-checkout-open';
 const closeOnlyMarker = 'donationCloseOnly';
 const checkoutProtocol = 'inttegro.checkout';
+const orderStoragePrefix = 'devcongress.inttegro.order';
 const purchaseIntentPattern = /^sale_[A-Za-z0-9]{20,128}$/;
+const orderPattern = /^or_[A-Za-z0-9]{20,128}$/;
+
+function orderStorageKey(purchaseIntentId: string): string {
+  return `${orderStoragePrefix}:${purchaseIntentId}`;
+}
+
+function storedOrderId(purchaseIntentId: string): string | undefined {
+  try {
+    const key = orderStorageKey(purchaseIntentId);
+    const orderId = window.sessionStorage.getItem(key)?.trim();
+    if (orderId && orderPattern.test(orderId)) return orderId;
+    if (orderId) window.sessionStorage.removeItem(key);
+  } catch {
+    // Checkout still works when browser privacy settings disable session storage.
+  }
+
+  return undefined;
+}
+
+function storeOrderId(purchaseIntentId: string, orderId: string): void {
+  if (!orderPattern.test(orderId)) return;
+
+  try {
+    window.sessionStorage.setItem(orderStorageKey(purchaseIntentId), orderId);
+  } catch {
+    // The mounted controller can still resume the order until the page reloads.
+  }
+}
+
+function clearStoredOrderId(purchaseIntentId: string): void {
+  try {
+    window.sessionStorage.removeItem(orderStorageKey(purchaseIntentId));
+  } catch {
+    // There is nothing to clear when session storage is unavailable.
+  }
+}
 
 function requireExplicitModalClose(host: HTMLElement): void {
   if (host.dataset[closeOnlyMarker] === 'true') return;
@@ -109,8 +146,9 @@ export function initializeDonationCheckout(root: ParentNode = document): void {
       .then((inttegro) => {
         if (!inttegro) throw new Error('Inttegro Checkout requires a browser.');
 
+        const orderId = storedOrderId(purchaseIntentId);
         controller = inttegro.createCheckout({
-          purchaseIntentId,
+          ...(orderId ? { orderId } : { purchaseIntentId }),
           appearance: {
             primaryColor: '#E8117F',
             theme: 'dark',
@@ -125,16 +163,21 @@ export function initializeDonationCheckout(root: ParentNode = document): void {
           title: 'Support DevCongress',
         });
 
+        controller.on('orderPrepared', ({ order }) => {
+          storeOrderId(purchaseIntentId, order.id);
+        });
         controller.on('canceled', () => {
           canceledDuringPresentation = true;
           announce('Donation checkout closed. You can reopen it when you are ready.');
           setBusy(false);
         });
         controller.on('completed', () => {
+          clearStoredOrderId(purchaseIntentId);
           announce('Thank you for supporting DevCongress.');
           setBusy(false);
         });
         controller.on('failed', ({ failure }) => {
+          if (!failure.recoverable) clearStoredOrderId(purchaseIntentId);
           announce(failure.recoverable
             ? 'Donation checkout needs your attention. Please try again.'
             : 'Donation checkout is unavailable. Please try again later.');

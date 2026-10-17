@@ -1,0 +1,285 @@
+---
+// Opens Inttegro Checkout in a modal for any link marked `data-support-checkout`.
+// Without JavaScript those links still go to the hosted Inttegro buy page.
+---
+
+<dialog class="support-dialog" id="support-dialog" aria-labelledby="support-dialog-title">
+  <div class="support-dialog-head">
+    <h2 class="heading-serif" id="support-dialog-title">Support DevCongress</h2>
+    <button type="button" class="support-close" data-support-close aria-label="Close">×</button>
+  </div>
+
+  <form class="support-form" id="support-form" novalidate>
+    <label class="support-field">
+      <span>Amount (GHS)</span>
+      <input name="amount" type="number" inputmode="decimal" min="1" step="0.01" required placeholder="50" />
+    </label>
+    <div class="support-presets" role="group" aria-label="Suggested amounts">
+      {[20, 50, 100, 200].map((amount) => (
+        <button type="button" class="support-preset" data-amount={amount}>GHS {amount}</button>
+      ))}
+    </div>
+    <label class="support-field">
+      <span>Name</span>
+      <input name="name" type="text" autocomplete="name" required maxlength="120" />
+    </label>
+    <label class="support-field">
+      <span>Email</span>
+      <input name="email" type="email" autocomplete="email" required />
+    </label>
+    <label class="support-field">
+      <span>Phone</span>
+      <input name="phone" type="tel" autocomplete="tel" required placeholder="024 123 4567" />
+    </label>
+    <p class="support-error" id="support-error" role="alert" hidden></p>
+    <button type="submit" class="btn btn-primary support-submit">Continue to payment</button>
+    <p class="support-note">Payments are processed securely by Inttegro.</p>
+  </form>
+
+  <div class="support-checkout" id="support-checkout" hidden></div>
+
+  <div class="support-done" id="support-done" hidden>
+    <p class="heading-serif">Thank you!</p>
+    <p>Your contribution keeps the DevCongress community growing.</p>
+    <button type="button" class="btn btn-primary" data-support-close>Close</button>
+  </div>
+</dialog>
+
+<style>
+  .support-dialog {
+    width: min(480px, calc(100vw - 32px));
+    max-height: calc(100dvh - 32px);
+    margin: auto;
+    padding: var(--s5);
+    border: 2px solid var(--black);
+    border-radius: var(--r-lg);
+    background: var(--bg-white);
+    box-shadow: var(--shadow-solid-lg);
+    color: var(--text);
+  }
+  .support-dialog::backdrop { background: rgb(17 17 17 / 55%); }
+
+  .support-dialog-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--s4);
+    margin-bottom: var(--s4);
+  }
+  .support-dialog-head h2 { font-size: var(--text-2xl); }
+
+  .support-close {
+    width: 40px;
+    height: 40px;
+    border: 2px solid var(--black);
+    border-radius: var(--r-full);
+    font-size: var(--text-xl);
+    line-height: 1;
+    background: var(--bg-white);
+    cursor: pointer;
+  }
+
+  .support-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s4);
+  }
+
+  .support-field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s1);
+    font-size: var(--text-sm);
+    font-weight: 600;
+  }
+  .support-field input {
+    min-height: 44px;
+    padding: var(--s2) var(--s3);
+    border: 2px solid var(--black);
+    border-radius: var(--r-md);
+    font: inherit;
+    font-weight: 400;
+    font-size: var(--text-base);
+  }
+  .support-field input:focus-visible { outline: 3px solid var(--pink); outline-offset: 1px; }
+
+  .support-presets {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s2);
+  }
+  .support-preset {
+    padding: var(--s2) var(--s3);
+    border: 2px solid var(--black);
+    border-radius: var(--r-full);
+    background: var(--yellow-bg);
+    font: inherit;
+    font-size: var(--text-sm);
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .support-preset[aria-pressed='true'] { background: var(--yellow); }
+
+  .support-error {
+    padding: var(--s3);
+    border: 2px solid var(--pink);
+    border-radius: var(--r-md);
+    background: var(--pink-light);
+    font-size: var(--text-sm);
+  }
+
+  .support-submit { justify-content: center; }
+  .support-submit:disabled { opacity: 0.6; cursor: progress; }
+
+  .support-note {
+    font-size: var(--text-xs);
+    color: var(--text-mid);
+    text-align: center;
+  }
+
+  .support-checkout { min-height: 420px; }
+
+  .support-done {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--s4);
+  }
+  .support-done .heading-serif { font-size: var(--text-3xl); }
+  .support-done[hidden], .support-checkout[hidden], .support-form[hidden] { display: none; }
+</style>
+
+<script>
+  import { loadInttegro, type CheckoutController } from '@inttegro/js';
+
+  const CHECKOUT_ENDPOINT = '/api/support/checkout';
+
+  const dialog = document.getElementById('support-dialog') as HTMLDialogElement | null;
+  const form = document.getElementById('support-form') as HTMLFormElement | null;
+  const errorBox = document.getElementById('support-error') as HTMLParagraphElement | null;
+  const checkoutEl = document.getElementById('support-checkout') as HTMLDivElement | null;
+  const doneEl = document.getElementById('support-done') as HTMLDivElement | null;
+  const submit = form?.querySelector<HTMLButtonElement>('.support-submit');
+  const amountInput = form?.elements.namedItem('amount') as HTMLInputElement | null;
+
+  let checkout: CheckoutController | null = null;
+
+  if (dialog && form && errorBox && checkoutEl && doneEl && submit && amountInput) {
+    document.querySelectorAll<HTMLAnchorElement>('a[data-support-checkout]').forEach((link) => {
+      link.addEventListener('click', (event) => {
+        if (event.metaKey || event.ctrlKey || event.shiftKey || event.button !== 0) return;
+        event.preventDefault();
+        open();
+      });
+    });
+
+    dialog.querySelectorAll('[data-support-close]').forEach((button) => {
+      button.addEventListener('click', () => dialog.close());
+    });
+    dialog.addEventListener('close', reset);
+
+    form.querySelectorAll<HTMLButtonElement>('.support-preset').forEach((preset) => {
+      preset.addEventListener('click', () => {
+        amountInput.value = preset.dataset.amount ?? '';
+        syncPresets();
+      });
+    });
+    amountInput.addEventListener('input', syncPresets);
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      showError(null);
+
+      if (!form.checkValidity()) {
+        showError('Please fill in the amount, your name, email and phone number.');
+        return;
+      }
+
+      const data = new FormData(form);
+      submit.disabled = true;
+      submit.textContent = 'Starting checkout…';
+
+      try {
+        const [orderId, inttegro] = await Promise.all([
+          createOrder({
+            amount: data.get('amount'),
+            name: data.get('name'),
+            email: data.get('email'),
+            phone: data.get('phone'),
+            requestId: crypto.randomUUID(),
+          }),
+          loadInttegro(),
+        ]);
+        if (!inttegro) throw new Error('Checkout requires a browser.');
+
+        form.hidden = true;
+        checkoutEl.hidden = false;
+        checkout = inttegro.createCheckout({ orderId, title: 'Support DevCongress' });
+        checkout.on('completed', () => {
+          destroyCheckout();
+          doneEl.hidden = false;
+        });
+        checkout.on('canceled', () => dialog.close());
+        await checkout.mount(checkoutEl);
+      } catch (error) {
+        destroyCheckout();
+        form.hidden = false;
+        checkoutEl.hidden = true;
+        showError(error instanceof Error ? error.message : 'We could not start checkout. Please try again.');
+      } finally {
+        submit.disabled = false;
+        submit.textContent = 'Continue to payment';
+      }
+    });
+  }
+
+  function open() {
+    dialog?.showModal();
+    void loadInttegro().catch(() => {});
+  }
+
+  async function createOrder(body: Record<string, unknown>): Promise<string> {
+    const response = await fetch(CHECKOUT_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    const result = await response.json().catch(() => ({})) as { orderId?: string; error?: string };
+    if (!response.ok || !result.orderId) {
+      throw new Error(result.error ?? 'We could not start checkout. Please try again.');
+    }
+    return result.orderId;
+  }
+
+  function syncPresets() {
+    form?.querySelectorAll<HTMLButtonElement>('.support-preset').forEach((preset) => {
+      preset.setAttribute('aria-pressed', String(preset.dataset.amount === amountInput?.value));
+    });
+  }
+
+  function showError(message: string | null) {
+    if (!errorBox) return;
+    errorBox.hidden = !message;
+    errorBox.textContent = message ?? '';
+  }
+
+  function destroyCheckout() {
+    checkout?.destroy();
+    checkout = null;
+    if (checkoutEl) {
+      checkoutEl.hidden = true;
+      checkoutEl.replaceChildren();
+    }
+  }
+
+  function reset() {
+    destroyCheckout();
+    showError(null);
+    if (form) {
+      form.hidden = false;
+      form.reset();
+    }
+    if (doneEl) doneEl.hidden = true;
+    syncPresets();
+  }
+</script>

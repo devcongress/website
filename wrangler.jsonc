@@ -3,14 +3,18 @@
   "name": "devcongress-website",
   "main": "src/worker.ts",
   "compatibility_date": "2026-07-10",
+  "compatibility_flags": ["nodejs_compat"],
   "preview_urls": true,
+  "vars": {
+    "INTTEGRO_SUPPORT_PURCHASE_INTENT_ID": "sale_eLiPUNAEjfeHZOX4VHQPuy0oJWQT6n0g7Bdof5rr"
+  },
   "observability": {
     "enabled": true
   },
   "assets": {
     "directory": "./dist",
     "binding": "ASSETS",
-    "run_worker_first": ["/events/*"],
+    "run_worker_first": ["/events/*", "/api/*"],
     "html_handling": "auto-trailing-slash"
   }
 }

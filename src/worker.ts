@@ -2,8 +2,9 @@
 
 import { createEventsCalendar } from './lib/event-calendar';
 import { fetchLivePublicEvent, fetchLivePublicEvents } from './lib/live-public-events';
+import { handleSupportCheckout, SUPPORT_CHECKOUT_PATH, type SupportCheckoutEnv } from './lib/support-checkout';
 
-interface Env {
+interface Env extends SupportCheckoutEnv {
   ASSETS: {
     fetch(request: Request): Promise<Response>;
   };
@@ -21,6 +22,10 @@ const READINESS_CACHE_MARKER = '1';
 export default {
   async fetch(request: Request, env: Env, context: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
+
+    if (url.pathname === SUPPORT_CHECKOUT_PATH) {
+      return handleSupportCheckout(request, env);
+    }
 
     if (url.pathname === CALENDAR_PATH) {
       if (!isReadableMethod(request.method)) return methodNotAllowed();

@@ -10,7 +10,7 @@
             "type": "string",
             "format": "uri"
           },
-          "paystack_url": {
+          "support_url": {
             "type": "string",
             "format": "uri"
           },
@@ -221,7 +221,7 @@
         },
         "required": [
           "community_slack_url",
-          "paystack_url",
+          "support_url",
           "youtube_embed_url",
           "stats",
           "socials",
@@ -246,7 +246,7 @@
             "type": "string",
             "format": "uri"
           },
-          "paystack_url": {
+          "support_url": {
             "type": "string",
             "format": "uri"
           },
@@ -457,7 +457,7 @@
         },
         "required": [
           "community_slack_url",
-          "paystack_url",
+          "support_url",
           "youtube_embed_url",
           "stats",
           "socials",

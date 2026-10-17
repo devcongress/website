@@ -4,7 +4,57 @@ const configSelector = '[data-donation-checkout-config]';
 const triggerSelector = '[data-donation-checkout-trigger]';
 const modalHostSelector = '[data-inttegro-checkout-modal]';
 const modalOpenClass = 'donation-checkout-open';
+const closeOnlyMarker = 'donationCloseOnly';
+const checkoutProtocol = 'inttegro.checkout';
 const purchaseIntentPattern = /^sale_[A-Za-z0-9]{20,128}$/;
+
+function requireExplicitModalClose(host: HTMLElement): void {
+  if (host.dataset[closeOnlyMarker] === 'true') return;
+
+  const root = host.shadowRoot;
+  const dialog = root?.querySelector<HTMLDialogElement>('dialog');
+  if (!root || !dialog) return;
+
+  host.dataset[closeOnlyMarker] = 'true';
+
+  const preventDismissal = (event: Event): void => {
+    event.preventDefault();
+    event.stopImmediatePropagation();
+  };
+
+  root.addEventListener('cancel', preventDismissal, { capture: true });
+  root.addEventListener('pointerdown', (event) => {
+    if (event.target === dialog) preventDismissal(event);
+  }, { capture: true });
+  host.addEventListener('pointerdown', (event) => {
+    if (event.target === host) preventDismissal(event);
+  }, { capture: true });
+}
+
+function preventFrameDismissal(event: MessageEvent<unknown>): void {
+  const host = document.body.querySelector<HTMLElement>(modalHostSelector);
+  const frame = host?.shadowRoot?.querySelector<HTMLIFrameElement>(
+    'iframe[data-inttegro-checkout]',
+  );
+  const message = event.data;
+
+  if (
+    !host
+    || !frame
+    || typeof message !== 'object'
+    || message === null
+    || event.source !== frame.contentWindow
+    || event.origin !== new URL(frame.src).origin
+    || !('channel' in message)
+    || message.channel !== checkoutProtocol
+    || !('instanceId' in message)
+    || message.instanceId !== host.dataset.inttegroCheckoutModal
+    || !('type' in message)
+    || message.type !== 'frame.dismiss'
+  ) return;
+
+  event.stopImmediatePropagation();
+}
 
 export function initializeDonationCheckout(root: ParentNode = document): void {
   const config = root.querySelector<HTMLElement>(configSelector);
@@ -30,12 +80,16 @@ export function initializeDonationCheckout(root: ParentNode = document): void {
   let canceledDuringPresentation = false;
 
   const modalObserver = new MutationObserver(() => {
+    const modalHost = document.body.querySelector<HTMLElement>(modalHostSelector);
+    if (modalHost) requireExplicitModalClose(modalHost);
+
     document.body.classList.toggle(
       modalOpenClass,
-      Boolean(document.body.querySelector(modalHostSelector)),
+      Boolean(modalHost),
     );
   });
   modalObserver.observe(document.body, { childList: true });
+  window.addEventListener('message', preventFrameDismissal, { capture: true });
 
   function announce(message: string): void {
     if (status) status.textContent = message;
@@ -57,7 +111,10 @@ export function initializeDonationCheckout(root: ParentNode = document): void {
 
         controller = inttegro.createCheckout({
           purchaseIntentId,
-          appearance: { theme: 'system' },
+          appearance: {
+            primaryColor: '#E8117F',
+            theme: 'dark',
+          },
           features: {
             showLineItems: true,
             showInvoiceDownload: true,

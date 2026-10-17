@@ -13,8 +13,8 @@ importers:
   .:
     dependencies:
       '@inttegro/js':
-        specifier: 0.5.6
-        version: 0.5.6
+        specifier: 0.5.8
+        version: 0.5.8
       astro:
         specifier: ^7.3.5
         version: 7.3.5
@@ -736,8 +736,8 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@inttegro/js@0.5.6':
-    resolution: {integrity: sha512-euQEyl5LUex+6i9Rq930letpwR9v7CPozGChv6+vpCWCVGFWfJMbYtEx9+BHtXSZUpuUj/IpA6/Cgub2MDYuuQ==}
+  '@inttegro/js@0.5.8':
+    resolution: {integrity: sha512-aAysBIhLWrdcd/Nm2hsZHzXpFSjG+L0YbYcQhtKo5FbCssZj0HIYSu6VVYw4l42iAphiaoh10oWleBgoZGnKbQ==}
     engines: {node: '>=18'}
 
   '@jridgewell/resolve-uri@3.1.2':
@@ -2181,7 +2181,7 @@ snapshots:
   '@img/sharp-win32-x64@0.35.4':
     optional: true
 
-  '@inttegro/js@0.5.6': {}
+  '@inttegro/js@0.5.8': {}
 
   '@jridgewell/resolve-uri@3.1.2': {}
 

@@ -29,11 +29,11 @@ programme content:
   (formerly Accra Digital Center), Accra venue sit below it.
 - The yellow primary hero action is Get DevCon26 tickets, linking directly to
   `/devcon26/#tickets` and remaining first and visually dominant. Join the
-  community (the existing Slack link) and Support us (the existing Paystack
-  donation link) remain secondary hero buttons with their existing external-link
-  behaviour, keyboard focus, fine-pointer transform-only hover feedback, and
-  reduced-motion support. The small announcement strip is removed; navigation
-  and the dedicated donation section retain their support actions.
+  community (the existing Slack link) and Support us (the stable `/donate`
+  first-party path) remain secondary hero buttons with their keyboard focus,
+  fine-pointer transform-only hover feedback, and reduced-motion support. The
+  small announcement strip is removed; navigation and the dedicated donation
+  section retain their support actions.
 - `Devcon26Feature.astro` renders immediately after Programs and before Events.
   It is now a compact reminder with 19 December 2026 / venue metadata and a Get
   tickets link rather than a second photo-heavy hero.

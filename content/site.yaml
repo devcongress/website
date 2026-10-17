@@ -1,6 +1,6 @@
 - id: site
   community_slack_url: https://join.slack.com/t/devcongress-community/shared_invite/zt-499mtyizl-kYhAODoWCY61A9nd_uF90A
-  paystack_url: https://paystack.shop/pay/devcongress-meetup
+  donation_path: /donate
   youtube_embed_url: https://www.youtube-nocookie.com/embed/vNWWGWXjybg?rel=0&modestbranding=1&playsinline=1
 
   stats:
@@ -75,7 +75,7 @@
     eyebrow: "Support"
     heading: "Keep DevCongress running."
     body: "DevCongress is community-funded without the strings of corporate backing. Your contribution keeps the lights on and the community growing."
-    cta_text: "Donate via Paystack"
+    cta_text: "Donate"
     uses_header: "Your support funds"
     uses_items:
       - "Monthly meetups across Ghana"

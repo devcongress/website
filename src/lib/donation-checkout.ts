@@ -57,7 +57,7 @@ export function initializeDonationCheckout(root: ParentNode = document): void {
 
         controller = inttegro.createCheckout({
           purchaseIntentId,
-          appearance: { theme: 'light' },
+          appearance: { theme: 'system' },
           features: {
             showLineItems: true,
             showInvoiceDownload: true,

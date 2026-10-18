@@ -1,11 +1,13 @@
 ---
 import Base from '../../layouts/Base.astro';
+import FormDropdown from '../../components/FormDropdown.astro';
 import { EVENT_SUBMISSION_TURNSTILE_SITE_KEY } from '../../lib/events';
+const localPreview = import.meta.env.DEV;
 const apiOrigin = import.meta.env.PUBLIC_DEVCON26_API_ORIGIN || 'https://em.devcongress.org';
 ---
 
 <Base title="Apply to speak | DevCon26" description="Share something useful with the DevCon26 community. Apply to speak at our annual conference." showFooter={false}>
-  <main class="speaker-page" data-speaker-page data-api-origin={apiOrigin}>
+  <main class="speaker-page" data-speaker-page data-api-origin={apiOrigin} data-local-preview={localPreview ? 'true' : undefined}>
     <div class="page-heading">
       <div><p class="eyebrow">DevCon26 · Call for Speakers</p><h1>Something worth <em>sharing?</em></h1></div>
       <p class="intro">Bring your experience, your experiments, and your perspective to the community.</p>
@@ -13,7 +15,7 @@ const apiOrigin = import.meta.env.PUBLIC_DEVCON26_API_ORIGIN || 'https://em.devc
     <p id="cfp-status" data-cfp-status role="status" tabindex="-1">Checking the Call for Speakers…</p>
     <form data-cfp-form novalidate hidden>
       <ol class="stepper" aria-label="Application steps">
-        {['About you', 'Your session', 'Proposal details'].map((label, index) => (
+        {['About you', 'Your session', 'Proposal details', 'Review'].map((label, index) => (
           <li data-step-label={index} aria-current={index === 0 ? 'step' : undefined}>
             <span class="step-number" data-step-number aria-hidden="true">{index + 1}</span><span>{label}</span>
           </li>
@@ -26,40 +28,81 @@ const apiOrigin = import.meta.env.PUBLIC_DEVCON26_API_ORIGIN || 'https://em.devc
         <label>Email<input name="speaker_email" type="email" maxlength="254" autocomplete="email" required /></label>
         <label class="full-width">Short bio<textarea name="bio" maxlength="4000" rows="4" required></textarea></label>
         </div>
-        <div class="actions"><span>Step 1 of 3</span><button type="button" data-next="1">Continue →</button></div>
+        <div class="actions"><span>Step 1 of 4</span><button type="button" data-next="1" disabled>Continue →</button></div>
       </section>
       <section class="step-panel" data-step="1" aria-labelledby="session-heading" hidden>
         <h2 id="session-heading">Your session</h2>
         <label>Session title<input name="title" maxlength="200" required /></label>
         <div class="field-grid">
           {[['topic', 'Topic track', 'Choose a track'], ['session_type', 'Session type', 'Choose a format']].map(([name, label, placeholder]) => (
-            <div class="choice-field" data-choice={name}>
-              <label id={`${name}-label`} for={`${name}-trigger`}>{label}</label>
-              <input type="hidden" name={name} />
-              <button class="choice-trigger" id={`${name}-trigger`} type="button" aria-labelledby={`${name}-label ${name}-value`} aria-controls={`${name}-options`} aria-expanded="false" aria-haspopup="listbox">
-                <span id={`${name}-value`} data-choice-value>{placeholder}</span><span aria-hidden="true">⌄</span>
-              </button>
-              <div class="choice-options" id={`${name}-options`} role="listbox" aria-labelledby={`${name}-label`} hidden></div>
-            </div>
+            <FormDropdown name={name} label={label} placeholder={placeholder} />
           ))}
         </div>
-        <div class="actions"><button class="secondary" type="button" data-back="0">← Back</button><span>Step 2 of 3</span><button type="button" data-next="2">Continue →</button></div>
+        <div class="actions"><button class="secondary" type="button" data-back="0"><svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="m8 4-6 6 6 6M2 10h16" /></svg>Back</button><span>Step 2 of 4</span><button type="button" data-next="2" disabled>Continue →</button></div>
       </section>
       <section class="step-panel" data-step="2" aria-labelledby="details-heading" hidden>
         <h2 id="details-heading">Proposal details</h2>
-        <div class="field-grid">
-          <label>Abstract<textarea name="abstract" rows="5" maxlength="12000" aria-describedby="abstract-limit" required></textarea><small id="abstract-limit" data-abstract-limit></small></label>
-          <label>Learning outcomes<textarea name="learning_outcomes" rows="5" required placeholder="One outcome per line" aria-describedby="outcomes-hint"></textarea><small id="outcomes-hint">Add 3–5 outcomes, one per line. Up to 300 characters each.</small></label>
+        <div class="field-grid proposal-fields">
+          <label>Abstract
+            <textarea name="abstract" rows="7" maxlength="12000" aria-describedby="abstract-limit abstract-error" required></textarea>
+            <small id="abstract-limit" data-abstract-limit></small>
+            <small id="abstract-error" class="field-error" hidden></small>
+          </label>
+          <fieldset class="outcomes-editor" aria-describedby="outcomes-hint outcomes-progress outcomes-error">
+            <legend>Learning outcomes</legend>
+            <small id="outcomes-hint">Add 3–5 concrete things attendees will understand, be able to do, or take away. Up to 300 characters each.</small>
+            <div data-outcome-rows></div>
+            <button type="button" class="outcome-add" data-add-outcome>＋ Add another outcome</button>
+            <small id="outcomes-progress" aria-live="polite"></small>
+            <small id="outcomes-error" class="field-error" hidden></small>
+            <textarea name="learning_outcomes" hidden></textarea>
+          </fieldset>
         </div>
+        <div class="actions">
+          <button class="secondary" type="button" data-back="1">← Back</button>
+          <button type="button" data-next="3" disabled>Preview proposal →</button>
+        </div>
+      </section>
+      <section class="step-panel" data-step="3" aria-labelledby="review-heading" hidden>
+        <h2 id="review-heading" tabindex="-1">Review your proposal</h2>
+        <p class="review-intro">Check your details before sending. You won’t be able to edit your proposal after submission.</p>
+        <dl class="review-details">
+          {[['speaker_name', 'Your name'], ['speaker_email', 'Email'], ['bio', 'Short bio'], ['title', 'Session title'], ['topic', 'Topic track'], ['session_type', 'Session type'], ['abstract', 'Abstract']].map(([name, label]) => (
+            <div><dt>{label}</dt><dd data-review-field={name}></dd></div>
+          ))}
+          <div><dt>Learning outcomes</dt><dd><ol data-review-outcomes></ol></dd></div>
+        </dl>
         <div class="submit-footer">
-        <div class="cf-turnstile" data-size="compact" data-sitekey={EVENT_SUBMISSION_TURNSTILE_SITE_KEY} data-action="cfp_submission"></div>
-        <div class="actions"><button class="secondary" type="button" data-back="1">← Back</button><span>Step 3 of 3</span><button type="submit">Submit proposal ↗</button></div>
+          {!localPreview && <div class="cf-turnstile" data-size="compact" data-sitekey={EVENT_SUBMISSION_TURNSTILE_SITE_KEY} data-action="cfp_submission"></div>}
+          {localPreview && <p class="preview-note">Local preview: this button shows the confirmation only. Nothing will be sent.</p>}
+          <div class="actions">
+            <button class="secondary" type="button" data-back="2">← Back</button>
+            <button type="submit">{localPreview ? 'Preview confirmation ↗' : 'Submit proposal ↗'}</button>
+          </div>
         </div>
       </section>
     </form>
+    <section class="submission-result" data-submission-result aria-labelledby="submission-heading" hidden>
+      <div class="result-topline"><span>DevCon26 · Call for speakers</span><span class="result-status">{localPreview ? 'Confirmation preview' : 'Proposal submitted'}</span></div>
+      <h1 id="submission-heading" tabindex="-1">Thanks for<br /><em>sharing your idea.</em></h1>
+      <p class="result-intro">Thank you for offering your time and experience to the DevCongress community.</p>
+      <div class="proposal-receipt" data-proposal-receipt hidden>
+        <p class="receipt-label">Your proposal</p>
+        <h2 data-result-title></h2>
+        <p data-result-format></p>
+      </div>
+      <div class="result-next">
+        <h2>What happens next?</h2>
+        <p>The team reviews proposals for the DevCon26 programme. If selected, you’ll hear from us about next steps.</p>
+      </div>
+      <div class="result-actions">
+        <a class="result-home" href="/devcon26/">Back to DevCon26 <span aria-hidden="true">↗</span></a>
+      </div>
+    </section>
+    {localPreview && <p class="preview-note" data-preview-note hidden>Local preview only. Nothing was submitted or sent.</p>}
     <noscript>Enable JavaScript to complete your speaker application.</noscript>
   </main>
-  <script is:inline src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+  {!localPreview && <script is:inline src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>}
 </Base>
 
 <script>
@@ -67,10 +110,39 @@ const apiOrigin = import.meta.env.PUBLIC_DEVCON26_API_ORIGIN || 'https://em.devc
   const form = page.querySelector<HTMLFormElement>('[data-cfp-form]')!;
   const status = page.querySelector<HTMLElement>('[data-cfp-status]')!;
   const endpoint = new URL('/api/cfp/conferences/2026', page.dataset.apiOrigin);
+  const localPreview = page.dataset.localPreview === 'true';
+  const settingsEndpoint = localPreview ? '/__local/cfp/devcon26' : endpoint;
   let abstractLimit = 300;
   let busy = false;
   let currentStep = 0;
   const closeChoices: Array<() => void> = [];
+
+  const result = page.querySelector<HTMLElement>('[data-submission-result]')!;
+  const heading = page.querySelector<HTMLElement>('.page-heading')!;
+
+  function showSubmissionResult() {
+    closeChoices.forEach((close) => close());
+    const title = form.querySelector<HTMLInputElement>('[name="title"]')!.value.trim();
+    const format = form.querySelector<HTMLInputElement>('[name="session_type"]')!.value.replaceAll('_', ' ');
+    const topic = form.querySelector<HTMLInputElement>('[name="topic"]')!.value.replaceAll('_', ' ');
+    const receipt = result.querySelector<HTMLElement>('[data-proposal-receipt]')!;
+    receipt.hidden = !title && !localPreview;
+    result.querySelector('[data-result-title]')!.textContent = title || 'Building useful things, together';
+    result.querySelector('[data-result-format]')!.textContent = [format, topic].filter(Boolean).join(' · ') || 'Example proposal · Local preview';
+    form.hidden = true;
+    heading.hidden = true;
+    status.hidden = true;
+    result.hidden = false;
+    page.querySelector<HTMLElement>('[data-preview-note]')?.removeAttribute('hidden');
+    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      result.animate([{ opacity: 0, transform: 'translateY(12px)' }, { opacity: 1, transform: 'translateY(0)' }], {
+        duration: 240,
+        easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
+      });
+    }
+    result.querySelector<HTMLElement>('#submission-heading')!.focus({ preventScroll: true });
+    result.scrollIntoView({ block: 'start' });
+  }
 
   function setupChoice(name: string, choices: string[]) {
     const root = form.querySelector<HTMLElement>(`[data-choice="${name}"]`)!;
@@ -99,6 +171,7 @@ const apiOrigin = import.meta.env.PUBLIC_DEVCON26_API_ORIGIN || 'https://em.devc
         trigger.removeAttribute('aria-invalid');
         trigger.removeAttribute('aria-describedby');
         options.forEach((item) => item.setAttribute('aria-selected', String(item === option)));
+        updateContinueButtons();
         close();
         trigger.focus();
       });
@@ -106,13 +179,40 @@ const apiOrigin = import.meta.env.PUBLIC_DEVCON26_API_ORIGIN || 'https://em.devc
       return option;
     });
 
+    function positionMenu() {
+      if (menu.hidden) return;
+      const rect = trigger.getBoundingClientRect();
+      const rootRect = root.getBoundingClientRect();
+      const viewport = window.visualViewport;
+      const viewportTop = viewport?.offsetTop ?? 0;
+      const viewportBottom = viewportTop + (viewport?.height ?? window.innerHeight);
+      const gap = 4;
+      const edge = 8;
+      const below = Math.max(0, viewportBottom - rect.bottom - gap - edge);
+      const above = Math.max(0, rect.top - viewportTop - gap - edge);
+      const desiredHeight = Math.min(menu.scrollHeight + 2, 256);
+      const onTop = below < desiredHeight && above > below;
+      menu.dataset.placement = onTop ? 'top' : 'bottom';
+      menu.style.maxHeight = `${Math.min(256, onTop ? above : below)}px`;
+      menu.style.top = onTop ? 'auto' : `${rect.bottom - rootRect.top + gap}px`;
+      menu.style.bottom = onTop ? `${rootRect.bottom - rect.top + gap}px` : 'auto';
+    }
+
     function open(last = false) {
       closeChoices.forEach((closeMenu) => closeMenu());
       menu.hidden = false;
       trigger.setAttribute('aria-expanded', 'true');
+      positionMenu();
       const selected = choices.indexOf(input.value);
-      options[selected >= 0 ? selected : last ? options.length - 1 : 0]?.focus();
+      const option = options[selected >= 0 ? selected : last ? options.length - 1 : 0];
+      option?.focus({ preventScroll: true });
+      if (option) menu.scrollTop = option.offsetTop - menu.clientHeight / 2;
     }
+
+    window.addEventListener('resize', positionMenu);
+    window.addEventListener('scroll', positionMenu, true);
+    window.visualViewport?.addEventListener('resize', positionMenu);
+    window.visualViewport?.addEventListener('scroll', positionMenu);
 
     trigger.addEventListener('click', () => menu.hidden ? open() : close());
     trigger.addEventListener('keydown', (event) => {
@@ -123,9 +223,11 @@ const apiOrigin = import.meta.env.PUBLIC_DEVCON26_API_ORIGIN || 'https://em.devc
     });
     menu.addEventListener('keydown', (event) => {
       if (event.key === 'Escape' || event.key === 'Tab') {
-        if (event.key === 'Escape') event.preventDefault();
+        if (event.key === 'Escape') {
+          event.preventDefault();
+          trigger.focus();
+        }
         close();
-        trigger.focus();
         return;
       }
       const index = options.indexOf(document.activeElement as HTMLButtonElement);
@@ -153,8 +255,22 @@ const apiOrigin = import.meta.env.PUBLIC_DEVCON26_API_ORIGIN || 'https://em.devc
 
   function showStep(step: number) {
     closeChoices.forEach((close) => close());
-    status.textContent = 'Applications are open. Your proposal goes directly to the annual conference review team.';
+    status.textContent = localPreview
+      ? 'Local preview: live speaker settings loaded. You can test the form steps; submission is disabled.'
+      : 'Applications are open. Your proposal goes directly to the annual conference review team.';
     currentStep = step;
+    if (step === 3) {
+      const data = new FormData(form);
+      form.querySelectorAll<HTMLElement>('[data-review-field]').forEach((field) => {
+        field.textContent = String(data.get(field.dataset.reviewField!) ?? '').trim();
+      });
+      const list = form.querySelector<HTMLOListElement>('[data-review-outcomes]')!;
+      list.replaceChildren(...outcomeInputs().map((input) => {
+        const item = document.createElement('li');
+        item.textContent = input.value.trim();
+        return item;
+      }));
+    }
     form.querySelectorAll<HTMLElement>('[data-step]').forEach((panel) => { panel.hidden = Number(panel.dataset.step) !== step; });
     form.querySelectorAll<HTMLElement>('[data-step-label]').forEach((label) => {
       const completed = Number(label.dataset.stepLabel) < step;
@@ -163,10 +279,172 @@ const apiOrigin = import.meta.env.PUBLIC_DEVCON26_API_ORIGIN || 'https://em.devc
       if (Number(label.dataset.stepLabel) === step) label.setAttribute('aria-current', 'step');
       else label.removeAttribute('aria-current');
     });
-    form.querySelector<HTMLInputElement | HTMLTextAreaElement>(`[data-step="${step}"] input, [data-step="${step}"] textarea`)?.focus();
+    if (step === 3) form.querySelector<HTMLElement>('#review-heading')!.focus();
+    else form.querySelector<HTMLInputElement | HTMLTextAreaElement>(`[data-step="${step}"] input, [data-step="${step}"] textarea`)?.focus();
   }
 
+  function stepReady(step: number): boolean {
+    if (step === 2) {
+      const outcomes = outcomeInputs();
+      return Boolean(abstractField.value.trim()) && wordCount(abstractField.value) <= abstractLimit
+        && abstractField.validity.valid && outcomes.length >= 3 && outcomes.length <= 5
+        && outcomes.every((input) => Boolean(input.value.trim()) && input.validity.valid);
+    }
+    const fields = [...form.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>(`[data-step="${step}"] input:not([type="hidden"]), [data-step="${step}"] textarea`)];
+    const fieldsReady = fields.every((field) => field.value.trim().length > 0 && field.validity.valid);
+    const choicesReady = step !== 1 || [...form.querySelectorAll<HTMLInputElement>('[data-choice] input')].every((field) => field.value !== '');
+
+    return fieldsReady && choicesReady;
+  }
+
+  function updateContinueButtons() {
+    form.querySelectorAll<HTMLButtonElement>('[data-next]').forEach((button) => {
+      button.disabled = busy || !stepReady(Number(button.dataset.next) - 1);
+    });
+  }
+
+  form.addEventListener('input', updateContinueButtons);
+  form.addEventListener('change', updateContinueButtons);
+  window.addEventListener('pageshow', updateContinueButtons);
+
+  const abstractField = form.querySelector<HTMLTextAreaElement>('[name="abstract"]')!;
+  const outcomesField = form.querySelector<HTMLTextAreaElement>('[name="learning_outcomes"]')!;
+  const touchedDetails = new Set<HTMLTextAreaElement>();
+  const outcomeRows = form.querySelector<HTMLElement>('[data-outcome-rows]')!;
+  const addOutcome = form.querySelector<HTMLButtonElement>('[data-add-outcome]')!;
+  let outcomeId = 0;
+
+  function outcomeInputs(): HTMLInputElement[] {
+    return [...outcomeRows.querySelectorAll<HTMLInputElement>('input')];
+  }
+
+  function syncOutcomes() {
+    const inputs = outcomeInputs();
+    outcomesField.value = inputs.map((input) => input.value.trim()).join('\n');
+    const completed = inputs.filter((input) => input.value.trim()).length;
+    const remaining = Math.max(0, 3 - completed);
+    const guidance = remaining
+      ? `Add ${remaining} more to reach the minimum.`
+      : completed < inputs.length ? 'Complete or remove the empty outcomes.' : 'Ready. You can add up to 5.';
+    const progress = form.querySelector('#outcomes-progress')!;
+    const message = `${completed} of 3 required outcomes added. ${guidance}`;
+    if (progress.textContent !== message) progress.textContent = message;
+    addOutcome.hidden = inputs.length >= 5;
+    [...outcomeRows.children].forEach((row, index) => {
+      row.querySelector('[data-outcome-number]')!.textContent = String(index + 1).padStart(2, '0');
+      const input = row.querySelector('input')!;
+      input.setAttribute('aria-label', `Learning outcome ${index + 1}`);
+      input.placeholder = `Outcome ${index + 1}`;
+      const remove = row.querySelector('button')!;
+      remove.hidden = inputs.length === 1;
+      remove.setAttribute('aria-label', `Remove learning outcome ${index + 1}`);
+    });
+    if (touchedDetails.has(outcomesField)) validateDetail(outcomesField);
+    updateContinueButtons();
+  }
+
+  function appendOutcome(focus = true) {
+    if (outcomeInputs().length >= 5) return;
+    const row = document.createElement('div');
+    row.className = 'outcome-row';
+    const number = document.createElement('span');
+    number.dataset.outcomeNumber = '';
+    number.setAttribute('aria-hidden', 'true');
+    const input = document.createElement('input');
+    input.id = `learning-outcome-${outcomeId++}`;
+    input.maxLength = 300;
+    input.required = true;
+    input.setAttribute('aria-describedby', 'outcomes-hint outcomes-error');
+    input.addEventListener('input', syncOutcomes);
+    input.addEventListener('blur', () => {
+      touchedDetails.add(outcomesField);
+      validateDetail(outcomesField);
+    });
+    const remove = document.createElement('button');
+    remove.type = 'button';
+    remove.className = 'outcome-remove';
+    remove.textContent = '×';
+    remove.addEventListener('click', () => {
+      const index = outcomeInputs().indexOf(input);
+      row.remove();
+      syncOutcomes();
+      const inputs = outcomeInputs();
+      inputs[Math.min(index, inputs.length - 1)]?.focus();
+    });
+    row.append(number, input, remove);
+    outcomeRows.append(row);
+    syncOutcomes();
+    if (focus) input.focus();
+  }
+
+  addOutcome.addEventListener('click', () => appendOutcome());
+  appendOutcome(false);
+
+
+  function wordCount(value: string): number {
+    return value.trim() ? value.trim().split(/\s+/).length : 0;
+  }
+
+  function updateWordCount() {
+    const count = wordCount(abstractField.value);
+    form.querySelector('[data-abstract-limit]')!.textContent = `${count} / ${abstractLimit} words`;
+  }
+
+  function validateDetail(field: HTMLTextAreaElement): boolean {
+    const value = field.value.trim();
+    let message = '';
+
+    if (field === abstractField) {
+      if (!value) message = 'Add an abstract for your proposal.';
+      else if (wordCount(value) > abstractLimit) message = `Keep your abstract within ${abstractLimit} words.`;
+      else if (value.length > 12000) message = 'Keep your abstract within 12,000 characters.';
+    } else {
+      const outcomes = value.split('\n').map((line) => line.trim()).filter(Boolean);
+
+      if (outcomes.length < 3 || outcomes.length > 5) message = 'Add 3–5 learning outcomes.';
+      else if (outcomeInputs().some((input) => !input.value.trim())) message = 'Complete or remove the empty outcomes.';
+      else if (outcomes.some((line) => line.length > 300)) message = 'Keep each learning outcome within 300 characters.';
+    }
+
+    const error = form.querySelector<HTMLElement>(field === abstractField ? '#abstract-error' : '#outcomes-error')!;
+    error.textContent = message;
+    error.hidden = !message;
+    field.setAttribute('aria-invalid', String(Boolean(message)));
+    if (field === outcomesField) {
+      outcomeInputs().forEach((input) => input.setAttribute('aria-invalid', String(Boolean(message))));
+    }
+    return !message;
+  }
+
+  for (const field of [abstractField, outcomesField]) {
+    field.addEventListener('blur', () => {
+      touchedDetails.add(field);
+      validateDetail(field);
+    });
+    field.addEventListener('input', () => {
+      updateWordCount();
+      if (touchedDetails.has(field)) validateDetail(field);
+    });
+  }
+
+  window.addEventListener('pageshow', updateWordCount);
+
   function validateStep(step: number): boolean {
+    if (step === 2) {
+      const invalid = [abstractField, outcomesField].filter((field) => {
+        touchedDetails.add(field);
+        return !validateDetail(field);
+      });
+
+      if (invalid.length) {
+        showStep(step);
+        if (invalid[0] === outcomesField) (outcomeInputs().find((input) => !input.value.trim()) ?? outcomeInputs()[0])?.focus();
+        else invalid[0].focus();
+        return false;
+      }
+      return true;
+    }
+
     const fields = [...form.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>(`[data-step="${step}"] input:not([type="hidden"]), [data-step="${step}"] textarea`)];
     const invalid = fields.find((field) => !field.checkValidity());
 
@@ -188,7 +466,7 @@ const apiOrigin = import.meta.env.PUBLIC_DEVCON26_API_ORIGIN || 'https://em.devc
         }
       }
     }
-    return true;
+    return stepReady(step);
   }
 
   form.querySelectorAll<HTMLButtonElement>('[data-next]').forEach((button) => {
@@ -202,7 +480,7 @@ const apiOrigin = import.meta.env.PUBLIC_DEVCON26_API_ORIGIN || 'https://em.devc
 
   async function loadCall() {
     try {
-      const response = await fetch(endpoint, { credentials: 'omit', cache: 'no-store', signal: AbortSignal.timeout(12000) });
+      const response = await fetch(settingsEndpoint, { credentials: 'omit', cache: 'no-store', signal: AbortSignal.timeout(12000) });
 
       if (response.status === 404) {
         status.textContent = 'The Call for Speakers is not open right now. Please check back soon.';
@@ -217,9 +495,12 @@ const apiOrigin = import.meta.env.PUBLIC_DEVCON26_API_ORIGIN || 'https://em.devc
         setupChoice(name, choices);
       }
       abstractLimit = Number(call.abstract_word_limit) || 300;
-      form.querySelector('[data-abstract-limit]')!.textContent = `Up to ${abstractLimit} words.`;
-      status.textContent = 'Applications are open. Your proposal goes directly to the annual conference review team.';
+      updateWordCount();
+      status.textContent = localPreview
+        ? 'Local preview: live speaker settings loaded. You can test the form steps; submission is disabled.'
+        : 'Applications are open. Your proposal goes directly to the annual conference review team.';
       form.hidden = false;
+      updateContinueButtons();
     } catch {
       status.textContent = 'The application could not be loaded. Please refresh to try again.';
     }
@@ -227,26 +508,25 @@ const apiOrigin = import.meta.env.PUBLIC_DEVCON26_API_ORIGIN || 'https://em.devc
 
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
-    if (busy) return;
-    if (currentStep < 2) {
+    if (busy || !result.hidden) return;
+    if (currentStep < 3) {
       if (validateStep(currentStep)) showStep(currentStep + 1);
       return;
     }
     for (let step = 0; step < 3; step++) {
       if (!validateStep(step)) return;
     }
+    if (localPreview) {
+      showSubmissionResult();
+      return;
+    }
     const data = new FormData(form);
     const outcomes = String(data.get('learning_outcomes')).split('\n').map((line) => line.trim()).filter(Boolean);
     const abstract = String(data.get('abstract')).trim();
     const token = String(data.get('cf-turnstile-response') ?? '');
 
-    if (outcomes.length < 3 || outcomes.length > 5 || outcomes.some((line) => line.length > 300)) {
-      status.textContent = 'Add 3–5 learning outcomes, each no longer than 300 characters.';
-      status.focus();
-      return;
-    }
-    if (abstract.split(/\s+/).length > abstractLimit || !token) {
-      status.textContent = !token ? 'Complete the human verification first.' : `Keep your abstract within ${abstractLimit} words.`;
+    if (!token) {
+      status.textContent = 'Complete the human verification first.';
       status.focus();
       return;
     }
@@ -266,15 +546,15 @@ const apiOrigin = import.meta.env.PUBLIC_DEVCON26_API_ORIGIN || 'https://em.devc
       const body = await response.json();
 
       if (response.status !== 202 || body.accepted !== true) throw new Error(body.error || 'Unable to submit. Please try again.');
-      status.textContent = body.message;
-      form.hidden = true;
+      showSubmissionResult();
     } catch (error) {
       status.textContent = error instanceof Error ? error.message : 'Unable to submit. Please try again.';
       (window as unknown as { turnstile?: { reset: () => void } }).turnstile?.reset();
     } finally {
       busy = false;
       form.querySelectorAll<HTMLButtonElement>('button').forEach((button) => { button.disabled = false; });
-      status.focus();
+      updateContinueButtons();
+      if (result.hidden) status.focus();
     }
   });
   void loadCall();
@@ -286,12 +566,157 @@ const apiOrigin = import.meta.env.PUBLIC_DEVCON26_API_ORIGIN || 'https://em.devc
     margin: 0 auto;
     padding: 16px 24px;
   }
+  .submission-result {
+    max-width: 800px;
+    margin: 48px auto 24px;
+    padding: clamp(24px, 5vw, 56px);
+    background: #fbf9f3;
+    border: 1px solid #d6d2c8;
+    border-radius: 12px;
+    scroll-margin-top: 100px;
+  }
+  .result-topline {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: space-between;
+    font-size: 12px;
+    font-weight: 600;
+    color: #59564f;
+  }
+  .result-status {
+    background: #f8ee3e;
+    padding: 6px 10px;
+    border-radius: 4px;
+    color: #111;
+  }
+  .submission-result h1 {
+    font-size: clamp(36px, 5vw, 64px);
+    line-height: 1.08;
+    margin: 32px 0 20px;
+  }
+  .submission-result h1:focus {
+    outline: none;
+  }
+  .submission-result em {
+    color: #c50070;
+    font-style: normal;
+  }
+  .result-intro, .result-next p {
+    font-size: 16px;
+    line-height: 1.65;
+    color: #59564f;
+    max-width: 60ch;
+    margin: 0;
+  }
+  .proposal-receipt {
+    margin: 28px 0;
+    padding: 4px 0 4px 20px;
+    border-left: 3px solid #c50070;
+  }
+  .receipt-label {
+    margin: 0 0 8px;
+    font-size: 12px;
+    color: #59564f;
+  }
+  .proposal-receipt h2 {
+    font-size: 22px;
+    line-height: 1.3;
+    overflow-wrap: anywhere;
+    margin: 0 0 8px;
+  }
+  .proposal-receipt > p:last-child {
+    font-size: 14px;
+    line-height: 1.5;
+    color: #59564f;
+    margin: 0;
+  }
+  .result-next {
+    border-top: 1px solid #dedbd4;
+    padding-top: 24px;
+    margin: 28px 0;
+  }
+  .result-next h2 {
+    font-size: 18px;
+    margin: 0 0 8px;
+  }
+  .result-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+  }
+  .result-home {
+    display: inline-flex;
+    align-items: center;
+    gap: 24px;
+    background: #f8ee3e;
+    color: #111;
+    padding: 14px 20px;
+    border-radius: 8px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: transform 150ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .result-home:active {
+    transform: scale(0.97);
+  }
+  .result-home:focus-visible {
+    outline: 2px solid #c50070;
+    outline-offset: 4px;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .result-home:hover {
+      transform: translateY(-2px);
+      background: #efe52d;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .result-home, .result-home:hover, .result-home:active {
+      transition: none;
+      transform: none;
+    }
+  }
+  @media (max-width: 700px) {
+    .submission-result {
+      margin-top: 20px;
+      padding: 24px 20px;
+    }
+  }
+  .review-intro {
+    color: #59564f;
+    font-size: 16px;
+    line-height: 1.6;
+  }
+  .review-details {
+    margin: 24px 0;
+  }
+  .review-details > div {
+    padding: 16px 0;
+    border-bottom: 1px solid #dedbd4;
+  }
+  .review-details dt {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+  .review-details dd {
+    margin: 0;
+    font-size: 16px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+  .review-details ol {
+    list-style: decimal outside;
+    padding-left: 24px;
+    margin: 0;
+  }
   .page-heading {
     display: grid;
-    grid-template-columns: 1.2fr 1fr;
-    align-items: center;
-    justify-content: space-between;
-    gap: 20px;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
     margin-bottom: 12px;
   }
   .eyebrow {
@@ -307,60 +732,90 @@ const apiOrigin = import.meta.env.PUBLIC_DEVCON26_API_ORIGIN || 'https://em.devc
     color: #ed008c;
     font-style: normal;
   }
-  .intro {
+  .intro,
+  [data-cfp-status],
+  .submit-footer > p,
+  small {
+    font-family: var(--font-body);
     font-size: 16px;
-    max-width: 600px;
+    font-weight: 400;
     line-height: 1.6;
+  }
+
+  .intro {
+    margin: 0;
+    max-width: 760px;
   }
   form {
     width: 100%;
     margin-top: 16px;
   }
   .stepper {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    display: flex;
+    align-items: center;
     gap: 16px;
+    width: 100%;
+    box-sizing: border-box;
     list-style: none;
-    padding: 0;
-    margin: 0 0 16px;
+    padding: 0 16px;
+    margin: 24px 0;
   }
+
   .stepper li {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding-bottom: 12px;
-    border-bottom: 2px solid #d6d2c8;
-    font-size: 15px;
-    color: #666;
+    gap: 8px;
+    flex: 1;
+    font-size: 14px;
+    line-height: 1.4;
+    color: #77736b;
     min-width: 0;
   }
+
+  .stepper li:not(:last-child)::after {
+    content: '';
+    height: 1px;
+    min-width: 12px;
+    flex: 1;
+    margin-left: 8px;
+    background: #d6d2c8;
+  }
+
+  .stepper li:last-child {
+    flex: 0 0 auto;
+  }
+
   .step-number {
     display: grid;
     place-items: center;
-    width: 30px;
-    height: 30px;
+    width: 28px;
+    height: 28px;
     flex-shrink: 0;
     border: 1px solid #d6d2c8;
     border-radius: 50%;
+    font-size: 12px;
   }
+
   .stepper li.completed {
-    border-color: #111;
     color: #111;
   }
+
   .stepper li.completed .step-number {
     background: #f8ee3e;
-    border-color: #111;
+    border-color: transparent;
   }
+
   .stepper li[aria-current="step"] {
-    color: #ed008c;
-    font-weight: 700;
-    border-color: #ed008c;
+    color: #b50068;
+    font-weight: 600;
   }
+
   [aria-current="step"] .step-number {
     background: #ed008c;
     color: #fff;
     border-color: #ed008c;
   }
+
   .step-panel {
     display: grid;
     gap: 12px;
@@ -380,104 +835,120 @@ const apiOrigin = import.meta.env.PUBLIC_DEVCON26_API_ORIGIN || 'https://em.devc
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 20px;
   }
+  .outcomes-editor {
+    min-width: 0;
+    padding: 0;
+    margin: 0;
+    border: 0;
+  }
+  .outcomes-editor legend {
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+  .outcomes-editor small {
+    display: block;
+    margin: 8px 0;
+  }
+  :global(.speaker-page .outcome-row) {
+    display: grid;
+    grid-template-columns: 28px minmax(0, 1fr) 32px;
+    gap: 8px;
+    align-items: center;
+    margin-top: 12px;
+  }
+  :global(.speaker-page .outcome-row > span) {
+    color: #b50068;
+    font-size: 14px;
+    font-weight: 600;
+  }
+  :global(body .speaker-page .outcome-add),
+  :global(body .speaker-page .outcome-remove) {
+    background: transparent;
+    color: #b50068;
+    border: 0;
+    box-shadow: none;
+    transform: none;
+    min-height: 36px;
+    padding: 4px;
+  }
+  :global(body .speaker-page .outcome-add::after),
+  :global(body .speaker-page .outcome-remove::after) {
+    content: none;
+  }
+  .outcome-add {
+    margin-top: 12px;
+  }
+  .proposal-fields {
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .proposal-fields label {
+    min-width: 0;
+  }
+
+  .field-error {
+    color: #a72035;
+  }
+
+  textarea[aria-invalid="true"], :global(.speaker-page .outcome-row input[aria-invalid="true"]) {
+    border-color: #a72035;
+  }
+
+  .preview-note {
+    margin: 0;
+    color: #666;
+  }
+
   .full-width {
     grid-column: 1 / -1;
   }
   label {
     display: grid;
     gap: 8px;
+    font-size: 14px;
     font-weight: 600;
     min-width: 0;
   }
-  input, textarea, select {
+  input, textarea, select, :global(.speaker-page .outcome-row input) {
     width: 100%;
     box-sizing: border-box;
-    padding: 12px;
-    border: 1px solid #8c8270;
+    min-height: 48px;
+    padding: 12px 14px;
+    border: 1px solid #c7c2b8;
     border-radius: 8px;
-    background: #fbf9f3;
+    background: #fffdf8;
+    color: #111;
     font: inherit;
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 1.5;
   }
-  input:focus, textarea:focus, select:focus {
+  input:focus, textarea:focus, select:focus, :global(.speaker-page .outcome-row input:focus) {
     border-color: #ed008c;
-    outline: 2px solid #ed008c;
-    outline-offset: 2px;
+    outline: none;
+    box-shadow: none;
   }
   textarea {
     resize: none;
     line-height: 1.5;
   }
   small {
-    font-size: 13px;
-    font-weight: 400;
     color: #666;
-  }
-  .choice-field {
-    position: relative;
-    min-width: 0;
-    display: grid;
-    gap: 8px;
-  }
-  .choice-trigger {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    width: 100%;
-    text-align: left;
-    background: #fbf9f3;
-    border-color: #8c8270;
-    font-weight: 400;
-  }
-  .choice-options {
-    position: absolute;
-    top: calc(100% + 6px);
-    inset-inline: 0;
-    z-index: 20;
-    padding: 6px;
-    border: 1px solid #111;
-    border-radius: 8px;
-    background: #fbf9f3;
-    box-shadow: 4px 4px 0 #111;
-    max-height: min(240px, 35svh);
-    overflow-y: auto;
-  }
-  .choice-options :global([role="option"]) {
-    display: block;
-    width: 100%;
-    min-height: 44px;
-    padding: 10px 12px;
-    border: 0;
-    border-radius: 6px;
-    background: transparent;
-    text-align: left;
-    font: inherit;
-    color: #111;
-    cursor: pointer;
-  }
-  .choice-options :global([role="option"]:focus-visible),
-  .choice-options :global([role="option"]:hover),
-  .choice-options :global([aria-selected="true"]) {
-    background: #fff8a8;
-    outline: 2px solid #ed008c;
-    outline-offset: -2px;
   }
   button:focus-visible {
     outline: 2px solid #ed008c;
     outline-offset: 3px;
   }
-  .choice-trigger[aria-invalid="true"] {
-    border-color: #b42318;
-  }
   .cf-turnstile {
     width: 164px;
-    justify-self: center;
+    justify-self: start;
   }
   .submit-footer {
     display: grid;
-    grid-template-columns: 164px minmax(0, 1fr);
-    align-items: center;
-    gap: 24px;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+    margin-top: 12px;
   }
   button {
     min-height: 48px;
@@ -489,7 +960,10 @@ const apiOrigin = import.meta.env.PUBLIC_DEVCON26_API_ORIGIN || 'https://em.devc
     font-weight: 700;
   }
   button:disabled {
-    opacity: .5;
+    color: #77736b;
+    background: #e9e6dd;
+    border-color: #d6d2c8;
+    cursor: not-allowed;
   }
   .actions {
     display: flex;
@@ -498,12 +972,46 @@ const apiOrigin = import.meta.env.PUBLIC_DEVCON26_API_ORIGIN || 'https://em.devc
     align-items: center;
     justify-content: space-between;
   }
+  .actions button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    flex-shrink: 0;
+    min-width: 104px;
+    line-height: 1.4;
+    overflow: visible;
+  }
+
+  .actions button svg {
+    flex-shrink: 0;
+    overflow: visible;
+  }
+
   .actions span {
     font-size: 13px;
     color: #666;
   }
   .secondary {
-    background: transparent;
+    background: #fbf9f3;
+    border: 2px solid #55514b;
+  }
+
+  :global(body .speaker-page .actions button.secondary) {
+    transform: none;
+    box-shadow: none;
+    transition: none;
+  }
+
+  :global(body .speaker-page .actions button.secondary::after) {
+    content: none;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .secondary:hover {
+      background: #f1eee5;
+      border-color: #111;
+    }
   }
   @media (max-width: 700px) {
     .page-heading, .field-grid, .submit-footer {
@@ -519,13 +1027,47 @@ const apiOrigin = import.meta.env.PUBLIC_DEVCON26_API_ORIGIN || 'https://em.devc
       padding: 16px 12px;
     }
     .stepper {
-      gap: 8px;
+      padding-inline: 12px;
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
     }
+
     .stepper li {
-      flex-direction: column;
-      align-items: flex-start;
+      position: relative;
+      display: grid;
+      grid-template-rows: 36px 28px 36px;
+      align-items: center;
+      justify-items: center;
+      text-align: center;
       font-size: 12px;
       gap: 6px;
+    }
+
+    .stepper .step-number {
+      grid-row: 2;
+    }
+
+    .stepper li > span:last-child {
+      grid-row: 3;
+      white-space: normal;
+    }
+
+    .stepper li:nth-child(even) > span:last-child {
+      grid-row: 1;
+    }
+
+    .stepper li > span {
+      grid-column: 1;
+    }
+
+    .stepper li:not(:last-child)::after {
+      position: absolute;
+      top: 56px;
+      left: calc(50% + 22px);
+      right: calc(-50% + 10px);
+      margin-left: 0;
+      min-width: 0;
     }
     .actions span {
       display: none;

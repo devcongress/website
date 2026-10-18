@@ -1,10 +1,14 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
+import { localCfpProxy } from './scripts/local-cfp-proxy.mjs';
 
 export default defineConfig({
   site: 'https://devcongress.org',
   base: '/',
   output: 'static',
+  vite: {
+    plugins: [localCfpProxy()],
+  },
   markdown: {
     syntaxHighlight: false,
   },

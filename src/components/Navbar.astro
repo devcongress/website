@@ -5,7 +5,7 @@ interface Props {
 }
 
 const { slackUrl, donationPath } = Astro.props;
-const conference = Astro.url.pathname.startsWith('/devcon26/');
+const conference = Astro.url.pathname === '/devcon26' || Astro.url.pathname.startsWith('/devcon26/');
 const guardNavigation = Astro.url.pathname.replace(/\/$/, '') === '/events/submit';
 const links = conference ? [
   { href: '/devcon26/#about', label: 'About' },
@@ -23,7 +23,7 @@ const links = conference ? [
 
 <header class="navbar" data-site-navbar>
   <div class="container navbar-inner">
-    <a href="/" class="navbar-logo" aria-label="DevCongress home" data-confirm-navigation={guardNavigation || undefined}>
+    <a href={conference ? "/devcon26/" : "/"} class="navbar-logo" aria-label={conference ? "DevCon26 home" : "DevCongress home"} data-confirm-navigation={guardNavigation || undefined}>
       <img src="/images/logo.png" alt="DevCongress" height="32" />
     </a>
     <nav class="navbar-links" aria-label={conference ? 'DevCon26 sections' : 'Primary'}>
@@ -58,7 +58,7 @@ const links = conference ? [
     top: 0;
     z-index: 100;
     background: var(--bg);
-    border-bottom: 2px solid var(--black);
+    border-bottom: 1px solid rgb(17 17 17 / 28%);
   }
 
   .navbar-inner {
@@ -238,6 +238,21 @@ const links = conference ? [
   }
 
   @media (max-width: 960px) {
+    .navbar-logo {
+      flex-shrink: 1;
+      min-width: 0;
+    }
+
+    .navbar-logo img {
+      max-width: 100%;
+      height: auto;
+      max-height: 40px;
+    }
+
+    .nav-toggle {
+      flex-shrink: 0;
+    }
+
     .navbar-inner {
       flex-wrap: wrap;
       gap: var(--s3);
@@ -279,7 +294,7 @@ const links = conference ? [
       overscroll-behavior: contain;
       background: var(--bg-white);
       border-top: 2px solid var(--black);
-      border-bottom: 2px solid var(--black);
+      border-bottom: 1px solid rgb(17 17 17 / 28%);
       box-shadow: 0 12px 20px rgb(17 17 17 / 8%);
       visibility: hidden;
       opacity: 0;

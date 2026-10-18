@@ -2,7 +2,7 @@
 
 ## Registration pause (2026-10-18)
 
-Registration and checkout routes temporarily render `Devcon26RegistrationHolding.astro` without intake fields, payment initialization, Turnstile or badge-generation scripts. The conference calls to action link to this notice. Existing payment confirmation/return handling and social-card routes remain available. Restore the intake routes from the parent revision only after registration/email/QR acceptance checks and an explicit reopening decision; keep the backend closed until then.
+Registration and checkout routes temporarily redirect to `/devcon26/#tickets`. The existing conference registration section shows “Registration opens soon” without an active registration button. No dedicated holding page, intake fields, payment initialization, Turnstile or badge-generation scripts are served at the paused routes. Existing payment confirmation/return handling and social-card routes remain available. Restore the intake routes from the parent revision only after registration/email/QR acceptance checks and an explicit reopening decision; keep the backend closed until then.
 
 
 ## Dedicated-page scroll motion (2026-10-16)
@@ -75,3 +75,14 @@ Verify with `pnpm build`, the existing DevCon26 hero and checkout checks, and
 desktop/mobile browser checks. Check links, navigation around 960/961px, panel
 placement before Where we show up, and visible keyboard focus. No payment-provider
 configuration, EMS data, or production checkout behavior is changed.
+
+
+## Local speaker-form preview
+
+`pnpm dev` loads the live DevCon26 Call for Speakers settings through the fixed, GET-only `/__local/cfp/devcon26` middleware. It forwards no cookies, credentials or request bodies. Local preview supports the form steps but disables submission and does not load Turnstile. Build/PR preview/production output uses deployed EMS directly and retains normal Turnstile and proposal submission; the middleware is development-only. Use port 4321 (`pnpm dev`), not the static preview on 4322, for this workflow.
+
+The navbar logo links to `/devcon26/` on all DevCon26 routes, and to `/` elsewhere. The hero’s yellow “Register now” button links to `#tickets`, where the registration-opens-soon notice remains.
+
+The conference landing page places “Back to DevCongress” beside the hero conference label and year, wrapping on narrow screens. The return link appears only on `/devcon26/`, not its sub-routes. Shared header dividers use a light single-pixel rule.
+
+The hero retains its wide top image and two smaller images beneath. Its rotation includes the original sixteen photos plus six selected April/May photos; three initial images load, with subsequent images prepared one at a time. Original source files remain untouched.

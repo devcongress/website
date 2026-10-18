@@ -70,11 +70,59 @@ const heroSlots = [
   },
 ];
 
+heroSlots[1].photos.push({
+  src: '/images/devcon26/hero-candid-question.webp',
+  alt: 'An attendee raising a hand during a discussion',
+  width: 667,
+  height: 1000,
+  position: '50% 25%',
+});
+
+heroSlots[2].photos.push({
+  src: '/images/devcon26/hero-candid-presenting.webp',
+  alt: 'A presenter speaking beside a screen',
+  width: 738,
+  height: 1000,
+  position: '50% 25%',
+});
+
+heroSlots[1].photos.push({
+  src: '/images/devcon26/hero-candid-reflection.webp',
+  alt: 'An attendee listening closely to a talk',
+  width: 845,
+  height: 1000,
+  position: '50% 25%',
+});
+
+heroSlots[0].photos.push({
+  src: '/images/devcon26/hero-candid-laptop-demo.webp',
+  alt: 'Community members gathered around a laptop demonstration',
+  width: 1100,
+  height: 733,
+  position: '50% 45%',
+});
+
+heroSlots[2].photos.push({
+  src: '/images/devcon26/hero-candid-audience-row.webp',
+  alt: 'Attendees following a discussion together',
+  width: 1100,
+  height: 733,
+  position: '50% 40%',
+});
+
+heroSlots[0].photos.push({
+  src: '/images/devcon26/hero-candid-outdoor-group.webp',
+  alt: 'The April meetup community gathered outside',
+  width: 1000,
+  height: 594,
+  position: '50% 75%',
+});
+
 const faqs = [
   ['Who is DevCon26 for?', 'For the people building technology across Africa: developers, designers, founders, product people, researchers, and students.'],
   ['When and where is it?', 'Meet us at Ghana Digital Center (formerly Accra Digital Center), Accra, Ghana on 19 December 2026. The programme will be announced here.'],
   ['Can I come with my team?', 'Yes. When registration opens, each person will register separately with their own name and email.'],
-  ['How do I register?', 'Registration opens soon. Check back here for updates. If you have already registered or paid, contact hello@devcongress.org for help.'],
+  ['How do I register?', 'Registration opens soon. Check back here for updates.'],
 ];
 
 const sponsorIds = new Set(['kweku_tech']);
@@ -165,13 +213,16 @@ function packageEnquiryLink(sponsorship: (typeof sponsorshipPackages)[number]) {
       <section class="hero page-shell" aria-labelledby="event-title">
         <div class="hero-copy">
           <p class="event-label">
-            <span class="event-label-copy">DevCongress annual conference</span>
-            <span class="event-year">2026</span>
+            <a class="event-home-link" href="/"><span aria-hidden="true">←</span> Back to DevCongress</a>
+            <span class="event-identity">
+              <span class="event-label-copy">DevCongress annual conference</span>
+              <span class="event-year">2026</span>
+            </span>
           </p>
           <h1 id="event-title">A year together.<br /><em>One big gathering.</em></h1>
           <p class="hero-summary">Meetups, ideas, and new connections all year. Join the community at DevCon26.</p>
           <div class="hero-actions">
-            <a class="button button-primary" href="/devcon26/register/">Registration opens soon <span aria-hidden="true">↗</span></a>
+            <a class="button button-primary" href="#tickets">Register now <span aria-hidden="true">↗</span></a>
             <p>19 December 2026<br /><strong>Ghana Digital Center (formerly Accra Digital Center), Accra</strong></p>
           </div>
         </div>
@@ -296,12 +347,11 @@ function packageEnquiryLink(sponsorship: (typeof sponsorshipPackages)[number]) {
           </div>
           <div class="tickets-heading">
             <p class="section-caption">DevCon26</p>
-            <h2 id="tickets-title">Your place in the room.</h2>
+            <h2 id="tickets-title">Registration opens soon.</h2>
           </div>
           <div class="registration-action">
             <p class="tickets-copy">Join us at DevCon26. A day of technology, community, and ideas.</p>
-            <a class="button button-primary registration-button" href="/devcon26/register/">Registration opens soon <span aria-hidden="true">↗</span></a>
-            <p class="registration-note">Registration opens soon. Check back here for updates.</p>
+            <p class="registration-note">We’re getting registration ready. Check back here for updates.</p>
           </div>
         </div>
       </section>
@@ -580,7 +630,8 @@ function packageEnquiryLink(sponsorship: (typeof sponsorshipPackages)[number]) {
   }
 
   .event-label {
-    display: inline-flex;
+    display: flex;
+    flex-wrap: wrap;
     max-width: 100%;
     align-items: center;
     gap: 12px;
@@ -589,6 +640,57 @@ function packageEnquiryLink(sponsorship: (typeof sponsorshipPackages)[number]) {
     font-size: var(--dc-text-meta);
     font-weight: 600;
     line-height: 1.5;
+  }
+
+  .event-identity {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    margin-left: auto;
+  }
+
+  .event-home-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 44px;
+    color: #b50068;
+    font-size: 14px;
+    font-weight: 600;
+    white-space: nowrap;
+    text-decoration: none;
+  }
+
+  .event-home-link > span {
+    font-size: 16px;
+    line-height: 1;
+    transition: transform 160ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .event-home-link:hover {
+      color: #85004d;
+      text-decoration: none;
+    }
+
+    .event-home-link:hover > span {
+      transform: translateX(-3px);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .event-home-link > span {
+      transition: none;
+    }
+
+    .event-home-link:hover > span {
+      transform: none;
+    }
+  }
+
+  .event-home-link:focus-visible {
+    outline: 2px solid var(--dc-pink);
+    outline-offset: 4px;
   }
 
   .event-label-copy {
@@ -679,7 +781,7 @@ function packageEnquiryLink(sponsorship: (typeof sponsorshipPackages)[number]) {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     align-self: center;
-    gap: 12px;
+    gap: 8px;
     min-width: 0;
   }
 
@@ -1911,7 +2013,7 @@ function packageEnquiryLink(sponsorship: (typeof sponsorshipPackages)[number]) {
     }
 
     .hero-images {
-      gap: 10px;
+      gap: 8px;
     }
 
     .story-section, .speakers-header, .section-intro, .location-section, .faq-section {
@@ -2041,7 +2143,7 @@ function packageEnquiryLink(sponsorship: (typeof sponsorshipPackages)[number]) {
     }
 
     .hero-images {
-      gap: 8px;
+      gap: 6px;
     }
 
     .hero-photo:not(.hero-photo-main) {
@@ -2115,38 +2217,53 @@ function packageEnquiryLink(sponsorship: (typeof sponsorshipPackages)[number]) {
     }
 
     .speaker-grid {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 28px 18px;
-      margin-top: 30px;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 24px;
+      margin: 30px 0 0;
     }
 
-    .speaker-card:nth-child(2) {
-      margin-top: 48px;
-    }
-
+    .speaker-card,
+    .speaker-card:nth-child(2),
     .speaker-card:nth-child(3) {
-      margin: -20px 0 0;
+      display: grid;
+      grid-template-columns: 112px minmax(0, 1fr);
+      grid-template-rows: 1fr 1fr;
+      gap: 6px 18px;
+      margin: 0;
     }
 
     .speaker-placeholder {
-      aspect-ratio: 0.85;
-      padding: 16px;
+      grid-row: 1 / 3;
+      aspect-ratio: 1;
+      padding: 12px;
+    }
+
+    .speaker-number {
+      font-size: 12px;
     }
 
     .speaker-art {
-      top: 16%;
-      width: 44%;
-      max-width: 128px;
+      top: 28%;
+      width: 58%;
+      max-width: 72px;
     }
 
     .speaker-placeholder small {
-      max-width: 10ch;
+      display: none;
+    }
+
+    .speaker-status {
+      align-self: end;
+      margin: 0;
+      font-size: 13px;
       line-height: 1.4;
     }
 
     .speaker-card h3 {
-      font-size: var(--dc-text-subtitle);
-      line-height: 1.1;
+      align-self: start;
+      margin: 0;
+      font-size: 20px;
+      line-height: 1.2;
     }
 
     .location-section {
@@ -2176,14 +2293,21 @@ function packageEnquiryLink(sponsorship: (typeof sponsorshipPackages)[number]) {
     }
 
     .registration-art {
-      bottom: auto;
+      inset: 0;
       width: 100%;
-      height: 300px;
-      opacity: 0.55;
+      height: 100%;
+      opacity: 0.28;
     }
 
     .registration-art img {
-      transform: rotate(-32deg) scale(0.72);
+      width: auto;
+      max-width: none;
+      height: 76%;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      object-fit: contain;
+      transform: translate(-50%, -50%) rotate(-14deg);
     }
 
     .tickets-copy {

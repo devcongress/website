@@ -1,8 +1,64 @@
 # Changelog
 
+## 2026-10-18 — Proposal form layout and feedback
+
+- Use a 60/40 desktop proposal grid, a full-width preview notice and a separate Back/Submit row; stack fields on mobile.
+- Add a live abstract word count and inline required/word-limit/outcome validation. Preserve local-only submission blocking and production Turnstile verification.
+- Replace long step underlines with compact markers and subtle connectors aligned to the form’s full inner width; give Back a fixed-size SVG arrow, explicit alignment and a flat border without the shared raised effect.
+
+## 2026-10-18 — Speaker supporting text
+
+- Use consistent body typography for the introduction, status messages, local preview notice and field hints. Development-only preview messages and submission guards remain unchanged.
+
+## 2026-10-18 — Narrow-phone navigation
+
+- Allow the navbar logo to shrink on narrow phones so the menu button remains fully visible. Checked the hero grid and speaker form steps in local mobile previews.
+
+## 2026-10-18 — Speaker introduction layout
+
+- Stack the speaker application introduction beneath its main heading at every screen size instead of placing it in a right-hand column.
+
+## 2026-10-18 — Selected hero photos
+
+- Preserve the original wide-over-two photo composition and its sixteen photos. Add the six user-selected photos (shortlist 1, 2, 3, 5, 6 and 12), with slot-specific crops and optimized WebP exports. Keep existing lazy loading and slideshow behavior.
+
+## 2026-10-18 — Return-link hover
+
+- Deepen the return link’s pink and move its arrow slightly left on pointer hover, without an underline; disable arrow motion for reduced-motion preferences.
+
+## 2026-10-18 — Main-site navigation and lighter header
+
+- Place a prominent “Back to DevCongress” link on the left of the hero metadata row, as a pink text link with a small back arrow; align the conference label and year to the right. Show the return link only on the conference landing page; retain the conference logo destination on sub-routes.
+- Soften shared navbar and mobile-menu bottom dividers to a translucent single-pixel rule.
+
+## 2026-10-18 — Explore conference destination
+
+- Point the homepage “Explore DevCon26” action to `/devcon26/` instead of jumping directly to the registration section.
+
+## 2026-10-18 — Conference navigation and registration notice
+
+- Restore the hero’s yellow “Register now” button, linking to the existing registration section, which still says registration opens soon. Remove the experimental notice styles and preview controls.
+- Keep navbar logo navigation within DevCon26 on the conference page and its sub-routes. Other pages continue linking to the main homepage.
+
+## 2026-10-18 — Speaker dropdowns and step readiness
+
+- Adapt EMS dropdown controls into a reusable Astro component with selected checkmarks, circular chevrons, soft menus and keyboard navigation. Keep dropdown choices flat instead of raised.
+- Use light single-pixel field borders and keep Continue disabled until required values, email format and both session choices are valid.
+
+
+## 2026-10-18 — Speaker input polish
+
+- Replace the double focus outline with one inset pink focus indicator. Give speaker text fields consistent padding, regular-weight text and clearer label sizing.
+
+
+## 2026-10-18 — Local speaker preview
+
+- Load deployed CFP settings through a fixed read-only development proxy; allow local form walkthroughs without real proposal submissions. Production builds continue to use deployed EMS directly.
+
+
 ## 2026-10-18 — Pause DevCon26 public registration
 
-- Replace registration and checkout intake pages with a shared “Registration opens soon” notice and event-team contact for existing attendees.
+- Show “Registration opens soon” in the existing conference registration section without an active registration button; redirect old registration and checkout URLs to that section.
 - Update only registration-related calls to action on the homepage and conference page, plus the registration FAQ copy. Preserve payment confirmation, legacy payment returns, social cards, badges, navigation, donations and the rest of the website.
 - Backend closure is a separate Owner setting; publishing this page does not cancel registrations, modify payments or stop existing email jobs.
 

@@ -2116,8 +2116,17 @@ function packageEnquiryLink(sponsorship: (typeof sponsorshipPackages)[number]) {
     }
 
     .event-label {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 4px;
       margin-bottom: 20px;
       font-size: var(--dc-text-meta);
+    }
+
+    .event-identity {
+      max-width: 100%;
+      margin-left: 0;
+      gap: 8px;
     }
 
     h1 {

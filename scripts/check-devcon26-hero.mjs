@@ -255,10 +255,11 @@ const mosaic = html.slice(html.indexOf('<div class="hero-images"'), html.indexOf
 const photos = [...mosaic.matchAll(/<img\b[^>]*>/g)].map((match) => match[0]);
 
 assert.equal((mosaic.match(/data-hero-slot=/g) || []).length, 3);
-assert.equal(photos.length, 16);
+assert.equal(photos.length, 22);
+assert.equal(new Set(photos.map((photo) => photo.match(/data-hero-src="([^"]+)"/)[1])).size, 22, 'no duplicate photo paths');
 assert.equal(photos.filter((photo) => /\ssrc=/.test(photo)).length, 3, 'three images exist without JS');
 assert.equal(photos.filter((photo) => /class="is-active"/.test(photo)).length, 3);
-assert.equal(photos.filter((photo) => /aria-hidden="true"/.test(photo)).length, 13);
+assert.equal(photos.filter((photo) => /aria-hidden="true"/.test(photo)).length, 19);
 assert.equal(photos.filter((photo) => /fetchpriority="high"/.test(photo)).length, 1);
 assert.ok(!mosaic.includes('<button') && !mosaic.includes('aria-live'));
 
@@ -271,4 +272,4 @@ for (const photo of photos) {
   assert.match(photo, /height="\d+"/);
 }
 
-console.log('DevCon26 hero checks passed: 3 static photos, 16 assets, staggered/preloaded rotation, failure recovery, pause/resume and cleanup.');
+console.log('DevCon26 hero checks passed: 3 static photos, 22 assets, staggered/preloaded rotation, failure recovery, pause/resume and cleanup.');

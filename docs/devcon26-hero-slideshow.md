@@ -1,8 +1,8 @@
 # DevCon26 hero photos
 
-Updated 2026-10-10. The event hero uses a three-photo mosaic: one wide gathering
+Updated 2026-10-18. The event hero uses a three-photo mosaic: one wide gathering
 above two smaller activity photographs, with no overlap. Three disjoint pools
-reuse all 16 April and May photographs. No location photo is introduced.
+contain 22 selected April and May photographs: the original sixteen plus six user selections. No location photo is introduced.
 The existing headline and invitation
 leave the photographs to tell the community story; the prominent hero ticket
 button still links to `#tickets`. The programme, tickets, and payment confirmation
@@ -11,7 +11,7 @@ are unchanged.
 ## Photographs
 
 The April community group, a May host, and a speaker open the mosaic. The original
-discussion and speaker photographs remain in the rotation. Fourteen optimized
+discussion and speaker photographs remain in the rotation. Twenty optimized
 photographs were selected from the supplied community folder:
 
 | Asset | Supplied source | Use |
@@ -31,12 +31,19 @@ photographs were selected from the supplied community folder:
 | `hero-may-connections.webp` | `DevCon May/IMG_1562.jpg` | May conversations, main image |
 | `hero-may-attendee.webp` | `DevCon May/IMG_1534.jpg` | May attendee, secondary image |
 
+| `hero-candid-question.webp` | `Dev Congress Photos April 2026/Fido Dev-0503.jpg` | Selection 1, small left |
+| `hero-candid-presenting.webp` | `Dev Congress Photos April 2026/Fido Dev-0443.jpg` | Selection 2, small right |
+| `hero-candid-reflection.webp` | `Dev Congress Photos April 2026/Fido Dev-0385.jpg` | Selection 3, small left |
+| `hero-candid-laptop-demo.webp` | `DevCon May/IMG_1557.jpg` | Selection 5, wide |
+| `hero-candid-audience-row.webp` | `DevCon May/IMG_1503.jpg` | Selection 6, small right |
+| `hero-candid-outdoor-group.webp` | `Dev Congress Photos April 2026/Fido Dev-0550.jpg` | Selection 12, wide |
+
 The existing optimized assets are unchanged. Only the three initial photographs
 have `src` attributes in the server-rendered page; only the wide image has high
 fetch priority. Other photographs keep their URLs in `data-hero-src` until the
-controller preloads the next candidate, avoiding eager downloads of all 16.
-Eight landscape photographs fill the wide slot. The two smaller slots each use
-four different photographs, with focal positions that keep people in view.
+controller preloads the next candidate, avoiding eager downloads of all 22.
+Ten landscape photographs fill the wide slot. The two smaller slots each use
+six different photographs, with focal positions that keep people in view.
 
 ## Interaction and accessibility
 

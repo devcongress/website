@@ -29,7 +29,7 @@ export default defineConfig({
         resources: [
           { resource: "'self'", kind: 'element' },
           { resource: 'https://fonts.googleapis.com', kind: 'element' },
-          // Inttegro's managed modal styles its isolated shadow root at runtime.
+          // Inttegro's hosted runtime applies container styles at runtime.
           { resource: "'unsafe-inline'", kind: 'element' },
           { resource: "'unsafe-inline'", kind: 'attribute' },
         ],

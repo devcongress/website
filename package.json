@@ -8,11 +8,12 @@
   },
   "scripts": {
     "dev": "astro dev",
-    "build": "astro build",
+    "build": "pnpm check:donation && astro build",
     "preview": "astro preview",
     "deploy": "pnpm build && wrangler deploy",
     "deploy:dry-run": "pnpm build && wrangler deploy --dry-run",
-    "astro": "astro"
+    "astro": "astro",
+    "check:donation": "node scripts/check-donation-checkout.mjs"
   },
   "dependencies": {
     "@inttegro/js": "0.5.8",

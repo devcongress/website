@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-10-18 — Pause DevCon26 public registration
+
+- Replace registration and checkout intake pages with a shared “Registration opens soon” notice and event-team contact for existing attendees.
+- Update only registration-related calls to action on the homepage and conference page, plus the registration FAQ copy. Preserve payment confirmation, legacy payment returns, social cards, badges, navigation, donations and the rest of the website.
+- Backend closure is a separate Owner setting; publishing this page does not cancel registrations, modify payments or stop existing email jobs.
+
+
 ## 2026-10-16
 
 - Make the registration receipt accurately acknowledge a request, not confirmed

@@ -1,0 +1,68 @@
+---
+import Base from '../layouts/Base.astro';
+---
+
+<Base title="Registration opens soon | DevCon26" description="DevCon26 registration opens soon. Check back here for updates." showFooter={false} noindex={true}>
+  <main class="registration-holding" id="main-content" aria-labelledby="registration-holding-title">
+    <section class="registration-holding-card">
+      <p class="registration-eyebrow">DevCon26 · Accra</p>
+      <h1 id="registration-holding-title">Registration opens soon.</h1>
+      <p>We’re getting registration ready. Check back here for updates.</p>
+      <p class="registration-help">Already registered or paid? Keep your existing confirmation. For help, <a href="mailto:hello@devcongress.org">contact the event team</a>.</p>
+      <a class="registration-back" href="/devcon26/">Back to DevCon26 <span aria-hidden="true">↗</span></a>
+    </section>
+  </main>
+</Base>
+
+<style>
+  .registration-holding {
+    display: grid;
+    place-items: center;
+    min-height: 65vh;
+    padding: clamp(2rem, 6vw, 5rem) 1.25rem;
+  }
+
+  .registration-holding-card {
+    width: 100%;
+    max-width: 42rem;
+    padding: clamp(1.5rem, 5vw, 3.5rem);
+    border: 1px solid var(--text);
+    border-radius: 12px;
+    background: var(--bg);
+  }
+
+  .registration-eyebrow {
+    margin: 0 0 1rem;
+    font-size: .85rem;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+  }
+
+  h1 {
+    margin: 0 0 1.5rem;
+    font-size: clamp(2.2rem, 6vw, 3.5rem);
+    line-height: 1.05;
+  }
+
+  p {
+    font-size: 1.15rem;
+    line-height: 1.6;
+  }
+
+  .registration-help {
+    margin-top: 1.5rem;
+    font-size: 1rem;
+  }
+
+  a {
+    color: inherit;
+    text-underline-offset: .2em;
+  }
+
+  .registration-back {
+    display: inline-block;
+    margin-top: 1rem;
+    padding-block: .75rem;
+    font-weight: 700;
+  }
+</style>

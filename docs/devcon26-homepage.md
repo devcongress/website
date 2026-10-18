@@ -1,5 +1,10 @@
 # DevCon26 homepage introduction
 
+## Registration pause (2026-10-18)
+
+Registration and checkout routes temporarily render `Devcon26RegistrationHolding.astro` without intake fields, payment initialization, Turnstile or badge-generation scripts. The conference calls to action link to this notice. Existing payment confirmation/return handling and social-card routes remain available. Restore the intake routes from the parent revision only after registration/email/QR acceptance checks and an explicit reopening decision; keep the backend closed until then.
+
+
 ## Dedicated-page scroll motion (2026-10-16)
 
 `src/lib/devcon26-scroll-reveals.ts` progressively enhances the dedicated page

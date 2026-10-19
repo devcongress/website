@@ -1,5 +1,18 @@
 # Changelog
 
+## 2026-10-18 — Donation checkout page and recovery
+
+- Match the Back to DevCongress link to the DevCon26 page: pink text, compact arrow, 44px target and reduced-motion-aware hover feedback.
+
+- Add a softly masked giving illustration centred across the desktop checkout background and behind the mobile introduction, without increasing page height.
+
+- Replace homepage donation modal with a dedicated `/donate/` page using the existing Inttegro hosted checkout.
+- Preserve prepared-order references through reload, completion, and failures; retry the same order and require acknowledgement before a new donation.
+- Add visible storage limitations, pending-payment restart protection, safe no-JavaScript guidance, and recovery checks in the build.
+- Keep the mobile navigation toggle full-sized on narrow phones.
+- Keep payment processing unchanged. Hosted input styling remains controlled by Inttegro and is documented as a visual limitation.
+
+
 ## 2026-10-16
 
 - Make the registration receipt accurately acknowledge a request, not confirmed

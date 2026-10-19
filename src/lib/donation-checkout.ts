@@ -1,240 +1,186 @@
-import { loadInttegro, type CheckoutController } from '@inttegro/js';
+import { loadInttegro, type CheckoutController, type CheckoutOrder } from '@inttegro/js';
 
-const configSelector = '[data-donation-checkout-config]';
-const triggerSelector = '[data-donation-checkout-trigger]';
-const modalHostSelector = '[data-inttegro-checkout-modal]';
-const modalOpenClass = 'donation-checkout-open';
-const closeOnlyMarker = 'donationCloseOnly';
-const checkoutProtocol = 'inttegro.checkout';
-const orderStoragePrefix = 'devcongress.inttegro.order';
-const purchaseIntentPattern = /^sale_[A-Za-z0-9]{20,128}$/;
 const orderPattern = /^or_[A-Za-z0-9]{20,128}$/;
-
-function orderStorageKey(purchaseIntentId: string): string {
-  return `${orderStoragePrefix}:${purchaseIntentId}`;
-}
-
-function storedOrderId(purchaseIntentId: string): string | undefined {
-  try {
-    const key = orderStorageKey(purchaseIntentId);
-    const orderId = window.sessionStorage.getItem(key)?.trim();
-    if (orderId && orderPattern.test(orderId)) return orderId;
-    if (orderId) window.sessionStorage.removeItem(key);
-  } catch {
-    // Checkout still works when browser privacy settings disable session storage.
-  }
-
-  return undefined;
-}
-
-function storeOrderId(purchaseIntentId: string, orderId: string): void {
-  if (!orderPattern.test(orderId)) return;
-
-  try {
-    window.sessionStorage.setItem(orderStorageKey(purchaseIntentId), orderId);
-  } catch {
-    // The mounted controller can still resume the order until the page reloads.
-  }
-}
-
-function clearStoredOrderId(purchaseIntentId: string): void {
-  try {
-    window.sessionStorage.removeItem(orderStorageKey(purchaseIntentId));
-  } catch {
-    // There is nothing to clear when session storage is unavailable.
-  }
-}
-
-function requireExplicitModalClose(host: HTMLElement): void {
-  if (host.dataset[closeOnlyMarker] === 'true') return;
-
-  const root = host.shadowRoot;
-  const dialog = root?.querySelector<HTMLDialogElement>('dialog');
-  if (!root || !dialog) return;
-
-  host.dataset[closeOnlyMarker] = 'true';
-
-  const preventDismissal = (event: Event): void => {
-    event.preventDefault();
-    event.stopImmediatePropagation();
-  };
-
-  root.addEventListener('cancel', preventDismissal, { capture: true });
-  root.addEventListener('pointerdown', (event) => {
-    if (event.target === dialog) preventDismissal(event);
-  }, { capture: true });
-  host.addEventListener('pointerdown', (event) => {
-    if (event.target === host) preventDismissal(event);
-  }, { capture: true });
-}
-
-function preventFrameDismissal(event: MessageEvent<unknown>): void {
-  const host = document.body.querySelector<HTMLElement>(modalHostSelector);
-  const frame = host?.shadowRoot?.querySelector<HTMLIFrameElement>(
-    'iframe[data-inttegro-checkout]',
-  );
-  const message = event.data;
-
-  if (
-    !host
-    || !frame
-    || typeof message !== 'object'
-    || message === null
-    || event.source !== frame.contentWindow
-    || event.origin !== new URL(frame.src).origin
-    || !('channel' in message)
-    || message.channel !== checkoutProtocol
-    || !('instanceId' in message)
-    || message.instanceId !== host.dataset.inttegroCheckoutModal
-    || !('type' in message)
-    || message.type !== 'frame.dismiss'
-  ) return;
-
-  event.stopImmediatePropagation();
-}
+const intentPattern = /^sale_[A-Za-z0-9]{20,128}$/;
 
 export function initializeDonationCheckout(root: ParentNode = document): void {
-  const config = root.querySelector<HTMLElement>(configSelector);
-  if (!config || config.dataset.donationCheckoutInitialized === 'true') return;
+  const page = root.querySelector<HTMLElement>('[data-donation-page]');
+  if (!page || page.dataset.initialized === 'true') return;
 
-  const purchaseIntentId = config.dataset.purchaseIntentId?.trim();
-  const fallbackPath = config.dataset.fallbackPath?.trim();
-  const triggers = Array.from(root.querySelectorAll<HTMLAnchorElement>(triggerSelector));
-  if (
-    !purchaseIntentId
-    || !purchaseIntentPattern.test(purchaseIntentId)
-    || !fallbackPath?.startsWith('/')
-    || fallbackPath.startsWith('//')
-    || triggers.length === 0
-  ) return;
+  const configuredIntent = page.dataset.purchaseIntentId?.trim();
+  if (!configuredIntent || !intentPattern.test(configuredIntent)) return;
 
-  config.dataset.donationCheckoutInitialized = 'true';
+  const purchaseIntentId: string = configuredIntent;
 
-  const status = config.querySelector<HTMLElement>('[data-donation-checkout-status]');
+  page.dataset.initialized = 'true';
+
+  const frame = page.querySelector<HTMLElement>('[data-checkout-frame]')!;
+  const status = page.querySelector<HTMLElement>('[data-checkout-status]')!;
+  const warning = page.querySelector<HTMLElement>('[data-storage-warning]')!;
+  const reference = page.querySelector<HTMLElement>('[data-order-reference]')!;
+  const retry = page.querySelector<HTMLButtonElement>('[data-checkout-retry]')!;
+  const fallback = page.querySelector<HTMLAnchorElement>('[data-checkout-fallback]')!;
+  const restart = page.querySelector<HTMLDetailsElement>('[data-checkout-restart]')!;
+  const acknowledge = page.querySelector<HTMLInputElement>('[data-restart-acknowledge]')!;
+  const startNew = page.querySelector<HTMLButtonElement>('[data-start-new]')!;
+  const key = `devcongress.inttegro.order:${purchaseIntentId}`;
+  let orderId: string | undefined;
   let controller: CheckoutController | undefined;
-  let controllerPromise: Promise<CheckoutController> | undefined;
-  let presenting = false;
-  let canceledDuringPresentation = false;
+  let busy = false;
+  let pending = false;
+  let generation = 0;
+  let eventVersion = 0;
 
-  const modalObserver = new MutationObserver(() => {
-    const modalHost = document.body.querySelector<HTMLElement>(modalHostSelector);
-    if (modalHost) requireExplicitModalClose(modalHost);
+  function storageWarning(): void {
+    warning.hidden = false;
+  }
 
-    document.body.classList.toggle(
-      modalOpenClass,
-      Boolean(modalHost),
-    );
-  });
-  modalObserver.observe(document.body, { childList: true });
-  window.addEventListener('message', preventFrameDismissal, { capture: true });
+  try {
+    const stored = window.sessionStorage.getItem(key)?.trim();
+    if (stored && orderPattern.test(stored)) orderId = stored;
+
+    // Probe writes too: reading may work when quota/privacy rules prevent saving.
+    window.sessionStorage.setItem(`${key}:probe`, '1');
+    window.sessionStorage.removeItem(`${key}:probe`);
+  } catch {
+    storageWarning();
+  }
+
+  function updateControls(): void {
+    retry.disabled = busy;
+    restart.hidden = !orderId || pending || busy;
+    fallback.hidden = Boolean(orderId) || busy || retry.hidden;
+    startNew.disabled = busy || pending || !acknowledge.checked;
+    reference.hidden = !orderId;
+    reference.textContent = orderId ? `Donation reference: ${orderId}` : '';
+    frame.setAttribute('aria-busy', String(busy));
+  }
 
   function announce(message: string): void {
-    if (status) status.textContent = message;
+    eventVersion += 1;
+    status.textContent = message;
+    updateControls();
   }
 
-  function setBusy(busy: boolean): void {
-    for (const trigger of triggers) {
-      trigger.setAttribute('aria-busy', String(busy));
-    }
-  }
+  function remember(order: CheckoutOrder): void {
+    if (!orderPattern.test(order.id)) return;
 
-  function checkoutController(): Promise<CheckoutController> {
-    if (controller) return Promise.resolve(controller);
-    if (controllerPromise) return controllerPromise;
-
-    controllerPromise = loadInttegro()
-      .then((inttegro) => {
-        if (!inttegro) throw new Error('Inttegro Checkout requires a browser.');
-
-        const orderId = storedOrderId(purchaseIntentId);
-        controller = inttegro.createCheckout({
-          ...(orderId ? { orderId } : { purchaseIntentId }),
-          appearance: {
-            primaryColor: '#E8117F',
-            theme: 'dark',
-          },
-          features: {
-            showLineItems: true,
-            showInvoiceDownload: true,
-            showReceiptDownload: true,
-            allowPaymentMethodChange: true,
-          },
-          locale: 'en-GH',
-          title: 'Support DevCongress',
-        });
-
-        controller.on('orderPrepared', ({ order }) => {
-          storeOrderId(purchaseIntentId, order.id);
-        });
-        controller.on('canceled', () => {
-          canceledDuringPresentation = true;
-          announce('Donation checkout closed. You can reopen it when you are ready.');
-          setBusy(false);
-        });
-        controller.on('completed', () => {
-          clearStoredOrderId(purchaseIntentId);
-          announce('Thank you for supporting DevCongress.');
-          setBusy(false);
-        });
-        controller.on('failed', ({ failure }) => {
-          if (!failure.recoverable) clearStoredOrderId(purchaseIntentId);
-          announce(failure.recoverable
-            ? 'Donation checkout needs your attention. Please try again.'
-            : 'Donation checkout is unavailable. Please try again later.');
-          setBusy(false);
-        });
-
-        return controller;
-      })
-      .catch((error) => {
-        controllerPromise = undefined;
-        throw error;
-      });
-
-    return controllerPromise;
-  }
-
-  async function presentCheckout(event: MouseEvent): Promise<void> {
-    if (
-      event.defaultPrevented
-      || event.button !== 0
-      || event.metaKey
-      || event.ctrlKey
-      || event.shiftKey
-      || event.altKey
-    ) return;
-
-    event.preventDefault();
-    if (presenting) return;
-
-    presenting = true;
-    canceledDuringPresentation = false;
-    setBusy(true);
-    announce('Opening secure donation checkout.');
+    orderId = order.id;
 
     try {
-      const checkout = await checkoutController();
-      if (checkout.state === 'ready') {
-        checkout.focus();
-        return;
-      }
-      await checkout.present();
-      announce('Secure donation checkout is open.');
+      window.sessionStorage.setItem(key, order.id);
     } catch {
-      if (canceledDuringPresentation) return;
+      storageWarning();
+    }
 
-      document.body.classList.remove(modalOpenClass);
-      announce('Opening the secure donation page instead.');
-      window.location.assign(fallbackPath);
+    pending = ['requires_action', 'processing'].includes(order.status);
+    updateControls();
+  }
+
+  function showOrder(order: CheckoutOrder): void {
+    remember(order);
+
+    const messages: Record<CheckoutOrder['status'], string> = {
+      requires_payment: 'Your donation is ready. Complete payment below. This prepared order can resume in this tab.',
+      requires_action: 'Your payment needs confirmation. Follow the instructions below; do not start another donation.',
+      processing: 'Your payment is processing. Keep this reference and check this donation again before paying again.',
+      paid: 'Thank you for supporting DevCongress. Your payment is confirmed. Your receipt is available in checkout below.',
+      failed: 'This payment attempt failed. Review the checkout below before trying again.',
+      expired: 'This order has expired. Check any pending payment before starting a new donation.',
+      canceled: 'This order was canceled. Check any pending payment before starting a new donation.',
+    };
+
+    announce(messages[order.status]);
+  }
+
+  async function mount(): Promise<void> {
+    if (busy) return;
+
+    busy = true;
+    const currentGeneration = ++generation;
+    controller?.destroy();
+    controller = undefined;
+    frame.replaceChildren();
+    retry.hidden = true;
+    announce(orderId ? 'Checking your existing donation…' : 'Loading secure checkout…');
+    const beforeMount = eventVersion;
+
+    try {
+      const inttegro = await loadInttegro();
+      if (!inttegro || currentGeneration !== generation) return;
+
+      const checkout = inttegro.createCheckout({
+        ...(orderId ? { orderId } : { purchaseIntentId }),
+        appearance: { primaryColor: '#E8117F', theme: 'light' },
+        features: {
+          showLineItems: true,
+          showInvoiceDownload: true,
+          showReceiptDownload: true,
+          allowPaymentMethodChange: true,
+        },
+        locale: 'en-GH',
+        title: 'Support DevCongress',
+      });
+      controller = checkout;
+
+      checkout.onEvent((event) => {
+        if (currentGeneration !== generation) return;
+
+        if ('order' in event && event.order) showOrder(event.order);
+
+        if (event.type === 'paymentAttemptStarted' || event.type === 'paymentProcessing' || event.type === 'paymentActionRequired') {
+          pending = true;
+          announce('Payment is in progress. Follow the checkout instructions. Check this donation before making another payment.');
+        } else if (event.type === 'failed') {
+          retry.hidden = false;
+          announce('We could not confirm the checkout status. Retry this checkout; your saved donation reference has been kept.');
+        } else if (event.type === 'canceled') {
+          retry.hidden = false;
+          announce('Checkout was closed. Reopen this checkout to check its status before paying again.');
+        }
+      });
+
+      await checkout.mount(frame);
+
+      if (currentGeneration === generation && eventVersion === beforeMount) {
+        announce(orderId
+          ? 'Existing donation reopened. Review its current status below before paying again.'
+          : 'Choose your amount and enter your details below.');
+      }
+    } catch {
+      if (currentGeneration !== generation) return;
+
+      retry.hidden = false;
+      announce(orderId
+        ? 'Your donation could not be loaded. Retry to check the same order. Do not pay again until its status is clear.'
+        : 'Secure checkout could not load. Try again or use the hosted checkout.');
     } finally {
-      presenting = false;
-      setBusy(false);
+      if (currentGeneration === generation) {
+        busy = false;
+        updateControls();
+      }
     }
   }
 
-  for (const trigger of triggers) {
-    trigger.addEventListener('click', (event) => {
-      void presentCheckout(event);
-    });
-  }
+  retry.addEventListener('click', () => { void mount(); });
+  acknowledge.addEventListener('change', updateControls);
+  startNew.addEventListener('click', () => {
+    if (busy || pending || !acknowledge.checked) return;
+
+    try {
+      // Do not silently restart if the old reference cannot be removed.
+      window.sessionStorage.removeItem(key);
+    } catch {
+      storageWarning();
+      announce('Your browser could not clear this checkout. Keep your reference and contact us for help.');
+      return;
+    }
+
+    orderId = undefined;
+    acknowledge.checked = false;
+    restart.open = false;
+    void mount();
+  });
+
+  void mount();
 }

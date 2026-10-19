@@ -10,11 +10,10 @@ interface DonateSectionContent {
 
 interface Props {
   donationPath: string;
-  useDonationModal?: boolean;
   donate: DonateSectionContent;
 }
 
-const { donationPath, useDonationModal = false, donate } = Astro.props;
+const { donationPath, donate } = Astro.props;
 ---
 
 <section class="donate-section" id="donate">
@@ -33,8 +32,6 @@ const { donationPath, useDonationModal = false, donate } = Astro.props;
           <a
             href={donationPath}
             class="btn btn-primary donate-cta"
-            data-donation-checkout-trigger={useDonationModal ? '' : undefined}
-            aria-haspopup={useDonationModal ? 'dialog' : undefined}
           >
             {donate.cta_text}
           </a>

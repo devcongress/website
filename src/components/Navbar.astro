@@ -343,6 +343,16 @@ const links = conference ? [
     }
   }
 
+  @media (max-width: 360px) {
+    .navbar-logo img {
+      height: 32px;
+    }
+
+    .nav-toggle {
+      flex-shrink: 0;
+    }
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .nav-link-label::after {
       transition: none;

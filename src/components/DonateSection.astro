@@ -29,7 +29,10 @@ const { donationPath, donate } = Astro.props;
           {donate.body}
         </p>
         <div class="donate-actions">
-          <a href={donationPath} class="btn btn-primary donate-cta">
+          <a
+            href={donationPath}
+            class="btn btn-primary donate-cta"
+          >
             {donate.cta_text}
           </a>
         </div>

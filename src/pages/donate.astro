@@ -1,0 +1,418 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import CheckoutIcon from '../components/CheckoutIcon.astro';
+
+const site = (await getCollection('site'))[0]!.data;
+const hostedCheckout = `https://pages.inttegro.com/buy/${site.inttegro_purchase_intent_id}`;
+---
+
+<Base title="Support DevCongress | Donate" showFooter={false} noindex={true} analytics={false}>
+  <a slot="skip-link" class="skip-link" href="#donation-main">Skip to donation checkout</a>
+  <main id="donation-main" class="donation-page" data-donation-page data-purchase-intent-id={site.inttegro_purchase_intent_id}>
+    <a class="back-link" href="/#donate"><span aria-hidden="true">←</span> Back to DevCongress</a>
+    <div class="donation-layout">
+      <section class="donation-intro" aria-labelledby="donation-title">
+        <p class="caption">COMMUNITY FUNDED. COMMUNITY LED.</p>
+        <h1 id="donation-title">Keep DevCongress<br />running.</h1>
+        <p class="intro-copy">Your contribution keeps the lights on and the community growing.</p>
+        <img
+          class="giving-illustration"
+          src="/images/donations/giving.png"
+          alt=""
+          width="1536"
+          height="1024"
+          loading="eager"
+          decoding="async"
+        />
+      </section>
+      <section class="checkout-region" aria-label="Donation checkout">
+        <div class="checkout-heading"><span><CheckoutIcon name="lock" /> Secure checkout with Inttegro</span></div>
+        <div class="checkout-feedback">
+          <p data-checkout-status role="status" aria-live="polite" aria-atomic="true">Loading secure checkout…</p>
+          <p data-storage-warning hidden>Your browser cannot save checkout recovery. Keep your donation reference before leaving this page.</p>
+          <p class="order-reference" data-order-reference hidden></p>
+          <button class="retry-button" data-checkout-retry type="button" hidden>Retry this checkout</button>
+          <a data-checkout-fallback href={hostedCheckout} hidden>Open hosted checkout</a>
+        </div>
+        <div id="donation-checkout" data-checkout-frame></div>
+        <div class="recovery-note">
+          <p>A prepared order can resume when you reload this tab. Details entered before that point are not saved. Closing the tab may end recovery.</p>
+          <details data-checkout-restart hidden>
+            <summary>Start a new donation</summary>
+            <p>A payment may still be processing. Starting again could cause a duplicate charge. Check your payment prompt or receipt first, and keep your current reference.</p>
+            <label><input type="checkbox" data-restart-acknowledge /> I have checked my payment status and want to start a new donation.</label>
+            <button class="retry-button" data-start-new type="button" disabled>Start new donation</button>
+          </details>
+        </div>
+        <noscript><p class="recovery-note">Enable JavaScript to recover or continue checkout. If you already started a payment, do not start another one. <a href="mailto:hello@devcongress.org">Contact us with your payment reference</a> for help.</p></noscript>
+      </section>
+      <aside class="support-info" aria-label="About your support">
+        <div class="support-detail">
+          <h2>Your support funds</h2>
+          <ul>
+            <li>Monthly meetups across Ghana</li>
+            <li>Dedicated support programs</li>
+            <li>Community tools and shared resources</li>
+            <li>The infrastructure behind our community</li>
+          </ul>
+        </div>
+        <p class="help">Questions about your contribution?<br /><a href="mailto:hello@devcongress.org">hello@devcongress.org</a></p>
+      </aside>
+    </div>
+  </main>
+</Base>
+
+<script>
+  import { initializeDonationCheckout } from '../lib/donation-checkout';
+
+  initializeDonationCheckout();
+</script>
+
+<style>
+  .donation-page {
+    max-width: 1120px;
+    margin-inline: auto;
+    padding: 32px 32px 24px;
+  }
+
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 44px;
+    color: #b50068;
+    font-size: 14px;
+    font-weight: 600;
+    white-space: nowrap;
+    text-decoration: none;
+  }
+
+  .back-link > span {
+    font-size: 16px;
+    line-height: 1;
+    transition: transform 160ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .back-link:hover {
+      color: #85004d;
+      text-decoration: none;
+    }
+
+    .back-link:hover > span {
+      transform: translateX(-3px);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .back-link > span {
+      transition: none;
+    }
+
+    .back-link:hover > span {
+      transform: none;
+    }
+  }
+
+  .back-link:focus-visible {
+    outline: 2px solid var(--pink);
+    outline-offset: 4px;
+  }
+
+  .donation-layout {
+    position: relative;
+    isolation: isolate;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+    align-items: start;
+    column-gap: 64px;
+    row-gap: 24px;
+    grid-template-rows: auto 1fr;
+    margin-top: 32px;
+  }
+
+  .checkout-region {
+    grid-column: 2;
+    grid-row: 1 / 3;
+  }
+
+  .support-info {
+    grid-column: 1;
+  }
+
+  .donation-intro {
+    padding-top: 24px;
+  }
+
+  .caption {
+    margin-bottom: 16px;
+    color: var(--text-mid);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1px;
+  }
+
+  h1 {
+    font-size: 48px;
+    line-height: 1.1;
+  }
+
+  .intro-copy {
+    max-width: 32ch;
+    margin-top: 24px;
+    color: var(--text-mid);
+    font-size: 20px;
+    line-height: 1.5;
+  }
+
+  .giving-illustration {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    z-index: -1;
+    width: 100%;
+    height: auto;
+    transform: translate(-50%, -50%);
+    object-fit: cover;
+    opacity: 0.14;
+    pointer-events: none;
+    mix-blend-mode: multiply;
+    mask-image: radial-gradient(ellipse 58% 58% at center, #000 20%, transparent 85%);
+  }
+
+  .support-detail {
+    margin-top: 32px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border-light);
+  }
+
+  h2 {
+    font-size: 20px;
+    font-weight: 600;
+  }
+
+  ul {
+    display: grid;
+    gap: 12px;
+    margin-top: 16px;
+    padding-left: 20px;
+    color: var(--text-mid);
+    font-size: 16px;
+    list-style: disc;
+  }
+
+  .help {
+    margin-top: 32px;
+    color: var(--text-mid);
+    font-size: 16px;
+    line-height: 1.5;
+  }
+
+  .help a {
+    color: var(--text);
+    text-decoration: underline;
+    text-underline-offset: 4px;
+  }
+
+  .checkout-region {
+    min-width: 0;
+    background: transparent;
+  }
+
+  .checkout-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 0 24px 8px;
+  }
+
+  .checkout-heading span {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: var(--text-mid);
+    font-size: 14px;
+  }
+
+  #donation-checkout {
+    min-height: 560px;
+    overflow: hidden;
+    border-radius: 12px;
+    background: var(--bg-white);
+  }
+
+  #donation-checkout:empty {
+    min-height: 0;
+  }
+
+  #donation-checkout :global(iframe) {
+    width: 100%;
+    min-height: 560px;
+    border: 0;
+  }
+
+  .checkout-feedback {
+    padding: 16px 24px;
+    font-size: 16px;
+  }
+
+  .donation-page [hidden] {
+    display: none !important;
+  }
+
+  .checkout-feedback, .recovery-note {
+    padding: 12px 0;
+    font-size: 14px;
+    color: var(--text-mid);
+    line-height: 1.5;
+  }
+
+  .checkout-feedback p + p, details p, details label {
+    margin-top: 12px;
+  }
+
+  .order-reference {
+    overflow-wrap: anywhere;
+    user-select: all;
+  }
+
+  .recovery-note {
+    margin-top: 16px;
+    border-top: 1px solid var(--border-light);
+  }
+
+  .recovery-note details {
+    margin-top: 16px;
+  }
+
+  summary, .retry-button {
+    min-height: 44px;
+    cursor: pointer;
+    font-weight: 600;
+  }
+
+  details label {
+    display: flex;
+    align-items: start;
+    gap: 8px;
+  }
+
+  details input {
+    margin-top: 4px;
+    flex-shrink: 0;
+  }
+
+  .retry-button {
+    margin-top: 12px;
+    padding: 8px 16px;
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    color: var(--text);
+    transition: transform 140ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .retry-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .retry-button:not(:disabled):active {
+    transform: scale(0.97);
+  }
+
+  .checkout-feedback a, .recovery-note a {
+    display: inline-block;
+    margin-top: 12px;
+    text-decoration: underline;
+  }
+
+  .skip-link {
+    position: absolute;
+    top: 8px;
+    left: 16px;
+    z-index: 1000;
+    padding: 12px;
+    background: var(--bg);
+    transform: translateY(-200%);
+  }
+
+  .skip-link:focus {
+    transform: none;
+  }
+
+  a:focus-visible, button:focus-visible, summary:focus-visible, input:focus-visible {
+    outline: 2px solid var(--pink);
+    outline-offset: 4px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .retry-button {
+      transition: none;
+    }
+
+    .retry-button:not(:disabled):active {
+      transform: none;
+    }
+  }
+
+  @media (max-width: 720px) {
+    .donation-page {
+      padding: 16px;
+    }
+
+    .donation-layout {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-rows: auto;
+      gap: 24px;
+      margin-top: 16px;
+    }
+
+    .checkout-region, .support-info {
+      grid-column: auto;
+      grid-row: auto;
+    }
+
+    .donation-intro {
+      position: relative;
+      isolation: isolate;
+      padding-top: 0;
+    }
+
+    h1 {
+      font-size: 36px;
+    }
+
+    .giving-illustration {
+      inset: -16px 0;
+      transform: none;
+      width: 100%;
+      height: calc(100% + 32px);
+      opacity: 0.12;
+    }
+
+    .intro-copy {
+      margin-top: 16px;
+      font-size: 18px;
+    }
+
+    .support-detail {
+      margin-top: 24px;
+    }
+
+    .checkout-heading {
+      padding: 0 0 8px;
+    }
+  }
+  @media (max-width: 360px) {
+    h1 {
+      font-size: 30px;
+    }
+
+    .caption {
+      letter-spacing: 0.5px;
+    }
+  }
+</style>

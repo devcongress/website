@@ -96,6 +96,28 @@ Events page. Local development can copy `.env.example` to `.env` and opt in
 explicitly. This website flag does not disable direct requests to Events
 Management; the backend needs its own runtime switch for a system-wide shutdown.
 
+## Donation checkout presentation
+
+Donation links navigate to `/donate/`, which embeds the existing Inttegro checkout
+using `@inttegro/js` 0.5.8. The purchase intent, payment processing, hosted fields,
+and invoice/receipt features are unchanged. The old presentation flag is no longer
+used; existing `modal` or `redirect` environment values do not change this flow.
+
+Prepared order IDs retain the original same-tab session-storage key. Reloads and
+retries reopen that order. Completion and errors keep the reference; uncertain
+payment outcomes never automatically start a new donation or redirect to a fresh
+purchase intent. An explicit, acknowledged restart clears the active reference.
+Known in-progress payments suppress restart. A storage warning explains when
+recovery cannot be saved. No payer details or payment credentials are stored.
+
+Draft fields before order preparation cannot be restored by the public SDK.
+Closing a tab can end session-storage recovery. Payment status remains authoritative
+inside Inttegro. Do not claim that this UI guarantees recovery on another device.
+
+`/support` retains the existing hosted redirect. The page offers a direct hosted
+checkout link only before an order is known, plus a no-JavaScript fallback.
+See [donation checkout verification](docs/donation-checkout.md).
+
 ## Cloudflare Workers deployment
 
 Astro still builds a static site-first fallback, while `src/worker.ts` adds a

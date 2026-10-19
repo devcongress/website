@@ -105,6 +105,7 @@ const site = defineCollection({
   schema: z.object({
     community_slack_url: z.string().url(),
     donation_path: z.literal('/donate'),
+    inttegro_purchase_intent_id: z.string().regex(/^sale_[A-Za-z0-9]{20,128}$/),
     youtube_embed_url: z.string().url(),
     stats: z.array(z.object({
       value: z.string(),

@@ -48,7 +48,10 @@ const site        = siteEntries[0]!.data;
   </head>
   <body>
     <slot name="skip-link" />
-    <Navbar slackUrl={site.community_slack_url} donationPath={site.donation_path} />
+    <Navbar
+      slackUrl={site.community_slack_url}
+      donationPath={site.donation_path}
+    />
     <slot />
     {showFooter && <FooterSection socials={site.socials} />}
   </body>

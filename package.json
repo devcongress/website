@@ -4,23 +4,25 @@
   "version": "0.0.1",
   "packageManager": "pnpm@10.34.5",
   "engines": {
-    "node": ">=22.12.0"
+    "node": ">=22.22.0"
   },
   "scripts": {
     "dev": "astro dev",
-    "build": "astro build",
+    "build": "pnpm check:donation && astro build",
     "preview": "astro preview",
     "deploy": "pnpm build && wrangler deploy",
     "deploy:dry-run": "pnpm build && wrangler deploy --dry-run",
-    "astro": "astro"
+    "astro": "astro",
+    "check:donation": "node scripts/check-donation-checkout.mjs"
   },
   "dependencies": {
-    "astro": "^7.3.5",
-    "zod": "^4.6.5"
+    "@inttegro/js": "0.5.8",
+    "astro": "^7.4.0",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "5.20260925.1",
-    "wrangler": "^4.139.0"
+    "@cloudflare/workers-types": "5.20261016.1",
+    "wrangler": "^4.151.0"
   },
   "pnpm": {
     "overrides": {

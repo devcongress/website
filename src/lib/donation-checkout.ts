@@ -1,7 +1,44 @@
-import { loadInttegro, type CheckoutController, type CheckoutOrder } from '@inttegro/js';
+import {
+  loadInttegro,
+  type CheckoutAppearance,
+  type CheckoutController,
+  type CheckoutOrder,
+} from '@inttegro/js';
 
 const orderPattern = /^or_[A-Za-z0-9]{20,128}$/;
 const intentPattern = /^sale_[A-Za-z0-9]{20,128}$/;
+const checkoutAppearance = {
+  theme: 'light',
+  colors: {
+    background: '#FFFFFF',
+    surface: '#F5F2E8',
+    foreground: '#111111',
+    mutedForeground: '#555555',
+    border: '#E0DDD4',
+    focus: '#E8117F',
+  },
+  button: {
+    background: '#E8117F',
+    foreground: '#FFFFFF',
+    border: '#111111',
+  },
+  input: {
+    background: '#FFFFFF',
+    foreground: '#111111',
+    border: '#111111',
+  },
+  selection: {
+    background: '#FEFCE8',
+    foreground: '#111111',
+    border: '#111111',
+  },
+  typography: {
+    fontFamily: 'sans-serif',
+  },
+  shape: {
+    borderRadius: 8,
+  },
+} satisfies CheckoutAppearance;
 
 export function initializeDonationCheckout(root: ParentNode = document): void {
   const page = root.querySelector<HTMLElement>('[data-donation-page]');
@@ -81,7 +118,7 @@ export function initializeDonationCheckout(root: ParentNode = document): void {
     remember(order);
 
     const messages: Record<CheckoutOrder['status'], string> = {
-      requires_payment: 'Your donation is ready. Complete payment below. This prepared order can resume in this tab.',
+      requires_payment: 'Your donation is ready. Complete payment below.',
       requires_action: 'Your payment needs confirmation. Follow the instructions below; do not start another donation.',
       processing: 'Your payment is processing. Keep this reference and check this donation again before paying again.',
       paid: 'Thank you for supporting DevCongress. Your payment is confirmed. Your receipt is available in checkout below.',
@@ -111,7 +148,7 @@ export function initializeDonationCheckout(root: ParentNode = document): void {
 
       const checkout = inttegro.createCheckout({
         ...(orderId ? { orderId } : { purchaseIntentId }),
-        appearance: { primaryColor: '#E8117F', theme: 'light' },
+        appearance: checkoutAppearance,
         features: {
           showLineItems: true,
           showInvoiceDownload: true,

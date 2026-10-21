@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-10-19 — Consolidate dependency updates from #66
+
+- Include Astro 7.4.0, Zod 4.6.7, Cloudflare Workers types 5.20261016.1 and Wrangler 4.151.0 in the donation follow-up, preserving Inttegro 0.5.8 and the donation recovery build checks. Raise the Node engine minimum to 22.22.0 to match Astro 7.4.0.
+
+## 2026-10-19 — Integrate donation checkout into main
+
+- Bring the dedicated checkout and prepared-order recovery from #65 into main. #65 was merged into #61’s feature branch; closing #61 did not deliver those changes to main.
+- Preserve current main’s DevCon26 speaker flow, registration pause, hero assets, narrow-phone navigation, support wording and local CFP proxy.
+
 ## 2026-10-18 — Proposal form layout and feedback
 
 - Use a 60/40 desktop proposal grid, a full-width preview notice and a separate Back/Submit row; stack fields on mobile.
@@ -61,6 +70,18 @@
 - Show “Registration opens soon” in the existing conference registration section without an active registration button; redirect old registration and checkout URLs to that section.
 - Update only registration-related calls to action on the homepage and conference page, plus the registration FAQ copy. Preserve payment confirmation, legacy payment returns, social cards, badges, navigation, donations and the rest of the website.
 - Backend closure is a separate Owner setting; publishing this page does not cancel registrations, modify payments or stop existing email jobs.
+
+## 2026-10-18 — Donation checkout page and recovery
+
+- Match the Back to DevCongress link to the DevCon26 page: pink text, compact arrow, 44px target and reduced-motion-aware hover feedback.
+
+- Add a softly masked giving illustration centred across the desktop checkout background and behind the mobile introduction, without increasing page height.
+
+- Replace homepage donation modal with a dedicated `/donate/` page using the existing Inttegro hosted checkout.
+- Preserve prepared-order references through reload, completion, and failures; retry the same order and require acknowledgement before a new donation.
+- Add visible storage limitations, pending-payment restart protection, safe no-JavaScript guidance, and recovery checks in the build.
+- Keep the mobile navigation toggle full-sized on narrow phones.
+- Keep payment processing unchanged. Hosted input styling remains controlled by Inttegro and is documented as a visual limitation.
 
 
 ## 2026-10-16

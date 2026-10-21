@@ -1,6 +1,7 @@
 - id: site
   community_slack_url: https://join.slack.com/t/devcongress-community/shared_invite/zt-499mtyizl-kYhAODoWCY61A9nd_uF90A
   donation_path: /donate
+  inttegro_purchase_intent_id: sale_eLiPUNAEjfeHZOX4VHQPuy0oJWQT6n0g7Bdof5rr
   youtube_embed_url: https://www.youtube-nocookie.com/embed/vNWWGWXjybg?rel=0&modestbranding=1&playsinline=1
 
   stats:

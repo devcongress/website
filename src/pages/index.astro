@@ -37,6 +37,9 @@ const events      = await getEvents();
     <MeetupsSection events={events} />
     <AdminsSection admins={admins} />
     <PartnersSection partners={partners} />
-    <DonateSection donationPath={site.donation_path} donate={site.donate_section} />
+    <DonateSection
+      donationPath={site.donation_path}
+      donate={site.donate_section}
+    />
   </main>
 </Base>

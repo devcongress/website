@@ -2,7 +2,7 @@
 
 ## 2026-10-21 — Match the donation form to DevCongress
 
-- Update the embedded donation checkout to `@inttegro/js` 0.7.0 and apply the
+- Update the embedded donation checkout to `@inttegro/js` 0.7.1 and apply the
   DevCongress palette to its background, surfaces, text, controls, focus state,
   typography and radius through the SDK appearance API.
 - Remove the persistent prepared-order recovery statement beneath the form while

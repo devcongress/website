@@ -16,7 +16,7 @@
     "check:donation": "node scripts/check-donation-checkout.mjs"
   },
   "dependencies": {
-    "@inttegro/js": "0.7.0",
+    "@inttegro/js": "0.7.1",
     "astro": "^7.4.0",
     "zod": "^4.6.7"
   },

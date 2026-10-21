@@ -99,7 +99,7 @@ Management; the backend needs its own runtime switch for a system-wide shutdown.
 ## Donation checkout presentation
 
 Donation links navigate to `/donate/`, which embeds the existing Inttegro checkout
-using `@inttegro/js` 0.7.0. The purchase intent, payment processing, hosted fields,
+using `@inttegro/js` 0.7.1. The purchase intent, payment processing, hosted fields,
 and invoice/receipt features are unchanged. The old presentation flag is no longer
 used; existing `modal` or `redirect` environment values do not change this flow.
 

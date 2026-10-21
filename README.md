@@ -99,14 +99,9 @@ Management; the backend needs its own runtime switch for a system-wide shutdown.
 ## Donation checkout presentation
 
 Donation links navigate to `/donate/`, which embeds the existing Inttegro checkout
-using `@inttegro/js` 0.7.0. The purchase intent, payment processing, hosted fields,
+using `@inttegro/js` 0.5.8. The purchase intent, payment processing, hosted fields,
 and invoice/receipt features are unchanged. The old presentation flag is no longer
 used; existing `modal` or `redirect` environment values do not change this flow.
-
-The embedded payment form uses the SDK's semantic appearance controls to carry
-DevCongress's cream, pink, yellow, black, and muted-gray palette into the hosted
-surface. Button, input, selection, focus, typography, and radius values are set
-explicitly while Inttegro continues to own the secure fields and payment states.
 
 Prepared order IDs retain the original same-tab session-storage key. Reloads and
 retries reopen that order. Completion and errors keep the reference; uncertain

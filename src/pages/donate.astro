@@ -36,12 +36,15 @@ const hostedCheckout = `https://pages.inttegro.com/buy/${site.inttegro_purchase_
           <a data-checkout-fallback href={hostedCheckout} hidden>Open hosted checkout</a>
         </div>
         <div id="donation-checkout" data-checkout-frame></div>
-        <details class="recovery-note" data-checkout-restart hidden>
-          <summary>Start a new donation</summary>
-          <p>A payment may still be processing. Starting again could cause a duplicate charge. Check your payment prompt or receipt first, and keep your current reference.</p>
-          <label><input type="checkbox" data-restart-acknowledge /> I have checked my payment status and want to start a new donation.</label>
-          <button class="retry-button" data-start-new type="button" disabled>Start new donation</button>
-        </details>
+        <div class="recovery-note">
+          <p>A prepared order can resume when you reload this tab. Details entered before that point are not saved. Closing the tab may end recovery.</p>
+          <details data-checkout-restart hidden>
+            <summary>Start a new donation</summary>
+            <p>A payment may still be processing. Starting again could cause a duplicate charge. Check your payment prompt or receipt first, and keep your current reference.</p>
+            <label><input type="checkbox" data-restart-acknowledge /> I have checked my payment status and want to start a new donation.</label>
+            <button class="retry-button" data-start-new type="button" disabled>Start new donation</button>
+          </details>
+        </div>
         <noscript><p class="recovery-note">Enable JavaScript to recover or continue checkout. If you already started a payment, do not start another one. <a href="mailto:hello@devcongress.org">Contact us with your payment reference</a> for help.</p></noscript>
       </section>
       <aside class="support-info" aria-label="About your support">
@@ -279,6 +282,10 @@ const hostedCheckout = `https://pages.inttegro.com/buy/${site.inttegro_purchase_
   .recovery-note {
     margin-top: 16px;
     border-top: 1px solid var(--border-light);
+  }
+
+  .recovery-note details {
+    margin-top: 16px;
   }
 
   summary, .retry-button {

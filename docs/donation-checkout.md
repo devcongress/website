@@ -1,7 +1,7 @@
 # Donation checkout
 
 The `/donate/` page replaces PR #61's homepage modal. It uses the same Inttegro
-purchase intent, `@inttegro/js` 0.7.0, hosted fields, payment processing, locale,
+purchase intent, `@inttegro/js` 0.5.8, hosted fields, payment processing, locale,
 and document/payment-method features. `/support` remains the hosted redirect.
 The old presentation environment flag is ignored.
 
@@ -28,11 +28,10 @@ contact support, rather than being sent into a potentially duplicate checkout.
 
 The page reuses the website's Bricolage Grotesque/Source Sans 3 fonts, cream palette,
 spacing, responsive layout, and contact information. Hosted fields are rendered in
-an Inttegro-controlled cross-origin iframe. Version 0.7.0 applies DevCongress's
-semantic background, surface, foreground, muted, border, focus, button, input, and
-selection colors, along with the SDK's sans-serif typography and shared 8px radius.
-The website must not proxy or modify the hosted payment runtime; Inttegro continues
-to own the secure controls, validation, and payment states.
+an Inttegro-controlled cross-origin iframe. Version 0.5.8 supports theme and primary
+color, not font, radius, spacing, or custom field styling. Matching those controls
+exactly requires a provider-supported extension; the website must not proxy or
+modify the hosted payment runtime. The accepted boundary is a site-styled surrounding page with provider-owned fields.
 
 ## Verification
 

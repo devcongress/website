@@ -94,27 +94,10 @@ function harness(storage = new Map(), storageBlocked = false) {
 const h = harness();
 await h.settle();
 assert.equal(h.controllers[0].options.purchaseIntentId, intent);
-assert.deepEqual(JSON.parse(JSON.stringify(h.controllers[0].options.appearance)), {
-  theme: 'light',
-  colors: {
-    background: '#FFFFFF',
-    surface: '#F5F2E8',
-    foreground: '#111111',
-    mutedForeground: '#555555',
-    border: '#E0DDD4',
-    focus: '#E8117F',
-  },
-  button: { background: '#E8117F', foreground: '#FFFFFF', border: '#111111' },
-  input: { background: '#FFFFFF', foreground: '#111111', border: '#111111' },
-  selection: { background: '#FEFCE8', foreground: '#111111', border: '#111111' },
-  typography: { fontFamily: 'sans-serif' },
-  shape: { borderRadius: 8 },
-});
 const order = { id: orderId, status: 'requires_payment' };
 h.controllers[0].emit({ type: 'orderPrepared', order });
 assert.equal(h.storage.get(key), orderId);
 assert.deepEqual([...h.storage.keys()], [key]);
-assert.doesNotMatch(h.element('[data-checkout-status]').textContent, /prepared order can/i);
 
 const resumed = harness(h.storage);
 await resumed.settle();
@@ -165,8 +148,6 @@ await blocked.click('[data-checkout-retry]');
 assert.equal(blocked.controllers.at(-1).options.orderId, orderId, 'memory recovery survives storage failure');
 
 const worker = readFileSync('src/worker.ts', 'utf8');
-const donationPage = readFileSync('src/pages/donate.astro', 'utf8');
 assert.match(worker, /SUPPORT_PATHS = new Set\(\['\/support', '\/support\/'\]\)/);
 assert.doesNotMatch(readFileSync('src/pages/index.astro', 'utf8'), /useDonationModal|InttegroDonationCheckout/);
-assert.doesNotMatch(donationPage, /A prepared order can/i);
-console.log('PASS donation recovery: branded checkout appearance, legacy resume, ID-only storage, completion/error retention, same-order retries, stale events, pending-payment guard, acknowledged restart, blocked storage, and page routing.');
+console.log('PASS donation recovery: legacy resume, ID-only storage, completion/error retention, same-order retries, stale events, pending-payment guard, acknowledged restart, blocked storage, and page routing.');

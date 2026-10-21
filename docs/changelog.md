@@ -1,13 +1,5 @@
 # Changelog
 
-## 2026-10-21 — Match the donation form to DevCongress
-
-- Update the embedded donation checkout to `@inttegro/js` 0.7.0 and apply the
-  DevCongress palette to its background, surfaces, text, controls, focus state,
-  typography and radius through the SDK appearance API.
-- Remove the persistent prepared-order recovery statement beneath the form while
-  retaining the guarded restart controls and actual same-tab order recovery.
-
 ## 2026-10-19 — Consolidate dependency updates from #66
 
 - Include Astro 7.4.0, Zod 4.6.7, Cloudflare Workers types 5.20261016.1 and Wrangler 4.151.0 in the donation follow-up, preserving Inttegro 0.5.8 and the donation recovery build checks. Raise the Node engine minimum to 22.22.0 to match Astro 7.4.0.

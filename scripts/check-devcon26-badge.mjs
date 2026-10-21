@@ -54,7 +54,7 @@ for (role of ['attendee', 'speaker']) {
 
   assert.equal(preview.status, 200);
   assert.ok(svg.includes('viewBox="0 0 1080 1350"'));
-  assert.ok(svg.includes('font-size="44"'));
+  assert.ok(svg.includes(`<g fill="#ed008c" aria-label="${role.toUpperCase()}"><circle`));
   assert.ok(svg.includes('data:image/png;base64,'));
   assert.ok(svg.includes('data:image/webp;base64,'));
   assert.ok(svg.includes(role.toUpperCase()));

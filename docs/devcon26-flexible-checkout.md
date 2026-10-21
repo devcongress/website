@@ -5,8 +5,7 @@ live EMS catalog's flexible_checkout.max_per_payment. The page displays the
 server's GHS unit amount and selects Paystack automatically only when EMS
 returns the single Paystack provider. It keeps the payment action disabled
 until the live catalog reports flexible_checkout.mode: live. The homepage
-links to the page so visitors can inspect ticket choices while sales are
-closed.
+links to the page; unavailable checkout is explained before showing buyer fields.
 
 Each seat has one allocation: self (at most one), private gift (recipient
 email), organizer-managed community pool, or buyer-shareable claim. New tickets
@@ -45,13 +44,11 @@ Gift and shareable recipients use /devcon26/tickets/claim/#capability=...;
 a badge link additionally has purpose=badge. A successful claim reports
 the server's delivery state and never displays a QR on the website.
 
-The one-ticket rehearsal on the checkout page remains a separate Paystack
-test flow. It never creates a real seat, claim, or QR. It is enabled only
-when the test catalog reports preview_email_available: true for the exact
-website origin. The request includes a Turnstile token with action
-devcon26_test_preview_email; EMS performs recipient screening and sends
-test-only email after verified test payment. If the preview flag is false,
-the entered-address preview cannot start.
+Public checkout contains no payment rehearsal or test-email form. While the catalog
+loads, a status panel replaces the form. If availability cannot be confirmed,
+the panel explains that checkout is unavailable and offers a retry. The form
+and order summary appear only after a valid catalog arrives; retry clears stale
+provider, price, and availability text. The separate EMS sandbox remains unchanged.
 
 The checkout, management, and claim routes are noindex static pages. They use
 the existing site CSP, processed Astro scripts, and the EMS exact-origin CORS
@@ -66,3 +63,30 @@ mobile captures are [checkout](./screenshots/devcon26/checkout-mobile.png),
 [management](./screenshots/devcon26/manage-mobile.png), and
 [claims](./screenshots/devcon26/claim-mobile.png). These show responsive layout
 with sales closed; they do not demonstrate payment or admission.
+
+## Full-flow test preview
+
+Build the feature preview with `PUBLIC_DEVCON26_COMPLETE_TEST=true`. This selects the separate complete-test catalog, initialization, and verification endpoints and displays a test-payment notice. Omit the flag for the public website build. The main checkout includes a Turnstile check bound to `devcon26_complete_test_checkout`; its widget must allow the exact preview hostname.
+
+Paystack test payments drive real private management/claim links, QR email attachments, and badge creation. EMS restricts recipients to the enabled tester list and enforces quotas. Test QR PNGs and downloaded badges visibly state that they are not valid for admission. Test badges cannot publish publicly.
+
+EMS migration `20261021150000_complete_test_ticket_checkout.sql` must be reviewed and applied before activating this path. It retains test provenance and blocks live launch while test orders remain. No migration or preview activation was performed as part of the review-fix pass; shared capacity cleanup requires separate approval.
+
+The test build's CSP adds only
+`https://devcon26-full-test-events-management.admins-a7d.workers.dev` when both
+`PUBLIC_DEVCON26_COMPLETE_TEST=true` and `PUBLIC_DEVCON26_API_ORIGIN` exactly
+match that backend. No wildcard or production CSP change is required.
+
+### Checkout presentation
+
+The purchase page imports `devcon26-checkout-design.css` after the shared ticket-access stylesheet. Its `.checkout-design` scope keeps claim and management screens unchanged. Controls follow the EMS form palette and 8px radii, with 44px minimum button targets and a subtle pink input focus ring. The order summary precedes the form in source/mobile reading order and occupies the right column on desktop. Gift email disclosure and the single continuous form retain the existing checkout controller.
+
+### Local stepper refinement
+
+Checkout now presents three steps within one preserved form. Continue validates only the current step; final submission reveals the earliest invalid prior step before reporting browser validity. Earlier-step edits require advancing through validation again. The right context panel uses text-only rendering for allocation and purchaser details, with totals always visible. Turnstile uses explicit rendering when Payment is shown. The local UI was checked with a read-only catalog fixture; payment and email testing still belongs to the authorized preview journey after deployment approval.
+
+The local allocation refinement uses native radio groups within a fieldset per ticket. Changing a selection restores focus to the corresponding replacement radio, and the other tickets disable the personal allocation with a visible explanation. The order preview has decorative masked SVG artwork and ticket notches; it remains explicitly an order preview. Primary actions use accessible deep pink with white text; current-step and selected-choice accents also use pink, while the illustrated ticket retains yellow and softened, fading artwork. The earlier custom dropdown and its keyboard/event state have been removed from the purchase controller.
+
+### Persistent Cloudflare preview builds
+
+Cloudflare Workers Builds supplies `WORKERS_CI=1` and `WORKERS_CI_BRANCH`. For the exact `feature/devcon26-flexible-ticket-checkout` branch, Astro config sets `PUBLIC_DEVCON26_COMPLETE_TEST=true` and the fixed EMS preview API origin before generating HTML and CSP. Every automatic push build therefore retains test routing. No GitHub variables or Worker runtime secrets are needed for these public build settings. Main and other branches retain their existing configuration. Manual builds outside Workers Builds still require the two explicit preview variables.

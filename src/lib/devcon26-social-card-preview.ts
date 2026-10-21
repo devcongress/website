@@ -3,7 +3,7 @@ import { layoutDigitalBadgeName, paintDigitalBadge } from './devcon26-digital-ba
 type PhotoCrop = { zoom: number; x: number; y: number };
 type SeatCard = { name: string; photo: File | null; crop?: PhotoCrop };
 const DEFAULT_PHOTO_CROP: PhotoCrop = { zoom: 1, x: 0.5, y: 0.18 };
-type BuyerSeat = { seat_number: number; card: { display_name: string; photo_available: boolean } };
+type BuyerSeat = { seat_number: number; card: { display_name: string; photo_available: boolean; is_test?: boolean } };
 type CardAssets = { base: HTMLImageElement | null; backdrop: HTMLImageElement | null };
 const BUYER_CARD_PATH = '/api/public/annual-conference/2026/social-cards/buyer/collection';
 const CARD_WIDTH = 1080;
@@ -203,6 +203,7 @@ export function initializeDevcon26SocialCardPreview(
 ): void {
   const preview = root.querySelector<HTMLElement>('[data-social-card-preview]');
   const isRegistration = root.dataset.cardContext === 'registration';
+  const usesDigitalBadge = isRegistration || root.hasAttribute('data-payment-confirmation');
 
   if (!preview || !Number.isSafeInteger(quantity) || quantity < 1 || quantity > 5) return;
 
@@ -293,6 +294,21 @@ export function initializeDevcon26SocialCardPreview(
     download.hidden = step !== 2;
     next.hidden = step === 2 && quantity === 1;
     next.textContent = step === 2 ? 'Other cards' : step === 1 ? 'Preview card' : 'Personalize this card';
+    if (navigation.hasAttribute('data-badge-actions')) {
+      navigation.dataset.actionStep = String(step);
+      later.hidden = step === 2 || (Boolean(buyerGrant) && !canFinishLater);
+      const setLabel = (button: HTMLButtonElement, label: string, arrow: string, leading = false) => {
+        const icon = document.createElement('span');
+
+        icon.setAttribute('aria-hidden', 'true');
+        icon.textContent = arrow;
+        button.replaceChildren(...(leading ? [icon, document.createTextNode(label)] : [document.createTextNode(label), icon]));
+      };
+
+      setLabel(back, step === 2 ? 'Edit badge' : 'Back', '←', true);
+      setLabel(next, step === 2 ? 'Other cards' : step === 1 ? 'Preview badge' : 'Personalize badge', '→');
+    }
+
     if (step === 2) next.setAttribute('aria-label', 'Choose another card');
     else next.removeAttribute('aria-label');
     if (step === 0) arrangeSeatCards();
@@ -404,7 +420,7 @@ export function initializeDevcon26SocialCardPreview(
     const context = ticketCanvas.getContext('2d');
 
     if (!context) return false;
-    const result = isRegistration ? layoutDigitalBadgeName(context, value) : layoutDevcon26CardName(context, value);
+    const result = usesDigitalBadge ? layoutDigitalBadgeName(context, value) : layoutDevcon26CardName(context, value);
     const message = required && !result.normalized
       ? 'Add a display name before previewing or sharing your card.'
       : result.valid ? '' : result.message;
@@ -457,7 +473,7 @@ export function initializeDevcon26SocialCardPreview(
     const version = ++renderVersion;
     const workCanvas = document.createElement('canvas');
     const card = cards[activeSeat];
-    const result = isRegistration
+    const result = usesDigitalBadge
       ? await paintDigitalBadge(workCanvas, card.name, card.photo, card.crop, 'attendee')
       : await paintCard(workCanvas, cardAssets.base!, cardAssets.backdrop!, card.name, card.photo, card.crop);
 
@@ -582,6 +598,7 @@ export function initializeDevcon26SocialCardPreview(
 
   async function loadRemotePhoto(seatNumber: number): Promise<boolean> {
     const seatIndex = seatNumber - 1;
+    const remoteSeatNumber = remoteSeats[seatIndex]?.seat_number;
 
     if (!buyerGrant || !apiOrigin || !remoteSeats[seatIndex]?.card.photo_available || cards[seatIndex].photo) return false;
     const loadVersion = ++photoLoadVersions[seatIndex];
@@ -589,7 +606,7 @@ export function initializeDevcon26SocialCardPreview(
     let response: Response;
 
     try {
-      response = await fetch(new URL(`${BUYER_CARD_PATH}/seats/${seatNumber}/photo`, apiOrigin), {
+      response = await fetch(new URL(`${BUYER_CARD_PATH}/seats/${remoteSeatNumber}/photo`, apiOrigin), {
         headers: buyerHeaders(),
         credentials: 'omit',
         cache: 'no-store',
@@ -732,7 +749,7 @@ export function initializeDevcon26SocialCardPreview(
     const card = cards[activeSeat];
 
     if (!buyerGrant || !card.name.trim() || !validateName(card.name, true)) return;
-    const seatNumber = activeSeat + 1;
+    const seatNumber = remoteSeats[activeSeat]?.seat_number;
 
     void buyerRequest(`/seats/${seatNumber}`, {
       method: 'PATCH',
@@ -756,7 +773,7 @@ export function initializeDevcon26SocialCardPreview(
       return;
     }
     cards[activeSeat].photo = file;
-    if (isRegistration) cards[activeSeat].crop = { ...DEFAULT_PHOTO_CROP };
+    if (usesDigitalBadge) cards[activeSeat].crop = { ...DEFAULT_PHOTO_CROP };
     exported[activeSeat] = false;
     photoLoadVersions[activeSeat] += 1;
     photoInput.setCustomValidity('');
@@ -765,7 +782,7 @@ export function initializeDevcon26SocialCardPreview(
     render(true);
     if (buyerGrant) {
       const seatIndex = activeSeat;
-      const seatNumber = seatIndex + 1;
+      const seatNumber = remoteSeats[seatIndex]?.seat_number;
       const uploadVersion = ++photoUploadVersions[seatIndex];
       const previousUpload = photoUploadQueues[seatIndex];
 
@@ -851,7 +868,7 @@ export function initializeDevcon26SocialCardPreview(
   later.hidden = Boolean(buyerGrant) && !canFinishLater;
   status.textContent = 'Loading the DevCon26 card artwork…';
   setBusy(true);
-  void loadCardAssets(isRegistration).then((assets) => {
+  void loadCardAssets(usesDigitalBadge).then((assets) => {
     cardAssets = assets;
     showStep(step, false);
     if (!buyerGrant) {

@@ -81,8 +81,7 @@
 
 .flexible-checkout .checkout-card,
 .flexible-checkout .checkout-panel,
-.flexible-checkout .order-summary,
-.flexible-checkout .preview-panel {
+.flexible-checkout .order-summary {
   border: 1px solid #cfc9bf;
   border-radius: 12px;
   background: #fffdf8;
@@ -426,8 +425,7 @@
   line-height: 1.45;
 }
 
-.flexible-checkout .primary-action,
-.flexible-checkout .secondary-action {
+.flexible-checkout .primary-action {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -440,8 +438,7 @@
   font-weight: 800;
 }
 
-.flexible-checkout .primary-action:disabled,
-.flexible-checkout .secondary-action:disabled {
+.flexible-checkout .primary-action:disabled {
   opacity: .52;
   cursor: not-allowed;
 }
@@ -519,38 +516,13 @@
   line-height: 1.45;
 }
 
-.flexible-checkout .preview-panel {
-  margin-top: 2rem;
+.flexible-checkout .checkout-availability p {
+  margin-top: 0.75rem;
+  color: #716c68;
 }
 
-.flexible-checkout .preview-panel summary {
-  cursor: pointer;
-  padding: 1.2rem 1.5rem;
-  font-weight: 800;
-}
-
-.flexible-checkout .preview-panel summary span {
-  float: right;
-}
-
-.flexible-checkout .preview-panel[open] summary span {
-  transform: rotate(45deg);
-}
-
-.flexible-checkout .preview-content {
-  max-width: 720px;
-  padding: 0 1.5rem 1.5rem;
-}
-
-.flexible-checkout .preview-content > p {
-  margin-bottom: 1.25rem;
-  color: #514b47;
-  line-height: 1.5;
-}
-
-.flexible-checkout .turnstile-container {
-  min-height: 4rem;
-  margin-top: 1rem;
+.flexible-checkout [hidden] {
+  display: none !important;
 }
 
 .flexible-checkout.ticket-access .checkout-shell {
@@ -714,7 +686,6 @@
 
 @media (prefers-reduced-motion: no-preference) {
   .flexible-checkout .primary-action:not(:disabled),
-  .flexible-checkout .secondary-action:not(:disabled),
   .flexible-checkout .quantity-control button:not(:disabled) {
     transition: transform 140ms cubic-bezier(0.4, 0, 0.2, 1);
   }
@@ -728,7 +699,6 @@
   }
 
   .flexible-checkout .primary-action:not(:disabled):active,
-  .flexible-checkout .secondary-action:not(:disabled):active,
   .flexible-checkout .quantity-control button:not(:disabled):active {
     transform: scale(.97);
   }

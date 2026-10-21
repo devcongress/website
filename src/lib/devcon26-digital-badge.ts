@@ -1,3 +1,5 @@
+import { badgeRoleDots } from './devcon26-badge-role';
+
 type Crop = { zoom: number; x: number; y: number };
 export type DigitalBadgeRole = 'attendee' | 'speaker';
 type NameLayout = {
@@ -255,14 +257,11 @@ export async function paintDigitalBadge(
     });
   }
 
-  const roleLabel = role === 'attendee' ? 'ATTENDEE' : role === 'speaker' ? 'SPEAKER' : null;
-
-  if (roleLabel) {
-    context.fillStyle = PINK;
-    context.font = `600 44px ${FONT}`;
-    context.textAlign = 'right';
-    context.fillText(roleLabel, 944, 1234);
-    context.textAlign = 'left';
+  context.fillStyle = PINK;
+  for (const dot of badgeRoleDots(role ?? 'attendee')) {
+    context.beginPath();
+    context.arc(dot.x, dot.y, dot.radius, 0, Math.PI * 2);
+    context.fill();
   }
 
   context.fillStyle = '#d4cfc2';

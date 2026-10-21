@@ -132,6 +132,15 @@ const checkoutApiOrigin = import.meta.env.PUBLIC_DEVCON26_API_ORIGIN || 'https:/
           </div>
           <p class="social-card-status" data-social-card-preview-status role="status" aria-live="polite">Sandbox preview only — not an admission ticket. This preview is not sent or saved.</p>
           </div>
+          <div class="social-step-navigation" data-social-navigation data-badge-actions hidden>
+            <button class="social-card-later" data-social-card-later type="button">Do this later</button>
+            <button class="action-button social-back-button" data-social-step-back type="button"><span aria-hidden="true">←</span> Edit badge</button>
+            <div class="badge-export-actions">
+            <button class="download-card-button" data-social-card-download type="button" hidden>Download badge <span aria-hidden="true">↓</span></button>
+            <button class="share-card-button" data-social-card-share type="button" hidden>Share badge <span aria-hidden="true">↗</span></button>
+            </div>
+            <button class="share-card-button" data-social-step-next type="button">Preview badge →</button>
+          </div>
           <button class="download-card-button" data-social-card-resume type="button" hidden>Continue making your cards</button>
           <div class="venue-note">
             <p class="venue-label">The place to meet</p>
@@ -146,16 +155,11 @@ const checkoutApiOrigin = import.meta.env.PUBLIC_DEVCON26_API_ORIGIN || 'https:/
       <div class="confirmation-actions">
         <div class="payment-actions">
           <button class="action-button retry-button" data-payment-retry type="button" hidden>Check payment status <span aria-hidden="true">↗</span></button>
-          <a class="action-button event-button" href="/devcon26/">Back to DevCon26 <span aria-hidden="true">↗</span></a>
-          <a class="support-link" href="mailto:hello@devcongress.org?subject=DevCon26%20payment">Need a hand? Contact us <span aria-hidden="true">↗</span></a>
+          <a class="support-link event-button" href="/devcon26/">Back to DevCon26</a>
+          <span class="footer-divider" aria-hidden="true">·</span>
+          <a class="support-link" href="mailto:hello@devcongress.org?subject=DevCon26%20payment">Contact us</a>
         </div>
-        <div class="social-step-navigation" data-social-navigation hidden>
-          <button class="share-card-button" data-social-card-share type="button" hidden>Share my card <span aria-hidden="true">↗</span></button>
-          <button class="download-card-button" data-social-card-download type="button" hidden>Download image</button>
-          <button class="action-button social-back-button" data-social-step-back type="button"><span aria-hidden="true">←</span> Back</button>
-          <button class="social-card-later" data-social-card-later type="button">Do this later <span aria-hidden="true">↗</span></button>
-          <button class="share-card-button" data-social-step-next type="button">Continue</button>
-        </div>
+
       </div>
     </main>
     <dialog class="social-leave-dialog" data-social-leave-dialog aria-labelledby="social-leave-title" aria-describedby="social-leave-copy">
@@ -1216,44 +1220,6 @@ const checkoutApiOrigin = import.meta.env.PUBLIC_DEVCON26_API_ORIGIN || 'https:/
     }
   }
 
-  @media (min-width: 1281px) {
-    .confirmation-actions {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) minmax(0, 0.95fr);
-      gap: clamp(28px, 4vw, 48px);
-      align-items: start;
-      margin-top: 16px;
-    }
-
-    .confirmation-actions .payment-actions {
-      margin-top: 0;
-    }
-
-    .social-step-navigation {
-      display: grid;
-      grid-auto-flow: column;
-      grid-auto-columns: minmax(0, 1fr);
-      gap: 8px;
-    }
-
-    .social-step-navigation > button {
-      box-sizing: border-box;
-      width: 100%;
-      height: 48px;
-      min-height: 48px;
-      justify-content: center;
-      padding: 8px 4px;
-      gap: 6px;
-      font-size: 12px;
-      line-height: 1.2;
-      white-space: normal;
-    }
-
-    .social-step-navigation > [data-social-step-next] {
-      margin-left: 0;
-    }
-  }
-
   @media (min-width: 761px) and (max-width: 1280px) {
     .confirmation-content {
       grid-template-columns: minmax(0, 1fr);
@@ -1374,6 +1340,120 @@ const checkoutApiOrigin = import.meta.env.PUBLIC_DEVCON26_API_ORIGIN || 'https:/
 
     .social-card-seats :global(.social-seat-button) {
       transition: none;
+    }
+  }
+
+  .confirmation-actions {
+    display: block;
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+  }
+
+  .confirmation-actions .payment-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 24px;
+    margin: 0;
+  }
+
+  .confirmation-actions .event-button {
+    background: transparent;
+    padding: 0;
+    color: var(--text-mid);
+  }
+
+  .social-step-navigation[data-badge-actions] {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    margin-top: 16px;
+  }
+
+  .social-step-navigation[data-badge-actions] button {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: auto;
+    min-height: 44px;
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.3;
+    white-space: nowrap;
+  }
+
+  .badge-export-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 8px;
+    max-width: 100%;
+    margin-left: auto;
+  }
+
+  .badge-export-actions:not(:has(button:not([hidden]))) {
+    display: none;
+  }
+
+  .social-step-navigation[data-badge-actions] > .social-back-button,
+  .social-step-navigation[data-badge-actions] > .social-card-later {
+    border: 0;
+    padding-inline: 0;
+    background: transparent;
+    color: var(--text-mid);
+    margin-right: auto;
+  }
+
+  .social-step-navigation[data-badge-actions] > [data-social-step-next] {
+    margin-left: auto;
+  }
+
+  .social-step-navigation[data-badge-actions][data-action-step="2"] > [data-social-step-next] {
+    order: -1;
+    margin: 0;
+    background: transparent;
+    color: var(--text-mid);
+    border-color: var(--payment-outline);
+  }
+
+  .social-step-navigation[data-badge-actions][hidden],
+  .social-step-navigation[data-badge-actions] button[hidden] {
+    display: none;
+  }
+
+  @media (max-width: 400px) {
+    .social-step-navigation[data-badge-actions] .badge-export-actions button {
+      padding-inline: 10px;
+      font-size: 13px;
+    }
+  }
+
+  .confirmation-actions .payment-actions {
+    gap: 8px 12px;
+    align-items: center;
+  }
+
+  .confirmation-actions .support-link {
+    font-size: 13px;
+    color: var(--text-mid);
+    text-decoration: none;
+  }
+
+  .footer-divider {
+    color: var(--text-mid);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .confirmation-actions .support-link:hover {
+      color: var(--pink);
+      text-decoration: none;
     }
   }
 

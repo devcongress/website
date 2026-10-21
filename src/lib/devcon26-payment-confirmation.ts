@@ -1,5 +1,13 @@
 import { DEVCON26_BUYER_GRANT_SESSION_KEY, DEVCON26_PUBLIC_CHECKOUT_PATH, devcon26Amount, devcon26Quote } from './devcon26-checkout-contract';
+import { paymentReceiptPresentation, renderPaymentReceipt } from './payment-receipts';
 import { FLEXIBLE_GRANT_SESSION_KEY } from './devcon26-flexible-checkout';
+
+const MANAGED_REFERENCE = /^devcon26-managed-(test|live)-[a-f0-9]{32}$/;
+const MANAGED_BUYER_REFERENCE = /^(TEST|LIVE)-DC26-[A-F0-9]{32}$/;
+const MANAGED_VERIFY_PATH = '/api/public/annual-conference/2026/checkout/managed/verify';
+
+const COMPLETE_TEST_REFERENCE = /^devcon26-complete-test-[a-f0-9]{32}$/;
+const COMPLETE_TEST_VERIFY_PATH = '/api/public/annual-conference/2026/complete-test-checkout/verify';
 
 const TEST_REFERENCE = /^devcon26-test-[a-f0-9]{32}$/;
 const BUYER_REFERENCE = /^DC26-[A-F0-9]{32}$/;
@@ -41,15 +49,21 @@ export interface TestPaymentSummary {
   hasDiscount: boolean;
   photo: string;
   buyerGrant?: string;
+  cardQuantity?: number;
 }
 
 export function devcon26ConfirmationUrl(reference: string): string {
-  if (!TEST_REFERENCE.test(reference) && !LIVE_REFERENCE.test(reference)) throw new Error('Invalid payment reference.');
+  if (!MANAGED_REFERENCE.test(reference) && !TEST_REFERENCE.test(reference)
+    && !LIVE_REFERENCE.test(reference) && !COMPLETE_TEST_REFERENCE.test(reference)) throw new Error('Invalid payment reference.');
 
   return '/devcon26/payment-confirmation/#reference=' + encodeURIComponent(reference);
 }
 
 export function devcon26BuyerReference(reference: string): string {
+  const managed = MANAGED_REFERENCE.exec(reference);
+
+  if (managed) return managed[1].toUpperCase() + '-DC26-' + reference.slice(-32).toUpperCase();
+  if (COMPLETE_TEST_REFERENCE.test(reference)) return 'TEST-DC26-' + reference.slice('devcon26-complete-test-'.length).toUpperCase();
   if (LIVE_REFERENCE.test(reference)) return 'DC26-' + reference.slice('devcon26_'.length).toUpperCase();
   if (!TEST_REFERENCE.test(reference)) throw new Error('Invalid payment reference.');
 
@@ -68,6 +82,11 @@ function devcon26ReferenceFromParameters(parameters: URLSearchParams): string | 
   const values = parameters.getAll('reference');
 
   if (values.length !== 1) return null;
+  if (MANAGED_REFERENCE.test(values[0])) return values[0];
+  if (MANAGED_BUYER_REFERENCE.test(values[0])) {
+    return 'devcon26-managed-' + values[0].slice(0, 4).toLowerCase() + '-' + values[0].slice(-32).toLowerCase();
+  }
+  if (COMPLETE_TEST_REFERENCE.test(values[0])) return values[0];
   if (TEST_REFERENCE.test(values[0])) return values[0];
   if (LIVE_REFERENCE.test(values[0])) return values[0];
   if (BUYER_REFERENCE.test(values[0])) return 'devcon26-test-' + values[0].slice('DC26-'.length).toLowerCase();
@@ -150,24 +169,36 @@ function livePaymentSummary(input: unknown): (TestPaymentSummary & { buyerGrant:
   };
 }
 
-function flexiblePaymentSummary(input: unknown): TestPaymentSummary | null {
+function flexiblePaymentSummary(input: unknown, mode: 'live' | 'test' = 'live'): TestPaymentSummary | null {
   if (!input || typeof input !== 'object' || Array.isArray(input)) return null;
 
   const result = input as Record<string, unknown>;
 
-  if (result.mode !== 'live' || result.status !== 'verified' || result.currency !== 'GHS'
+  if (result.mode !== mode || result.status !== 'verified' || result.currency !== 'GHS'
     || !Number.isSafeInteger(result.quantity) || (result.quantity as number) < 1
     || !Number.isSafeInteger(result.ticket_amount_minor) || (result.ticket_amount_minor as number) <= 0
     || !Number.isSafeInteger(result.amount_paid_minor)
     || (result.amount_paid_minor as number) < (result.ticket_amount_minor as number)) return null;
 
+  const ticketAmountMinor = result.ticket_amount_minor as number;
+  const amountPaidMinor = result.amount_paid_minor as number;
+  const processingFeeMinor = result.processing_fee_minor === undefined
+    ? amountPaidMinor - ticketAmountMinor
+    : result.processing_fee_minor;
+
+  if (!Number.isSafeInteger(processingFeeMinor) || (processingFeeMinor as number) < 0
+    || ticketAmountMinor + (processingFeeMinor as number) !== amountPaidMinor) return null;
+
   return {
     status: 'verified',
+    buyerGrant: result.card_quantity === 1 && typeof result.buyer_grant === 'string'
+      && result.buyer_grant.length > 0 && result.buyer_grant.length <= 2000 ? result.buyer_grant : undefined,
+    cardQuantity: result.card_quantity === 1 ? 1 : 0,
     ticketName: 'DevCon26 ticket',
     quantity: result.quantity as number,
-    amount: devcon26Amount(result.amount_paid_minor as number),
-    baseAmount: devcon26Amount(result.ticket_amount_minor as number),
-    feeAmount: devcon26Amount((result.amount_paid_minor as number) - (result.ticket_amount_minor as number)),
+    amount: devcon26Amount(amountPaidMinor),
+    baseAmount: devcon26Amount(ticketAmountMinor),
+    feeAmount: devcon26Amount(processingFeeMinor as number),
     discountAmount: 'GHS 0.00',
     coupon: null,
     hasDiscount: false,
@@ -183,13 +214,19 @@ export function initializeDevcon26PaymentConfirmation(
   const copy = root.querySelector<HTMLElement>('[data-payment-copy]')!;
   const status = root.querySelector<HTMLElement>('[data-payment-status]')!;
   const receipt = root.querySelector<HTMLElement>('[data-payment-receipt]')!;
+  const modeNotice = root.querySelector<HTMLElement>('[data-payment-mode-notice]');
   const attention = root.querySelector<HTMLElement>('[data-payment-attention]')!;
   const retry = root.querySelector<HTMLButtonElement>('[data-payment-retry]')!;
-  const print = root.querySelector<HTMLButtonElement>('[data-payment-print]')!;
+  const providerReceipt = root.querySelector<HTMLAnchorElement>('[data-provider-receipt]')!;
+  const providerReceiptEmail = root.querySelector<HTMLElement>('[data-provider-receipt-email]')!;
   let operation = 0;
   let abort: AbortController | undefined;
 
   function showState(state: PageState, heading: string, description: string, canRetry = false): void {
+    if (state !== 'verified') {
+      if (modeNotice) modeNotice.hidden = true;
+      renderPaymentReceipt(providerReceipt, providerReceiptEmail, { kind: 'reference' });
+    }
     root.dataset.paymentState = state;
     title.textContent = heading;
     copy.textContent = description;
@@ -227,11 +264,15 @@ export function initializeDevcon26PaymentConfirmation(
     const timeout = window.setTimeout(() => controller.abort(), 15000);
 
     try {
+      const managedReference = MANAGED_REFERENCE.exec(reference);
+      const managedCheckout = Boolean(managedReference);
+      const completeTest = COMPLETE_TEST_REFERENCE.test(reference);
       const liveCheckout = LIVE_REFERENCE.test(reference);
+      const paymentMode = managedReference?.[1] === 'live' || liveCheckout ? 'live' : 'test';
       let flexibleGrant: { reference: string; checkout_grant: string; checkout_verifier: string } | null = null;
       let buyerGrant: { reference: string; buyer_grant: string; buyer_verifier: string } | null = null;
 
-      if (liveCheckout) {
+      if (managedCheckout || liveCheckout || completeTest) {
         try {
           const stored = JSON.parse(sessionStorage.getItem(FLEXIBLE_GRANT_SESSION_KEY) ?? 'null') as Record<string, unknown> | null;
 
@@ -247,27 +288,29 @@ export function initializeDevcon26PaymentConfirmation(
           flexibleGrant = null;
         }
 
-        if (!flexibleGrant) {
-        try {
-          const stored = JSON.parse(sessionStorage.getItem(DEVCON26_BUYER_GRANT_SESSION_KEY) ?? 'null') as Record<string, unknown> | null;
+        if (!flexibleGrant && !managedCheckout && !completeTest) {
+          try {
+            const stored = JSON.parse(sessionStorage.getItem(DEVCON26_BUYER_GRANT_SESSION_KEY) ?? 'null') as Record<string, unknown> | null;
 
-          if (stored && stored.reference === reference && typeof stored.buyer_grant === 'string'
-            && typeof stored.buyer_verifier === 'string') {
-            buyerGrant = {
-              reference,
-              buyer_grant: stored.buyer_grant,
-              buyer_verifier: stored.buyer_verifier,
-            };
+            if (stored && stored.reference === reference && typeof stored.buyer_grant === 'string'
+              && typeof stored.buyer_verifier === 'string') {
+              buyerGrant = {
+                reference,
+                buyer_grant: stored.buyer_grant,
+                buyer_verifier: stored.buyer_verifier,
+              };
+            }
+          } catch {
+            buyerGrant = null;
           }
-        } catch {
-          buyerGrant = null;
-        }
         }
 
         if (!buyerGrant && !flexibleGrant) throw new Error('Secure checkout access is unavailable in this browser session.');
       }
 
-      const verifyPath = flexibleGrant ? FLEXIBLE_VERIFY_PATH : liveCheckout ? PUBLIC_VERIFY_PATH : VERIFY_PATH;
+      const verifyPath = managedCheckout ? MANAGED_VERIFY_PATH
+        : completeTest ? COMPLETE_TEST_VERIFY_PATH
+        : flexibleGrant ? FLEXIBLE_VERIFY_PATH : liveCheckout ? PUBLIC_VERIFY_PATH : VERIFY_PATH;
       const response = await fetch(devcon26VerificationUrl(root.dataset.checkoutApiOrigin!).replace(VERIFY_PATH, verifyPath), {
         method: 'POST',
         credentials: 'omit',
@@ -287,7 +330,8 @@ export function initializeDevcon26PaymentConfirmation(
 
       const payload = await response.json();
 
-      if (liveCheckout && payload && typeof payload === 'object' && (payload as Record<string, unknown>).mode === 'live') {
+      if ((managedCheckout || liveCheckout || completeTest) && payload && typeof payload === 'object'
+        && (payload as Record<string, unknown>).mode === paymentMode) {
         const liveStatus = (payload as Record<string, unknown>).status;
 
         if (liveStatus === 'refund_required') {
@@ -309,28 +353,43 @@ export function initializeDevcon26PaymentConfirmation(
           return;
         }
       }
-      const summary = flexibleGrant ? flexiblePaymentSummary(payload)
+      const summary = flexibleGrant ? flexiblePaymentSummary(payload, paymentMode)
         : liveCheckout ? livePaymentSummary(payload) : devcon26TestPaymentSummary(payload);
 
       if (current !== operation) return;
       if (!summary) throw new Error('Invalid verification result.');
 
       if (summary.status === 'verified') {
+        // The validated reference and verification response agree on the stored
+        // order mode; current checkout settings never select this payment's mode.
+        renderPaymentReceipt(providerReceipt, providerReceiptEmail,
+          paymentReceiptPresentation('paystack', paymentMode, payload.receipt_url));
+
+        if (modeNotice) {
+          modeNotice.hidden = paymentMode !== 'test';
+          modeNotice.textContent = paymentMode === 'test'
+            ? 'Test payment — no money was charged. Test tickets are not valid for admission.' : '';
+        }
+
         root.querySelector<HTMLElement>('[data-payment-ticket]')!.textContent = summary.ticketName;
         root.querySelector<HTMLElement>('[data-payment-quantity]')!.textContent = summary.quantity + (summary.quantity === 1 ? ' person' : ' people');
         root.querySelector<HTMLElement>('[data-payment-amount]')!.textContent = summary.amount;
         root.querySelector<HTMLElement>('[data-payment-base]')!.textContent = summary.baseAmount;
         root.querySelector<HTMLElement>('[data-payment-fee]')!.textContent = summary.feeAmount;
-        root.querySelector<HTMLElement>('[data-payment-fee-row]')!.hidden = !liveCheckout || summary.feeAmount === 'GHS 0.00';
+        root.querySelector<HTMLElement>('[data-payment-fee-row]')!.hidden = summary.feeAmount === 'GHS 0.00';
         root.querySelector<HTMLElement>('[data-payment-discount]')!.textContent = '−' + summary.discountAmount;
         root.querySelector<HTMLElement>('[data-payment-coupon]')!.textContent = summary.coupon || '';
         root.querySelector<HTMLElement>('[data-payment-discount-row]')!.hidden = !summary.hasDiscount;
         root.querySelector<HTMLElement>('[data-payment-reference]')!.textContent = devcon26BuyerReference(reference);
         root.querySelector<HTMLImageElement>('[data-payment-photo]')!.src = summary.photo;
-        if (!flexibleGrant) {
+        if (flexibleGrant && summary.buyerGrant && summary.cardQuantity) {
+          initializeCardPreview(root, summary.cardQuantity, summary.buyerGrant, true);
+        } else if (!flexibleGrant) {
           initializeCardPreview(root, summary.quantity, liveCheckout ? summary.buyerGrant : null, liveCheckout && summary.canFinishLater);
         }
-        showState('verified', 'Payment confirmed.', flexibleGrant
+        showState('verified', paymentMode === 'test' ? 'Test payment confirmed.' : 'Payment confirmed.', (managedCheckout || completeTest) && summary.buyerGrant
+          ? 'Personalize your conference badge below. Your ticket and private links will also arrive by email.'
+          : flexibleGrant
           ? 'Your payment is verified. Keep this payment record for your reference; it is not an admission ticket.'
           : 'All done. Your payment was successful, and the details are right here whenever you need them.');
       } else if (summary.status === 'refund_required') {
@@ -353,11 +412,6 @@ export function initializeDevcon26PaymentConfirmation(
 
   retry.addEventListener('click', () => {
     if (root.dataset.paymentState !== 'loading') void verifyPayment();
-  });
-
-  print.hidden = false;
-  print.addEventListener('click', () => {
-    if (root.dataset.paymentState === 'verified') window.print();
   });
 
   window.addEventListener('hashchange', () => void verifyPayment());

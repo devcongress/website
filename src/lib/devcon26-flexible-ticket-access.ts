@@ -26,7 +26,7 @@ function origin(value: string): string {
 
 function capabilityFromHash(): string | null {
   const parameters = new URLSearchParams(window.location.hash.replace(/^#/, ''));
-  const values = parameters.getAll('capability');
+  const values = [...parameters.getAll('capability'), ...parameters.getAll('key')];
 
   return values.length === 1 && CAPABILITY.test(values[0]) ? values[0] : null;
 }

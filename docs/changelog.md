@@ -1,5 +1,24 @@
 # Changelog
 
+## 2026-10-30 — Polish private ticket claim controls
+
+- Match the claim page's primary action to the DevCon26 checkout pink while keeping the styling scoped to ticket-access pages.
+- Replace the oversized claim-input focus treatment with one pink border edge; forced-colors mode retains a system-color focus outline. The submit action retains its mobile-sized target.
+
+## 2026-10-28 — EMS-managed checkout mode
+
+- Read Testing or Live and a settings version from one EMS catalog at runtime; remove branch-specific payment-mode and preview-backend build selection.
+- Bind initialization to the reviewed mode and settings version. Refresh stale settings and return to ticket review without automatically starting another payment; preserve the same request key for unchanged retries.
+- Require the shared human check in both modes, visibly identify test checkout and confirmation, and route new managed references to stored-order verification while retaining historical callback paths.
+- Accept canonical private capability links and existing emailed key fragments only when there is one unambiguous token; reject duplicates and conflicts.
+- Include focused runtime-mode, stale-settings, callback, private-link, receipt, badge and existing checkout checks in the normal build. Verification: pnpm build and git diff --check passed; no payment, email, migration, deployment or merge was performed.
+
+## 2026-10-28 — Consolidate dependency updates into ticketing
+
+- Rebase the two-commit ticket checkout branch onto current main, preserving the branded donation checkout and Connect navigation.
+- Absorb the four dependency updates from #71: Inttegro 0.7.2, Astro 7.4.2, Cloudflare Workers types 5.20261023.1 and Wrangler 4.152.0.
+- Raise the Node engine minimum and pin both deployment workflows to Node 22.23.4, matching Astro's supported runtime and fixing the bot PR's build failure. Production deployment conditions and preview-only test settings are unchanged.
+
 ## 2026-10-21 — Match the donation form to DevCongress
 
 - Update the embedded donation checkout to `@inttegro/js` 0.7.1 and apply the
@@ -7,6 +26,62 @@
   typography and radius through the SDK appearance API.
 - Remove the persistent prepared-order recovery statement beneath the form while
   retaining the guarded restart controls and actual same-tab order recovery.
+
+## 2026-10-25 — Grouped community tickets
+
+- Render organizer-assigned community tickets as one quantity group without recipient email inputs, including a grouped order-summary line.
+- Grow community-only orders as community tickets; retain explicit additional tickets and per-ticket choices for mixed personal, gift and shareable orders. Changing one grouped ticket’s use preserves the rest.
+- Keep gift emails attached to their allocations when community counts change, enforce total ticket limits, and retain keyboard focus at the bounds.
+- Keep the community heading inside a continuous card border, use concise explanatory copy and a clearly labeled quantity row, and reduce the change-use action to a quiet secondary control. Wrap controls on narrow phones, with minimum 44px targets and reduced-motion-aware press feedback. Preserve the existing per-seat API contract; no migration or backend setting changes.
+
+## 2026-10-25 — Provider-aware receipt guidance
+
+- Gate receipt actions on code-reviewed provider capabilities: a validated provider URL takes precedence, otherwise confirmed customer receipt email guidance, otherwise payment details only.
+- Keep Paystack receipt links and email promises disabled until supported URL origins or mode-specific merchant email settings are verified. Clear stale receipt links whenever verification restarts or leaves the verified state.
+- Preserve removal of the unreliable browser-print button. No provider settings or production deployments changed.
+- Refresh legacy checkout assertions for the current homepage-to-registration journey, flexible ticket form, dotted badge roles, shared badge renderer, and compact footer; retain payment safety and non-admission checks.
+
+## 2026-10-25 — Remove unreliable payment-record action
+
+- Remove the payment-confirmation Print or save action, which invoked browser printing rather than a provider receipt. Keep verified payment details and the non-admission caption; native browser printing remains available. No provider receipt link is currently supplied by this flow.
+
+## 2026-10-24 — Leave-dialog focus polish
+
+- Focus the payment-confirmation leave-dialog heading on opening so touch users do not see a second outline around Keep editing. Preserve a restrained pink keyboard-focus indicator on both dialog actions.
+
+## 2026-10-24 — Consistent desktop checkout progress
+
+- Match desktop checkout progress to the compact mobile step title/count and three slim segments. Retain accessible, keyboard-operable completed-step navigation without the oversized tinted tabs.
+
+## 2026-10-24 — Compact mobile badge actions
+
+- Keep Edit, Download and Share on one mobile row with shorter labels, and reduce footer separation and bottom padding while preserving touch targets and safe-area spacing.
+
+## 2026-10-24 — Restore badge photo adjustment
+
+- Restore automatic photo adjustment after upload and an Adjust photo action in both editor steps. Save zoom and position with the correct seat, wait for photo uploads, restore saved crops, and keep failed saves retryable.
+- Use side-by-side controls on desktop and a scrollable, touch-friendly mobile dialog. Keep mobile footer links together and explicitly color the download action to avoid Safari's default blue.
+- Verification: production build, badge renderer and payment-confirmation checks passed; local browser fixtures exercised crop save, retry, Escape and a 390px mobile layout. The legacy checkout check still stops at its unrelated landing-page assertion.
+
+## 2026-10-24 — Clear ticket purchase entry points
+
+- Send homepage Buy tickets actions to the DevCon26 ticket section before checkout. Show the GH₵150 per-person price, QR PDF email and badge link, and multi-ticket guidance. Align navigation and FAQs; remove stale registration-opening copy.
+
+## 2026-10-24 — Payment badge renderer and minimal footer
+
+- Select the blended-photo badge renderer for the payment-confirmation editor as well as registration, including matching name validation, photo defaults and artwork loading. Preview and download now share the approved composition.
+- Simplify the page footer to muted links separated by a dot, with pink hover and no arrows or underlines.
+
+## 2026-10-24 — Conference badge and action polish
+
+- Preserve the blended-photo physical badge and original name typography; use dotted uppercase attendee/speaker labels in canvas and SVG.
+- Remove testing banners from badge artwork and simplify confirmation copy while retaining test-payment isolation and disabled public publication.
+- Place compact badge actions beneath the editor, group download/share on narrow screens, and move page links into a quiet footer. Preserve multi-seat navigation and deferred-edit eligibility.
+
+## 2026-10-21 — Clear public checkout availability
+
+- Remove the one-ticket payment rehearsal and its test-email/Turnstile code from public checkout.
+- Replace the disabled form with a loading or unavailable panel and retry action until EMS returns a valid ticket catalog. Clear stale availability and provider details on retry.
 
 ## 2026-10-21 — Separate sponsor handover from public checkout
 
@@ -212,3 +287,85 @@
 - Unified the DevCon26 mobile section navigation with the homepage header frame:
   a sticky 68px cream header, homepage-sized controls, a full-width white menu,
   and safe anchor offsets for the dedicated page’s section links.
+
+### 2026-10-21 — Full-flow test preview
+
+- Select complete-test checkout and confirmation using an explicit preview build flag, with test notices and preview-only human verification.
+- Preserve private ticket/claim/badge flows while visibly marking test badge downloads and disabling public badge publication.
+- Reset the human check after checkout errors and back-navigation; preserve ordinary live checkout copy.
+
+### 2026-10-21 — Preview backend CSP
+
+- Allow the exact EMS preview backend only for the explicit full-test build; preserve ordinary production CSP.
+- Verified the deployed form loads GH₵150 pricing and opens a GH₵300 Paystack TEST checkout for self and gift tickets.
+
+### 2026-10-21 — Preview checkout presentation
+
+- Removed the prominent test-checkout banner at the user’s request to bring the preview layout closer to production. Test payment routing and backend safeguards remain active.
+
+## 2026-10-21 — Clean conference checkout
+
+- Redesigned checkout with compact numbered sections, an integrated quantity stepper, app-style inputs and restrained focus rings.
+- Replaced the image summary with a branded conference order summary; it appears before the form on mobile so totals are visible before payment.
+- Kept checkout routing, allocations, test payments, ticket/badge delivery, and shared ticket-access styles unchanged.
+- Verified the Astro build and preview quantity/allocation controls.
+
+## 2026-10-21 — Local checkout stepper
+
+- Added Tickets, Your details, and Payment steps with contextual order information on the right, per-step validation, preserved back-navigation state, and reduced-motion-aware transitions.
+- Render the payment challenge only when Payment is visible; earlier Continue buttons do not initialize payment.
+- Tightened the ticket layout to fit a 1280×720 viewport for one ticket, and position assignment menus upward when needed. Small viewports and larger orders retain natural scrolling.
+- Verified local catalog-fixture navigation, missing gift/contact validation, retained inputs, summary totals, menu bounds, build, and diff whitespace checks. No payment or email side effects; not pushed or deployed.
+
+## 2026-10-21 — Local ticket choice and boarding-pass refinement
+
+- Replaced the allocation dropdown with native radio tiles, selected-choice explanations, one-self availability, and conditional gift email validation.
+- Added a masked decorative Accra-inspired vector illustration, perforated divider, and ticket notches to the order preview; no issued ticket or QR is implied.
+- Changed checkout actions to brand yellow and progress to connected segments with current/completed states.
+- Checked keyboard radio selection, gift validation/removal, step advancement, local viewport fit, and the production build. This refinement remains local, unpushed, and undeployed.
+
+## 2026-10-21 — Pink checkout interaction accents
+
+- Switched primary checkout actions, current-step indicators and selected ticket choices to pink; retained yellow on the illustrated order preview. Used a deeper pink for readable white button text. Local only; no push or deployment.
+
+### Restrained pink refinement
+
+- Reserved pink for primary actions and focus feedback; restored neutral active-step and selected-ticket styling. Yellow remains on the ticket artwork. Local only.
+- Softened the ticket illustration to 42% opacity with fading edge masks, preserving the existing arch clip.
+
+- Restored the previous pink active-step and selected-ticket accents at user request; retained the illustration’s 42% opacity and fading mask. Local only.
+
+### 2026-10-21 — Quantity input focus
+
+- Replace the checkout quantity field’s heavy outer focus outline with a thin inset pink border and a soft tint. Preserve a visible system-color outline in forced-colors mode.
+
+### 2026-10-22 — Persist preview checkout build settings
+
+- Bind the DevCon26 feature branch’s Cloudflare builds to the test checkout backend before Astro generates HTML and CSP, preventing later pushes from reverting the preview to production checkout. Main and other branch builds retain existing settings.
+
+### 2026-10-22 — Payment provider and navigation consistency
+
+- Use the same Back/Continue action row on contact and payment steps.
+- Show Paystack as the sole selected provider in a reusable, vertically expanding provider list with a locally served logo; payment routing remains unchanged. Logo source: https://commons.wikimedia.org/wiki/File:Paystack_Logo.svg.
+
+### 2026-10-22 — Compact step actions
+
+- Size contact and payment Continue buttons to their labels, with Back aligned left and the primary action right. Allow wrapping on narrow screens without stretching the primary button.
+
+## 2026-10-22 — Complete-test badge editor after payment
+
+- Open the saved conference badge editor after verified preview payment for a self ticket.
+- Address the actual issued seat for name/photo edits and mark preview badge downloads as test-only.
+- Preserve gift-only confirmation and add a runtime confirmation regression check.
+
+## 2026-10-24 — Mobile checkout polish
+
+- Added mobile-specific step progress, sticky ticket controls, per-ticket removal, and a collapsed summary below the form.
+- Preserved recipient details when removing a middle ticket; refined radio focus, quantity colors and gift labels.
+- Verified production build and browser removal/navigation behavior; physical iPhone checks remain pending. Local changes only.
+
+### Mobile ticket quantity alignment
+
+- Use an explicit two-column mobile quantity row so the label stays centered and the stepper sits at the right edge. Keep 44px button targets and allow the label to wrap on narrow screens.
+
+- Added a softly masked community photo behind the expanded mobile order summary at 10% opacity, preserving text contrast and the compact collapsed state.

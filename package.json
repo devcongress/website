@@ -4,25 +4,26 @@
   "version": "0.0.1",
   "packageManager": "pnpm@10.34.5",
   "engines": {
-    "node": ">=22.22.0"
+    "node": ">=22.23.4"
   },
   "scripts": {
     "dev": "astro dev",
-    "build": "pnpm check:donation && astro build",
+    "build": "pnpm check:donation && astro build && pnpm check:tickets",
     "preview": "astro preview",
     "deploy": "pnpm build && wrangler deploy",
     "deploy:dry-run": "pnpm build && wrangler deploy --dry-run",
     "astro": "astro",
-    "check:donation": "node scripts/check-donation-checkout.mjs"
+    "check:donation": "node scripts/check-donation-checkout.mjs",
+    "check:tickets": "node scripts/check-devcon26-managed-checkout.mjs && node scripts/check-community-tickets.mjs && node scripts/check-devcon26-payment-confirmation.mjs && node scripts/check-payment-receipts.mjs && node scripts/check-devcon26-badge.mjs && node scripts/check-devcon26-checkout.mjs"
   },
   "dependencies": {
-    "@inttegro/js": "0.7.1",
-    "astro": "^7.4.0",
+    "@inttegro/js": "0.7.2",
+    "astro": "^7.4.2",
     "zod": "^4.6.7"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "5.20261016.1",
-    "wrangler": "^4.151.0"
+    "@cloudflare/workers-types": "5.20261023.1",
+    "wrangler": "^4.152.0"
   },
   "pnpm": {
     "overrides": {

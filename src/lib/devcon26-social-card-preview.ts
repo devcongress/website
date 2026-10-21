@@ -3,7 +3,7 @@ import { layoutDigitalBadgeName, paintDigitalBadge } from './devcon26-digital-ba
 type PhotoCrop = { zoom: number; x: number; y: number };
 type SeatCard = { name: string; photo: File | null; crop?: PhotoCrop };
 const DEFAULT_PHOTO_CROP: PhotoCrop = { zoom: 1, x: 0.5, y: 0.18 };
-type BuyerSeat = { seat_number: number; card: { display_name: string; photo_available: boolean } };
+type BuyerSeat = { seat_number: number; card: { display_name: string; photo_available: boolean; is_test?: boolean; crop?: { x: number; y: number; scale: number } } };
 type CardAssets = { base: HTMLImageElement | null; backdrop: HTMLImageElement | null };
 const BUYER_CARD_PATH = '/api/public/annual-conference/2026/social-cards/buyer/collection';
 const CARD_WIDTH = 1080;
@@ -203,6 +203,7 @@ export function initializeDevcon26SocialCardPreview(
 ): void {
   const preview = root.querySelector<HTMLElement>('[data-social-card-preview]');
   const isRegistration = root.dataset.cardContext === 'registration';
+  const usesDigitalBadge = isRegistration || root.hasAttribute('data-payment-confirmation');
 
   if (!preview || !Number.isSafeInteger(quantity) || quantity < 1 || quantity > 5) return;
 
@@ -229,8 +230,10 @@ export function initializeDevcon26SocialCardPreview(
   const resume = root.querySelector<HTMLButtonElement>('[data-social-card-resume]')!;
   const leaveDialog = root.querySelector<HTMLDialogElement>('[data-social-leave-dialog]')!;
   const leaveCopy = root.querySelector<HTMLElement>('[data-social-leave-copy]')!;
-  const photoDialog = isRegistration ? root.querySelector<HTMLDialogElement>('[data-photo-dialog]') : null;
-  const adjustPhoto = root.querySelector<HTMLButtonElement>('[data-photo-adjust]');
+  const photoDialog = root.querySelector<HTMLDialogElement>('[data-photo-dialog]');
+  const adjustPhotos = Array.from(root.querySelectorAll<HTMLButtonElement>('[data-photo-adjust]'));
+  let photoDialogTrigger: HTMLElement | null = null;
+  let cropBeforeAdjusting: PhotoCrop | null = null;
   const adjustCanvas = photoDialog?.querySelector<HTMLCanvasElement>('[data-photo-adjust-canvas]');
   const cropInputs = Array.from(photoDialog?.querySelectorAll<HTMLInputElement>('[data-photo-crop]') ?? []);
   let cropRenderTimer: number | undefined;
@@ -238,6 +241,8 @@ export function initializeDevcon26SocialCardPreview(
   const exported = Array.from({ length: quantity }, () => false);
   const photoLoadVersions = Array.from({ length: quantity }, () => 0);
   const photoUploadVersions = Array.from({ length: quantity }, () => 0);
+  const photoSaved = Array.from({ length: quantity }, () => false);
+  let savingCrop = false;
   const photoUploadQueues = Array.from({ length: quantity }, () => Promise.resolve());
   let step = quantity > 1 ? 0 : 1;
   let allowLeave = false;
@@ -293,6 +298,21 @@ export function initializeDevcon26SocialCardPreview(
     download.hidden = step !== 2;
     next.hidden = step === 2 && quantity === 1;
     next.textContent = step === 2 ? 'Other cards' : step === 1 ? 'Preview card' : 'Personalize this card';
+    if (navigation.hasAttribute('data-badge-actions')) {
+      navigation.dataset.actionStep = String(step);
+      later.hidden = step === 2 || (Boolean(buyerGrant) && !canFinishLater);
+      const setLabel = (button: HTMLButtonElement, label: string, arrow: string, leading = false) => {
+        const icon = document.createElement('span');
+
+        icon.setAttribute('aria-hidden', 'true');
+        icon.textContent = arrow;
+        button.replaceChildren(...(leading ? [icon, document.createTextNode(label)] : [document.createTextNode(label), icon]));
+      };
+
+      setLabel(back, step === 2 ? 'Edit badge' : 'Back', '←', true);
+      setLabel(next, step === 2 ? 'Other cards' : step === 1 ? 'Preview badge' : 'Personalize badge', '→');
+    }
+
     if (step === 2) next.setAttribute('aria-label', 'Choose another card');
     else next.removeAttribute('aria-label');
     if (step === 0) arrangeSeatCards();
@@ -390,6 +410,7 @@ export function initializeDevcon26SocialCardPreview(
   });
 
   function updatePhotoPicker(url: string | null): void {
+    adjustPhotos.forEach((button) => { button.disabled = busy || !url; });
     photoThumbnail.hidden = !url;
     photoThumbnail.removeAttribute('src');
 
@@ -404,7 +425,7 @@ export function initializeDevcon26SocialCardPreview(
     const context = ticketCanvas.getContext('2d');
 
     if (!context) return false;
-    const result = isRegistration ? layoutDigitalBadgeName(context, value) : layoutDevcon26CardName(context, value);
+    const result = usesDigitalBadge ? layoutDigitalBadgeName(context, value) : layoutDevcon26CardName(context, value);
     const message = required && !result.normalized
       ? 'Add a display name before previewing or sharing your card.'
       : result.valid ? '' : result.message;
@@ -457,7 +478,7 @@ export function initializeDevcon26SocialCardPreview(
     const version = ++renderVersion;
     const workCanvas = document.createElement('canvas');
     const card = cards[activeSeat];
-    const result = isRegistration
+    const result = usesDigitalBadge
       ? await paintDigitalBadge(workCanvas, card.name, card.photo, card.crop, 'attendee')
       : await paintCard(workCanvas, cardAssets.base!, cardAssets.backdrop!, card.name, card.photo, card.crop);
 
@@ -498,13 +519,77 @@ export function initializeDevcon26SocialCardPreview(
     }, 60);
   }
 
-  adjustPhoto?.addEventListener('click', () => {
+  function openPhotoAdjuster(trigger: HTMLElement | null = null): void {
     if (busy || !photoDialog || !cards[activeSeat].photo) return;
+
+    photoDialogTrigger = trigger;
+    cropBeforeAdjusting = { ...(cards[activeSeat].crop ?? DEFAULT_PHOTO_CROP) };
     syncCropInputs();
-    photoDialog.showModal();
+    const message = photoDialog.querySelector<HTMLElement>('[data-photo-adjust-status]');
+
+    if (message) message.textContent = '';
+    if (!photoDialog.open) photoDialog.showModal();
+    repaintCrop();
+  }
+
+  adjustPhotos.forEach((button) => button.addEventListener('click', () => openPhotoAdjuster(button)));
+  function restorePhotoCrop() {
+    if (cropBeforeAdjusting) {
+      cards[activeSeat].crop = { ...cropBeforeAdjusting };
+      repaintCrop();
+    }
+  }
+
+  photoDialog?.querySelector('[data-photo-cancel]')?.addEventListener('click', () => {
+    if (savingCrop) return;
+
+    restorePhotoCrop();
+    photoDialog.close();
   });
-  photoDialog?.addEventListener('close', () => { adjustPhoto?.focus(); });
-  photoDialog?.querySelector('[data-photo-done]')?.addEventListener('click', () => { photoDialog.close(); });
+
+  photoDialog?.addEventListener('cancel', (event) => {
+    if (savingCrop) {
+      event.preventDefault();
+      return;
+    }
+    restorePhotoCrop();
+  });
+  photoDialog?.addEventListener('close', () => {
+    const target = photoDialogTrigger ?? adjustPhotos.find((button) => button.offsetParent !== null);
+
+    target?.focus({ preventScroll: true });
+  });
+  photoDialog?.querySelector('[data-photo-done]')?.addEventListener('click', async () => {
+    if (busy || !photoDialog) return;
+
+    const seatIndex = activeSeat;
+    const crop = { ...(cards[seatIndex].crop ?? DEFAULT_PHOTO_CROP) };
+    const message = photoDialog.querySelector<HTMLElement>('[data-photo-adjust-status]');
+
+    savingCrop = true;
+    setBusy(true);
+    if (message) message.textContent = buyerGrant ? 'Saving photo position…' : '';
+
+    try {
+      await photoUploadQueues[seatIndex];
+      if (buyerGrant) {
+        if (!photoSaved[seatIndex]) throw new Error('Choose your photo again so it can be saved.');
+        await buyerRequest(`/seats/${remoteSeats[seatIndex].seat_number}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ crop: { x: crop.x, y: crop.y, scale: crop.zoom } }),
+        });
+      }
+      await paintPreview();
+      photoDialog.close();
+      status.textContent = buyerGrant ? 'Photo and position saved to your badge.' : 'Photo position updated.';
+    } catch {
+      if (message) message.textContent = 'Your photo position could not be saved. Check your connection and try again, or choose your photo again if the upload failed.';
+    } finally {
+      savingCrop = false;
+      setBusy(false);
+    }
+  });
   photoDialog?.querySelector('[data-photo-reset]')?.addEventListener('click', () => {
     if (busy) return;
     cards[activeSeat].crop = { ...DEFAULT_PHOTO_CROP };
@@ -577,11 +662,24 @@ export function initializeDevcon26SocialCardPreview(
     });
     if (!remoteSeats.length || remoteSeats.length !== quantity) throw new Error('Your ticket cards are not ready yet.');
 
-    cards.forEach((card, index) => { card.name = remoteSeats[index].card.display_name; });
+    cards.forEach((card, index) => {
+      const saved = remoteSeats[index].card;
+
+      card.name = saved.display_name;
+      photoSaved[index] = saved.photo_available;
+      if (saved.crop && [saved.crop.x, saved.crop.y, saved.crop.scale].every(Number.isFinite)) {
+        card.crop = {
+          x: Math.max(0, Math.min(1, saved.crop.x)),
+          y: Math.max(0, Math.min(1, saved.crop.y)),
+          zoom: Math.max(1, Math.min(2.5, saved.crop.scale)),
+        };
+      }
+    });
   }
 
   async function loadRemotePhoto(seatNumber: number): Promise<boolean> {
     const seatIndex = seatNumber - 1;
+    const remoteSeatNumber = remoteSeats[seatIndex]?.seat_number;
 
     if (!buyerGrant || !apiOrigin || !remoteSeats[seatIndex]?.card.photo_available || cards[seatIndex].photo) return false;
     const loadVersion = ++photoLoadVersions[seatIndex];
@@ -589,7 +687,7 @@ export function initializeDevcon26SocialCardPreview(
     let response: Response;
 
     try {
-      response = await fetch(new URL(`${BUYER_CARD_PATH}/seats/${seatNumber}/photo`, apiOrigin), {
+      response = await fetch(new URL(`${BUYER_CARD_PATH}/seats/${remoteSeatNumber}/photo`, apiOrigin), {
         headers: buyerHeaders(),
         credentials: 'omit',
         cache: 'no-store',
@@ -666,7 +764,7 @@ export function initializeDevcon26SocialCardPreview(
     back.disabled = value;
     next.disabled = value;
     resume.disabled = value;
-    if (adjustPhoto) adjustPhoto.disabled = value;
+    adjustPhotos.forEach((button) => { button.disabled = value || !cards[activeSeat].photo; });
     cropInputs.forEach((input) => { input.disabled = value; });
     photoDialog?.querySelectorAll<HTMLButtonElement>('button').forEach((button) => { button.disabled = value; });
     seatList.querySelectorAll<HTMLButtonElement>('button').forEach((button) => { button.disabled = value; });
@@ -732,7 +830,7 @@ export function initializeDevcon26SocialCardPreview(
     const card = cards[activeSeat];
 
     if (!buyerGrant || !card.name.trim() || !validateName(card.name, true)) return;
-    const seatNumber = activeSeat + 1;
+    const seatNumber = remoteSeats[activeSeat]?.seat_number;
 
     void buyerRequest(`/seats/${seatNumber}`, {
       method: 'PATCH',
@@ -755,8 +853,9 @@ export function initializeDevcon26SocialCardPreview(
 
       return;
     }
+    photoSaved[activeSeat] = false;
     cards[activeSeat].photo = file;
-    if (isRegistration) cards[activeSeat].crop = { ...DEFAULT_PHOTO_CROP };
+    if (usesDigitalBadge) cards[activeSeat].crop = { ...DEFAULT_PHOTO_CROP };
     exported[activeSeat] = false;
     photoLoadVersions[activeSeat] += 1;
     photoInput.setCustomValidity('');
@@ -765,7 +864,7 @@ export function initializeDevcon26SocialCardPreview(
     render(true);
     if (buyerGrant) {
       const seatIndex = activeSeat;
-      const seatNumber = seatIndex + 1;
+      const seatNumber = remoteSeats[seatIndex]?.seat_number;
       const uploadVersion = ++photoUploadVersions[seatIndex];
       const previousUpload = photoUploadQueues[seatIndex];
 
@@ -778,6 +877,12 @@ export function initializeDevcon26SocialCardPreview(
 
         body.set('photo', file, file.name);
         await buyerRequest(`/seats/${seatNumber}/photo`, { method: 'POST', body });
+        await buyerRequest(`/seats/${seatNumber}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ crop: { x: DEFAULT_PHOTO_CROP.x, y: DEFAULT_PHOTO_CROP.y, scale: DEFAULT_PHOTO_CROP.zoom } }),
+        });
+        if (photoUploadVersions[seatIndex] === uploadVersion) photoSaved[seatIndex] = true;
 
         if (photoUploadVersions[seatIndex] === uploadVersion && activeSeat === seatIndex) {
           status.textContent = 'Photo saved to your social card.';
@@ -788,6 +893,7 @@ export function initializeDevcon26SocialCardPreview(
         }
       });
     }
+    if (!isRegistration) openPhotoAdjuster();
   });
 
   async function prepareImage(): Promise<File> {
@@ -851,7 +957,7 @@ export function initializeDevcon26SocialCardPreview(
   later.hidden = Boolean(buyerGrant) && !canFinishLater;
   status.textContent = 'Loading the DevCon26 card artwork…';
   setBusy(true);
-  void loadCardAssets(isRegistration).then((assets) => {
+  void loadCardAssets(usesDigitalBadge).then((assets) => {
     cardAssets = assets;
     showStep(step, false);
     if (!buyerGrant) {

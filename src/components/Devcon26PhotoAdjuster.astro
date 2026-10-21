@@ -1,0 +1,155 @@
+<dialog class="badge-photo-dialog" data-photo-dialog aria-labelledby="badge-photo-title" aria-describedby="badge-photo-help">
+  <header>
+    <h2 id="badge-photo-title">Adjust your photo</h2>
+    <p id="badge-photo-help">Position your photo inside the badge. Your preview and download use the same crop.</p>
+  </header>
+  <div class="badge-photo-workspace">
+    <canvas data-photo-adjust-canvas width="1080" height="1350" aria-label="Badge photo adjustment preview"></canvas>
+    <div class="badge-photo-controls">
+      <label for="badge-photo-zoom">Zoom</label>
+      <input id="badge-photo-zoom" data-photo-crop="zoom" type="range" min="1" max="2.5" step="0.01" value="1" />
+      <label for="badge-photo-x">Horizontal position</label>
+      <input id="badge-photo-x" data-photo-crop="x" type="range" min="0" max="1" step="0.01" value="0.5" />
+      <label for="badge-photo-y">Vertical position</label>
+      <input id="badge-photo-y" data-photo-crop="y" type="range" min="0" max="1" step="0.01" value="0.18" />
+    </div>
+  </div>
+  <p class="badge-photo-status" data-photo-adjust-status role="status" aria-live="polite"></p>
+  <footer>
+    <button type="button" data-photo-reset>Reset</button>
+    <button type="button" data-photo-cancel>Cancel</button>
+    <button class="badge-photo-save" type="button" data-photo-done>Use this photo</button>
+  </footer>
+</dialog>
+
+<style>
+  .badge-photo-dialog {
+    box-sizing: border-box;
+    width: min(760px, calc(100vw - 32px));
+    max-height: calc(100dvh - 32px);
+    margin: auto;
+    padding: 24px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    border: 1px solid #dedbd3;
+    border-radius: 12px;
+    background: #fffdf8;
+    color: #1c1c1c;
+  }
+
+  .badge-photo-dialog::backdrop {
+    background: rgb(28 28 28 / 55%);
+  }
+
+  h2 {
+    margin: 0 0 8px;
+    font-size: 1.5rem;
+  }
+
+  header p {
+    margin: 0;
+    color: #625f59;
+    font-size: .9375rem;
+  }
+
+  .badge-photo-workspace {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: center;
+    gap: 32px;
+    margin-top: 20px;
+  }
+
+  canvas {
+    display: block;
+    width: min(100%, 280px);
+    height: auto;
+    margin: auto;
+  }
+
+  .badge-photo-controls {
+    display: grid;
+    min-width: 0;
+  }
+
+  label {
+    font-size: .875rem;
+    font-weight: 600;
+  }
+
+  input {
+    width: 100%;
+    min-width: 0;
+    height: 44px;
+    margin: 0 0 8px;
+    accent-color: #c90069;
+  }
+
+  .badge-photo-status {
+    min-height: 1.5em;
+    margin: 12px 0;
+    font-size: .875rem;
+  }
+
+  footer {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  button {
+    min-height: 44px;
+    padding: 10px 16px;
+    border: 1px solid #dedbd3;
+    border-radius: 8px;
+    background: #fff;
+    color: #1c1c1c;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .badge-photo-save {
+    border-color: #c90069;
+    background: #c90069;
+    color: #fff;
+  }
+
+  button:disabled {
+    opacity: .5;
+    cursor: wait;
+  }
+
+  :is(button, input):focus-visible {
+    outline: 2px solid #c90069;
+    outline-offset: 3px;
+  }
+
+  @media (max-width: 600px) {
+    .badge-photo-dialog {
+      width: calc(100vw - 16px);
+      max-height: calc(100dvh - 16px);
+      padding: 16px;
+      padding-bottom: max(16px, env(safe-area-inset-bottom));
+    }
+
+    .badge-photo-workspace {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 16px;
+      margin-top: 16px;
+    }
+
+    canvas {
+      width: min(180px, 24dvh);
+    }
+
+    footer {
+      position: sticky;
+      bottom: -16px;
+      padding-block: 12px;
+      background: #fffdf8;
+    }
+
+  }
+</style>

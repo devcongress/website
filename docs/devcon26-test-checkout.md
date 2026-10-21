@@ -1,10 +1,15 @@
 # DevCon26 public test checkout
 
-The `/devcon26/` ticket links lead to `/devcon26/checkout/?tier=...`, which uses
-the public EMS API at `https://em.devcongress.org`.
-Buyers do not log in to EMS. The browser never receives a Paystack secret key.
-Live ticket sales remain closed; this sandbox does not charge real money,
-reserve seats, issue admission tickets, or send ticket emails.
+The current `/devcon26/checkout/` reads Testing or Live from EMS through the
+versioned managed checkout API; see [the active checkout contract](./devcon26-flexible-checkout.md).
+There is no website build-time payment-mode selector. Buyers do not log in to
+EMS, and the browser never receives a Paystack secret key.
+
+The sandbox configuration and dated implementation notes below describe the
+historical test-checkout path retained for existing initialized callbacks. They
+do not configure the current managed checkout or establish current sales status.
+That historical sandbox does not charge real money, reserve seats, issue
+admission tickets, or send ticket emails.
 
 ## Configure the EMS sandbox
 
@@ -107,7 +112,7 @@ the ticket tier, quantity, GHS amount, and payment status; local tier metadata
 supplies only the matching label and photo.
 
 Only a valid `mode: "test"`, `status: "verified"` response reveals the payment
-summary, full neutral reference, optional print/save action, and next steps.
+summary, full neutral reference, capability-gated provider receipt guidance, and next steps.
 Pending, failed, missing/unknown reference, invalid response, timeout, and
 connection-error states never display successful payment or a usable ticket.
 Retries only check the existing payment. No JavaScript means no verified
@@ -129,8 +134,7 @@ and subtle side notches make it easier to retain without implying admission.
 The record keeps the existing server-supplied amount, tier, quantity, coupon,
 and neutral payment-reference hooks; no payment, EMS, or Paystack behavior changed.
 
-The action now accurately says **Print or save payment record**. Its print
-stylesheet renders only the record, with a white fallback-safe surface, 150mm
+The former **Print or save payment record** button has since been removed because embedded mobile browsers may not support printing. Native browser printing still uses the stylesheet to render only the record, with a white fallback-safe surface, 150mm
 maximum width, exact-color adjustment, and legacy/modern break-avoid rules to
 keep the receipt together.
 
@@ -179,10 +183,10 @@ the browser-owned beforeunload prompt where supported, not a custom modal.
 Sandbox copy explicitly warns that edits are not persisted; live return copy
 only promises the existing emailed collection link when that gate is enabled.
 
-The website build defaults to sandbox presentation. The live editor/checkout
-bridge is selected only by `PUBLIC_DEVCON26_CHECKOUT_MODE=live` and still fails
-closed unless EMS public checkout, payment, exact-origin, open-sales, and
-ticketing-storage gates are independently configured. EMS verifies Paystack on
+The current website obtains checkout mode from EMS at runtime; the earlier
+`PUBLIC_DEVCON26_CHECKOUT_MODE` bridge is historical. Managed checkout still
+fails closed unless EMS payment, exact-origin, sales, and storage readiness
+gates are satisfied. EMS verifies Paystack on
 the server before granting access to the paid order's seats. The short-lived
 buyer grant and verifier stay in the initiating browser session, not in the
 callback URL or local storage. The later option is available only when EMS's
@@ -407,8 +411,8 @@ The completed-payment summary keeps a single outer border without the stacked
 bottom shadow. Internal row rules, the dashed footer divider, and its full-bleed
 tinted band are removed. Amount-first typography and additional spacing around
 ticket selection and the payment reference provide the hierarchy instead.
-Desktop and mobile retain comfortable padding, and the save action and
-"Payment record only. Not an admission ticket." caption remain intact.
+Desktop and mobile retain comfortable padding and the
+"Payment record only. Not an admission ticket." caption. The former save action was subsequently removed.
 
 The confirmation venue block no longer includes the building photo or its mask.
 Venue information and directions remain; the selected ticket photo inside the
@@ -439,3 +443,41 @@ the script; no Downloads folder or external source file is required.
 These checks neither call the payment API nor replace browser layout, native
 form validation, or Paystack round-trip verification. No dependency or separate
 test runner is added.
+
+
+## Provider receipt capabilities
+
+The confirmation page uses the code-owned registry in `src/lib/payment-receipts.ts`.
+After payment verification succeeds, it displays a returned `receipt_url` only
+when it is an HTTPS URL on an explicitly approved provider origin, with no
+credentials or control characters. It never constructs a receipt link from a
+reference, receipt number, or checkout authorization URL. Otherwise it shows
+email guidance only for a payment mode whose merchant customer-receipt setting
+has been operationally confirmed. Without either capability, payment details
+and the reference remain visible without a receipt promise.
+
+Paystack currently has no allowed receipt origins and no confirmed email modes.
+Its transaction API documents `receipt_number`, not a customer receipt URL:
+https://paystack.com/docs/api/transaction/
+Customer emails are a merchant preference and must be checked in the actual
+account and applicable mode before enabling guidance:
+https://support.paystack.com/en/articles/2131010
+
+For a future provider, review its documented receipt URL format/origins, add a
+server adapter that returns the transaction's real receipt URL, and update the
+trusted provider context and provider label in the confirmation flow. Add
+origins to the registry only after that review. Record current merchant-setting
+evidence before adding a mode to `customerEmailConfirmedModes`; supported email
+functionality alone does not prove emails are enabled or delivered. Recheck
+this configuration when the provider/account settings change. Existing
+DevCongress ticket PDF and badge emails are independent and unchanged.
+
+Run `node scripts/check-payment-receipts.mjs` for the focused provider-policy and rendering checks.
+
+### Grouped community allocations
+
+Organizer-assigned (`community_managed`) places appear as one quantity group and one summary line. They never require recipient emails. Increasing the total of a community-only order adds more community places; mixed orders retain the existing gift default for additional places. “Add another ticket” creates an individually editable ticket, and “Change one ticket’s use” converts one community place to an individually editable gift without changing the total.
+
+The API still receives one allocation per seat. Only gifts carry `recipient_email`; personal and shareable tickets retain their existing behavior. Community quantity changes preserve other allocations and gift details, with the catalog limit applied to the whole order.
+
+Verification: `node scripts/check-community-tickets.mjs`, the full checkout checker and the preview build; local in-app browser checks with a synthetic catalog for community-only and mixed orders. No payment or email is initiated by these checks. Delivery targets the PR branch preview only; production remains unchanged.

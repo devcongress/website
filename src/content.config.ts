@@ -33,7 +33,10 @@ const partners = defineCollection({
   loader: glob({ pattern: '**/*.yaml', base: './content/partners' }),
   schema: z.object({
     name: z.string().min(1),
-    logo: z.string().url(),
+    logo: z.string().refine((value) => URL.canParse(value)
+      || /^\/[A-Za-z0-9][A-Za-z0-9._/-]*$/.test(value), {
+      message: 'logo must be a full URL or a safe root-relative asset path',
+    }),
     url: z.string().url().optional(),
     backgroundColor: z.string().regex(/^#([A-Fa-f0-9]{8}|[A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/).optional(),
   }),

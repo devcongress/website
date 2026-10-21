@@ -122,14 +122,16 @@ heroSlots[0].photos.push({
 const faqs = [
   ['Who is DevCon26 for?', 'For the people building technology across Africa: developers, designers, founders, product people, researchers, and students.'],
   ['When and where is it?', 'Meet us at Ghana Digital Center (formerly Accra Digital Center), Accra, Ghana on 19 December 2026. The programme will be announced here.'],
-  ['Can I come with my team?', 'Yes. When registration opens, each person will register separately with their own name and email.'],
-  ['How do I register?', 'Registration opens soon. Check back here for updates.'],
+  ['Can I come with my team?', 'Yes. Buy individual tickets together in one checkout, then choose who each ticket is for. Each ticket admits one person.'],
+  ['How do I get a ticket?', 'Go to ticket checkout, choose your tickets, and complete payment. Your ticket email includes a QR ticket PDF and a link to personalize your conference badge.'],
 ];
 
-const sponsorIds = new Set(['kweku_tech']);
+const sponsorIds = new Set(['amalitech', 'kweku_tech', 'paystack']);
 const partners = await getCollection('partners');
 const sponsors = partners.filter((partner) => sponsorIds.has(partner.id));
-const pastSponsors = [...partners].sort((left, right) => left.data.name.localeCompare(right.data.name, 'en', { sensitivity: 'base' }));
+const pastSponsors = partners
+  .filter((partner) => partner.id !== 'amalitech')
+  .sort((left, right) => left.data.name.localeCompare(right.data.name, 'en', { sensitivity: 'base' }));
 
 const sponsorshipPackages = [
   {
@@ -223,7 +225,7 @@ function packageEnquiryLink(sponsorship: (typeof sponsorshipPackages)[number]) {
           <h1 id="event-title">A year together.<br /><em>One big gathering.</em></h1>
           <p class="hero-summary">Meetups, ideas, and new connections all year. Join the community at DevCon26.</p>
           <div class="hero-actions">
-            <a class="button button-primary" href="#tickets">Register now <span aria-hidden="true">↗</span></a>
+            <a class="button button-primary" href="#tickets">Buy tickets <span aria-hidden="true">↗</span></a>
             <p>19 December 2026<br /><strong>Ghana Digital Center (formerly Accra Digital Center), Accra</strong></p>
           </div>
         </div>
@@ -352,8 +354,10 @@ function packageEnquiryLink(sponsorship: (typeof sponsorshipPackages)[number]) {
           </div>
           <div class="registration-action">
             <p class="tickets-copy">Join us at DevCon26. A day of technology, community, and ideas.</p>
-            <p class="registration-note">Explore ticket options and check current checkout availability.</p>
-            <a class="button button-primary" href="/devcon26/checkout/">Explore ticket options <span aria-hidden="true">↗</span></a>
+            <p class="registration-price"><strong>GH₵150</strong><span>per person</span></p>
+            <p class="registration-note">One ticket admits one person. After payment, receive your QR ticket PDF by email and a link to create your conference badge.</p>
+            <p class="registration-note">Coming with others? Buy multiple individual tickets in one checkout and choose who each ticket is for.</p>
+            <a class="button button-primary" href="/devcon26/checkout/">Continue to checkout <span aria-hidden="true">↗</span></a>
           </div>
         </div>
       </section>
@@ -1161,6 +1165,31 @@ function packageEnquiryLink(sponsorship: (typeof sponsorshipPackages)[number]) {
   .registration-button {
     max-width: 100%;
     margin-top: 32px;
+  }
+
+  .registration-price {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 12px;
+    margin-top: 24px;
+    color: var(--dc-ink);
+  }
+
+  .registration-price strong {
+    font-family: var(--font-display);
+    font-size: clamp(36px, 4vw, 48px);
+    line-height: 1.1;
+    font-weight: 600;
+  }
+
+  .registration-price span {
+    color: var(--dc-muted);
+    font-size: var(--dc-text-meta);
+  }
+
+  .registration-action > .button {
+    margin-top: 24px;
   }
 
   .registration-note {

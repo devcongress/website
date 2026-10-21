@@ -1,5 +1,22 @@
 # Changelog
 
+## 2026-10-21 — Clear public checkout availability
+
+- Remove the one-ticket payment rehearsal and its test-email/Turnstile code from public checkout.
+- Replace the disabled form with a loading or unavailable panel and retry action until EMS returns a valid ticket catalog. Clear stale availability and provider details on retry.
+
+## 2026-10-21 — Separate sponsor handover from public checkout
+
+- Remove sponsor handover from the public DevCon26 per-ticket choices. Additional tickets require an explicit gift recipient or community allocation before payment.
+- Keep existing order-management actions for historical buyer-managed purchases; sponsor allocations are arranged in EMS.
+
+## 2026-10-20 — Flexible DevCon26 ticket checkout
+
+- Replace the closed checkout redirect with a responsive quantity and per-seat allocation form. The server catalog owns the unit price, payment provider, maximum quantity, and payment availability.
+- Unify checkout into one continuous form surface and replace browser-native allocation selects with an accessible in-page choice list that explains each handoff option.
+- Add a separate one-ticket Paystack test rehearsal that requires the exact-origin preview-email catalog flag and a Turnstile challenge. Test checkout cannot issue real admission.
+- Verify flexible payments using their own session-scoped grant and show a payment record without admission credentials. Add private buyer-management and recipient-claim destinations for the lifecycle emails.
+
 ## 2026-10-19 — Consolidate dependency updates from #66
 
 - Include Astro 7.4.0, Zod 4.6.7, Cloudflare Workers types 5.20261016.1 and Wrangler 4.151.0 in the donation follow-up, preserving Inttegro 0.5.8 and the donation recovery build checks. Raise the Node engine minimum to 22.22.0 to match Astro 7.4.0.
@@ -192,3 +209,54 @@
 - Unified the DevCon26 mobile section navigation with the homepage header frame:
   a sticky 68px cream header, homepage-sized controls, a full-width white menu,
   and safe anchor offsets for the dedicated page’s section links.
+
+### 2026-10-21 — Full-flow test preview
+
+- Select complete-test checkout and confirmation using an explicit preview build flag, with test notices and preview-only human verification.
+- Preserve private ticket/claim/badge flows while visibly marking test badge downloads and disabling public badge publication.
+- Reset the human check after checkout errors and back-navigation; preserve ordinary live checkout copy.
+
+### 2026-10-21 — Preview backend CSP
+
+- Allow the exact EMS preview backend only for the explicit full-test build; preserve ordinary production CSP.
+- Verified the deployed form loads GH₵150 pricing and opens a GH₵300 Paystack TEST checkout for self and gift tickets.
+
+### 2026-10-21 — Preview checkout presentation
+
+- Removed the prominent test-checkout banner at the user’s request to bring the preview layout closer to production. Test payment routing and backend safeguards remain active.
+
+## 2026-10-21 — Clean conference checkout
+
+- Redesigned checkout with compact numbered sections, an integrated quantity stepper, app-style inputs and restrained focus rings.
+- Replaced the image summary with a branded conference order summary; it appears before the form on mobile so totals are visible before payment.
+- Kept checkout routing, allocations, test payments, ticket/badge delivery, and shared ticket-access styles unchanged.
+- Verified the Astro build and preview quantity/allocation controls.
+
+## 2026-10-21 — Local checkout stepper
+
+- Added Tickets, Your details, and Payment steps with contextual order information on the right, per-step validation, preserved back-navigation state, and reduced-motion-aware transitions.
+- Render the payment challenge only when Payment is visible; earlier Continue buttons do not initialize payment.
+- Tightened the ticket layout to fit a 1280×720 viewport for one ticket, and position assignment menus upward when needed. Small viewports and larger orders retain natural scrolling.
+- Verified local catalog-fixture navigation, missing gift/contact validation, retained inputs, summary totals, menu bounds, build, and diff whitespace checks. No payment or email side effects; not pushed or deployed.
+
+## 2026-10-21 — Local ticket choice and boarding-pass refinement
+
+- Replaced the allocation dropdown with native radio tiles, selected-choice explanations, one-self availability, and conditional gift email validation.
+- Added a masked decorative Accra-inspired vector illustration, perforated divider, and ticket notches to the order preview; no issued ticket or QR is implied.
+- Changed checkout actions to brand yellow and progress to connected segments with current/completed states.
+- Checked keyboard radio selection, gift validation/removal, step advancement, local viewport fit, and the production build. This refinement remains local, unpushed, and undeployed.
+
+## 2026-10-21 — Pink checkout interaction accents
+
+- Switched primary checkout actions, current-step indicators and selected ticket choices to pink; retained yellow on the illustrated order preview. Used a deeper pink for readable white button text. Local only; no push or deployment.
+
+### Restrained pink refinement
+
+- Reserved pink for primary actions and focus feedback; restored neutral active-step and selected-ticket styling. Yellow remains on the ticket artwork. Local only.
+- Softened the ticket illustration to 42% opacity with fading edge masks, preserving the existing arch clip.
+
+- Restored the previous pink active-step and selected-ticket accents at user request; retained the illustration’s 42% opacity and fading mask. Local only.
+
+### 2026-10-21 — Quantity input focus
+
+- Replace the checkout quantity field’s heavy outer focus outline with a thin inset pink border and a soft tint. Preserve a visible system-color outline in forced-colors mode.

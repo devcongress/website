@@ -1,6 +1,7 @@
 ---
 import { getCollection } from 'astro:content';
 import Base from '../../layouts/Base.astro';
+import Devcon26HomeLink from '../../components/Devcon26HomeLink.astro';
 
 const speakerSlots = ['01', '02', '03'];
 const heroScenes = [
@@ -213,7 +214,7 @@ function packageEnquiryLink(sponsorship: (typeof sponsorshipPackages)[number]) {
       <section class="hero page-shell" aria-labelledby="event-title">
         <div class="hero-copy">
           <p class="event-label">
-            <a class="event-home-link" href="/"><span aria-hidden="true">←</span> Back to DevCongress</a>
+            <Devcon26HomeLink />
             <span class="event-identity">
               <span class="event-label-copy">DevCongress annual conference</span>
               <span class="event-year">2026</span>
@@ -347,11 +348,12 @@ function packageEnquiryLink(sponsorship: (typeof sponsorshipPackages)[number]) {
           </div>
           <div class="tickets-heading">
             <p class="section-caption">DevCon26</p>
-            <h2 id="tickets-title">Registration opens soon.</h2>
+            <h2 id="tickets-title">A place at DevCon26.</h2>
           </div>
           <div class="registration-action">
             <p class="tickets-copy">Join us at DevCon26. A day of technology, community, and ideas.</p>
-            <p class="registration-note">We’re getting registration ready. Check back here for updates.</p>
+            <p class="registration-note">Explore ticket options and check current checkout availability.</p>
+            <a class="button button-primary" href="/devcon26/checkout/">Explore ticket options <span aria-hidden="true">↗</span></a>
           </div>
         </div>
       </section>
@@ -647,50 +649,6 @@ function packageEnquiryLink(sponsorship: (typeof sponsorshipPackages)[number]) {
     align-items: center;
     gap: 12px;
     margin-left: auto;
-  }
-
-  .event-home-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    min-height: 44px;
-    color: #b50068;
-    font-size: 14px;
-    font-weight: 600;
-    white-space: nowrap;
-    text-decoration: none;
-  }
-
-  .event-home-link > span {
-    font-size: 16px;
-    line-height: 1;
-    transition: transform 160ms cubic-bezier(0.16, 1, 0.3, 1);
-  }
-
-  @media (hover: hover) and (pointer: fine) {
-    .event-home-link:hover {
-      color: #85004d;
-      text-decoration: none;
-    }
-
-    .event-home-link:hover > span {
-      transform: translateX(-3px);
-    }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .event-home-link > span {
-      transition: none;
-    }
-
-    .event-home-link:hover > span {
-      transform: none;
-    }
-  }
-
-  .event-home-link:focus-visible {
-    outline: 2px solid var(--dc-pink);
-    outline-offset: 4px;
   }
 
   .event-label-copy {

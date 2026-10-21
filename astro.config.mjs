@@ -2,6 +2,10 @@
 import { defineConfig } from 'astro/config';
 import { localCfpProxy } from './scripts/local-cfp-proxy.mjs';
 
+const previewBackend = 'https://devcon26-full-test-events-management.admins-a7d.workers.dev';
+const previewConnectSource = process.env.PUBLIC_DEVCON26_COMPLETE_TEST === 'true'
+  && process.env.PUBLIC_DEVCON26_API_ORIGIN === previewBackend ? ` ${previewBackend}` : '';
+
 export default defineConfig({
   site: 'https://devcongress.org',
   base: '/',
@@ -21,7 +25,7 @@ export default defineConfig({
         "form-action 'self' https://em.devcongress.org",
         "img-src 'self' data: blob: https:",
         "font-src 'self' https://fonts.gstatic.com",
-        "connect-src 'self' https://em.devcongress.org https://dvevcongress.goatcounter.com https://gc.zgo.at https://challenges.cloudflare.com",
+        `connect-src 'self' https://em.devcongress.org https://dvevcongress.goatcounter.com https://gc.zgo.at https://challenges.cloudflare.com${previewConnectSource}`,
         "frame-src https://www.youtube-nocookie.com https://www.youtube.com https://challenges.cloudflare.com https://pages.inttegro.com",
         "worker-src 'self' blob:",
         'upgrade-insecure-requests',

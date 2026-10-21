@@ -1,0 +1,35 @@
+---
+import Base from '../../../layouts/Base.astro';
+import Devcon26HomeLink from '../../../components/Devcon26HomeLink.astro';
+import '../../../styles/devcon26-flexible-checkout.css';
+
+const apiOrigin = import.meta.env.PUBLIC_DEVCON26_API_ORIGIN || 'https://em.devcongress.org';
+---
+
+<Base title="Manage your DevCon26 tickets | DevCongress" description="Manage the tickets from your DevCon26 purchase." noindex={true} showFooter={false}>
+  <a slot="skip-link" class="skip-link" href="#ticket-main">Skip to tickets</a>
+  <main id="ticket-main" class="flexible-checkout ticket-access" data-ticket-management data-api-origin={apiOrigin}>
+    <div class="checkout-shell">
+      <Devcon26HomeLink />
+      <header class="checkout-header">
+        <p class="eyebrow">Your DevCon26 order</p>
+        <h1>Your tickets, <em>your way.</em></h1>
+        <p>Use this private page to pass on shareable tickets or reissue a gift invitation.</p>
+      </header>
+      <div class="checkout-card">
+        <p class="checkout-status" data-access-status role="status" aria-live="polite">Loading your tickets…</p>
+        <div class="management-list" data-management-list></div>
+        <button class="retry-action" type="button" data-access-retry hidden>Try again</button>
+      </div>
+      <p class="access-privacy">This link gives access to your order. Keep it private. Ticket and QR details are delivered through their own claim and email steps.</p>
+    </div>
+  </main>
+</Base>
+
+<script>
+  import { initializeTicketManagement } from '../../../lib/devcon26-flexible-ticket-access';
+
+  const page = document.querySelector<HTMLElement>('[data-ticket-management]');
+
+  if (page) initializeTicketManagement(page);
+</script>

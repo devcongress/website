@@ -1,5 +1,6 @@
 ---
 import Base from '../../layouts/Base.astro';
+import Devcon26HomeLink from '../../components/Devcon26HomeLink.astro';
 
 const checkoutApiOrigin = import.meta.env.PUBLIC_DEVCON26_API_ORIGIN || 'https://em.devcongress.org';
 ---
@@ -9,6 +10,7 @@ const checkoutApiOrigin = import.meta.env.PUBLIC_DEVCON26_API_ORIGIN || 'https:/
   <div class="payment-page" data-payment-confirmation data-checkout-api-origin={checkoutApiOrigin} data-payment-state="loading">
 
     <main class="page-shell" id="payment-main">
+      <Devcon26HomeLink />
       <div class="payment-status" data-payment-status role="status" aria-live="polite" aria-busy="true">
         <div class="status-intro">
           <p class="confirmation-label">DevCon26 <span>Good company awaits.</span></p>

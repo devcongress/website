@@ -1,5 +1,6 @@
 ---
 import Base from '../../../layouts/Base.astro';
+import Devcon26HomeLink from '../../../components/Devcon26HomeLink.astro';
 import Devcon26VerifiedBadge from '../../../components/Devcon26VerifiedBadge.astro';
 
 const apiOrigin = import.meta.env.PUBLIC_DEVCON26_API_ORIGIN || (import.meta.env.DEV ? 'http://localhost:5173' : 'https://em.devcongress.org');
@@ -14,6 +15,7 @@ const apiOrigin = import.meta.env.PUBLIC_DEVCON26_API_ORIGIN || (import.meta.env
 >
   <main class="social-card-page" data-social-card-page data-social-card-api-origin={apiOrigin}>
     <div class="social-card-header">
+      <Devcon26HomeLink />
       <p>DevCon26 · 19 December 2026</p>
     </div>
 

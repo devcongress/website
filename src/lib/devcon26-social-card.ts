@@ -3,6 +3,7 @@ import { layoutDigitalBadgeName, loadDigitalBadgeFont, paintDigitalBadge, type D
 type Role = DigitalBadgeRole;
 
 type Card = {
+  is_test?: boolean;
   display_name: string;
   role: Role;
   crop: { x: number; y: number; scale: number };
@@ -156,7 +157,7 @@ export function initializeDevcon26SocialCard(page: HTMLElement): void {
     y.value = String(Math.round(crop.y * 100));
     scale.value = String(crop.scale);
     cropControls.disabled = !selectedFile;
-    publish.hidden = card.public_enabled;
+    publish.hidden = card.public_enabled || Boolean(card.is_test);
     revoke.hidden = !card.public_enabled;
     share.hidden = !card.public_enabled;
     const publicUrl = new URL('/devcon26/cards/' + encodeURIComponent(card.public_slug), window.location.origin).toString();
@@ -195,8 +196,17 @@ export function initializeDevcon26SocialCard(page: HTMLElement): void {
     badgeCanvas.width = canvas.width;
     badgeCanvas.height = canvas.height;
     context.drawImage(canvas, 0, 0);
+
+    if (snapshot.is_test) {
+      context.fillStyle = '#111111';
+      context.fillRect(0, 0, canvas.width, 64);
+      context.fillStyle = '#ffffff';
+      context.font = 'bold 28px sans-serif';
+      context.textAlign = 'center';
+      context.fillText('TEST BADGE — NOT VALID FOR ADMISSION', canvas.width / 2, 42);
+    }
     badgeCanvas.setAttribute('aria-label', `${snapshot.display_name} — ${snapshot.role} at DevCon26`);
-    badgeCaption.textContent = `${snapshot.role === 'speaker' ? 'Speaker' : 'Attendee'} badge · For sharing, not admission.`;
+    badgeCaption.textContent = `${snapshot.is_test ? 'TEST · ' : ''}${snapshot.role === 'speaker' ? 'Speaker' : 'Attendee'} badge · For sharing, not admission.`;
     badgeCanvas.hidden = false;
     rendered = true;
 

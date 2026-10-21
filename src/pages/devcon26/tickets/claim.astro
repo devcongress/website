@@ -1,0 +1,43 @@
+---
+import Base from '../../../layouts/Base.astro';
+import Devcon26HomeLink from '../../../components/Devcon26HomeLink.astro';
+import '../../../styles/devcon26-flexible-checkout.css';
+
+const apiOrigin = import.meta.env.PUBLIC_DEVCON26_API_ORIGIN || 'https://em.devcongress.org';
+---
+
+<Base title="Claim your DevCon26 ticket | DevCongress" description="Claim a private DevCon26 ticket invitation." noindex={true} showFooter={false}>
+  <a slot="skip-link" class="skip-link" href="#claim-main">Skip to claim</a>
+  <main id="claim-main" class="flexible-checkout ticket-access" data-ticket-claim data-api-origin={apiOrigin}>
+    <div class="checkout-shell">
+      <Devcon26HomeLink />
+      <header class="checkout-header">
+        <p class="eyebrow">A place for you at DevCon26</p>
+        <h1>Claim your <em>invitation.</em></h1>
+        <p>19 December 2026 · Ghana Digital Center, Accra</p>
+      </header>
+      <form class="checkout-card claim-form" data-claim-form novalidate>
+        <div class="field">
+          <label for="claim-name">Your full name</label>
+          <input id="claim-name" type="text" autocomplete="name" maxlength="120" required />
+        </div>
+        <div class="field">
+          <label for="claim-email">Your email address</label>
+          <input id="claim-email" type="email" autocomplete="email" maxlength="254" required />
+        </div>
+        <p class="field-note">Use the email address where you want ticket details delivered. For a private gift, use the email address that received the invitation.</p>
+        <p class="checkout-status" data-access-status role="status" aria-live="polite"></p>
+        <button class="primary-action" data-claim-submit type="submit">Claim ticket <span aria-hidden="true">↗</span></button>
+      </form>
+      <p class="access-privacy">This invitation link is private. Do not post it publicly. Claiming the ticket may queue an email; this page does not display an admission QR.</p>
+    </div>
+  </main>
+</Base>
+
+<script>
+  import { initializeTicketClaim } from '../../../lib/devcon26-flexible-ticket-access';
+
+  const page = document.querySelector<HTMLElement>('[data-ticket-claim]');
+
+  if (page) initializeTicketClaim(page);
+</script>

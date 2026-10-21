@@ -1,5 +1,6 @@
 ---
 import Base from '../../layouts/Base.astro';
+import Devcon26HomeLink from '../../components/Devcon26HomeLink.astro';
 import FormDropdown from '../../components/FormDropdown.astro';
 import { EVENT_SUBMISSION_TURNSTILE_SITE_KEY } from '../../lib/events';
 const localPreview = import.meta.env.DEV;
@@ -8,6 +9,7 @@ const apiOrigin = import.meta.env.PUBLIC_DEVCON26_API_ORIGIN || 'https://em.devc
 
 <Base title="Apply to speak | DevCon26" description="Share something useful with the DevCon26 community. Apply to speak at our annual conference." showFooter={false}>
   <main class="speaker-page" data-speaker-page data-api-origin={apiOrigin} data-local-preview={localPreview ? 'true' : undefined}>
+    <Devcon26HomeLink />
     <div class="page-heading">
       <div><p class="eyebrow">DevCon26 · Call for Speakers</p><h1>Something worth <em>sharing?</em></h1></div>
       <p class="intro">Bring your experience, your experiments, and your perspective to the community.</p>

@@ -1,12 +1,121 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="robots" content="noindex" />
-    <meta http-equiv="refresh" content="0;url=/devcon26/#tickets" />
-    <title>DevCon26 registration</title>
-  </head>
-  <body>
-    <a href="/devcon26/#tickets">Continue to DevCon26 registration updates</a>
-  </body>
-</html>
+---
+import Base from '../../layouts/Base.astro';
+import Devcon26HomeLink from '../../components/Devcon26HomeLink.astro';
+import '../../styles/devcon26-flexible-checkout.css';
+
+const apiOrigin = import.meta.env.PUBLIC_DEVCON26_API_ORIGIN || 'https://em.devcongress.org';
+const turnstileSiteKey = import.meta.env.PUBLIC_DEVCON26_TURNSTILE_SITE_KEY || '0x4AAAAAADov8n7eB5-btoDw';
+---
+
+<Base title="Choose your DevCon26 tickets | DevCongress" description="Choose how many DevCon26 tickets you need and who they are for." noindex={true} showFooter={false}>
+  <a slot="skip-link" class="skip-link" href="#checkout-main">Skip to checkout</a>
+
+  <main id="checkout-main" class="flexible-checkout" data-flexible-checkout data-api-origin={apiOrigin} data-turnstile-site-key={turnstileSiteKey}>
+    <div class="checkout-shell">
+      <Devcon26HomeLink />
+
+      <header class="checkout-header">
+        <p class="eyebrow">DevCon26 · 19 December 2026 · Accra</p>
+        <h1>Make room for <em>your people.</em></h1>
+        <p>Choose the number of places you need. Keep one, give one, or help someone else join us.</p>
+      </header>
+
+      <div class="checkout-layout">
+        <form class="checkout-form" data-live-form novalidate>
+          <div class="checkout-panel">
+            <section class="form-section ticket-section" aria-labelledby="quantity-heading">
+              <div class="form-section-heading">
+                <div>
+                  <p class="section-kicker">Your order</p>
+                  <h2 id="quantity-heading">Choose your tickets</h2>
+                </div>
+                <p>One ticket admits one person.</p>
+              </div>
+
+              <div class="quantity-row">
+                <div>
+                  <span class="control-label">Number of tickets</span>
+                  <p class="field-note" data-quantity-limit>Checking ticket availability…</p>
+                </div>
+                <div class="quantity-control">
+                  <button type="button" data-decrease aria-label="Remove one ticket" disabled>−</button>
+                  <label class="visually-hidden" for="ticket-quantity">Number of tickets</label>
+                  <input id="ticket-quantity" data-quantity type="number" min="1" step="1" value="1" inputmode="numeric" disabled required />
+                  <button type="button" data-increase aria-label="Add one ticket" disabled>+</button>
+                </div>
+              </div>
+
+              <div class="allocation-heading">
+                <h3 id="allocation-heading">Who are they for?</h3>
+                <p>Choose what should happen to each ticket after payment.</p>
+              </div>
+              <div class="allocation-list" data-allocation-list aria-labelledby="allocation-heading"></div>
+            </section>
+
+            <section class="form-section" aria-labelledby="buyer-heading">
+              <div class="form-section-heading">
+                <div>
+                  <p class="section-kicker">Contact</p>
+                  <h2 id="buyer-heading">Your details</h2>
+                </div>
+                <p>We’ll send payment information here.</p>
+              </div>
+              <div class="buyer-fields">
+                <div class="field"><label for="purchaser-name">Full name</label><input id="purchaser-name" data-name type="text" autocomplete="name" maxlength="120" required disabled /></div>
+                <div class="field"><label for="purchaser-email">Email address</label><input id="purchaser-email" data-email type="email" autocomplete="email" maxlength="254" required disabled /></div>
+              </div>
+            </section>
+
+            <section class="form-section payment-section" aria-labelledby="payment-heading">
+              <div class="payment-heading">
+                <div>
+                  <p class="section-kicker">Payment</p>
+                  <h2 id="payment-heading">Review and pay</h2>
+                </div>
+                <div class="provider" data-provider hidden><span class="provider-mark" aria-hidden="true">✓</span><span data-provider-name>Paystack</span><span class="provider-auto">Selected automatically</span></div>
+              </div>
+              <p class="checkout-status" data-status role="status" aria-live="polite">Checking whether checkout is open…</p>
+              <button class="primary-action" data-pay type="submit" disabled>Continue to payment <span aria-hidden="true">↗</span></button>
+              <button class="retry-action" data-retry type="button" hidden>Check availability again</button>
+            </section>
+          </div>
+        </form>
+
+        <aside class="order-summary" aria-labelledby="summary-heading">
+          <div class="summary-art" aria-hidden="true"><img src="/images/devcon26/ticket-community.webp" width="640" height="512" alt="" /></div>
+          <div class="summary-body">
+            <p class="eyebrow">Your order</p>
+            <h2 id="summary-heading">A place to belong.</h2>
+            <dl><div><dt>Tickets</dt><dd data-summary-quantity>1</dd></div><div><dt>Price per ticket</dt><dd data-unit-price>Confirming…</dd></div><div class="summary-total"><dt>Ticket total</dt><dd data-total>—</dd></div></dl>
+            <p>Ghana Digital Center, Accra<br />Saturday, 19 December 2026</p>
+            <small>Your payment record confirms the charge. Ticket access and handoff details follow the choices you make above.</small>
+          </div>
+        </aside>
+      </div>
+
+      <details class="preview-panel" data-preview-panel>
+        <summary>Try a one-ticket payment rehearsal <span aria-hidden="true">+</span></summary>
+        <div class="preview-content">
+          <p>This separate Paystack test checkout charges no real money and creates no real seat, claim link, or admission QR. It does not rehearse the allocation choices above. A test-only email can go to your address only when the preview email service is enabled and eligible.</p>
+          <form data-preview-form novalidate>
+            <div class="buyer-fields">
+              <div class="field"><label for="preview-name">Your name</label><input id="preview-name" type="text" autocomplete="name" maxlength="120" required /></div>
+              <div class="field"><label for="preview-email">Your email</label><input id="preview-email" type="email" autocomplete="email" maxlength="254" required /></div>
+            </div>
+            <div class="turnstile-container" data-turnstile aria-label="Human check"></div>
+            <p class="checkout-status" data-preview-status role="status" aria-live="polite">Checking test checkout availability…</p>
+            <button class="secondary-action" data-preview-pay type="submit" disabled>Open test checkout <span aria-hidden="true">↗</span></button>
+          </form>
+        </div>
+      </details>
+    </div>
+  </main>
+</Base>
+
+<script>
+  import { initializeFlexibleCheckout } from '../../lib/devcon26-flexible-checkout';
+
+  const page = document.querySelector<HTMLElement>('[data-flexible-checkout]');
+
+  if (page) initializeFlexibleCheckout(page);
+</script>

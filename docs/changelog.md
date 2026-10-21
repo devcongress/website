@@ -8,6 +8,18 @@
 - Remove the persistent prepared-order recovery statement beneath the form while
   retaining the guarded restart controls and actual same-tab order recovery.
 
+## 2026-10-21 — Separate sponsor handover from public checkout
+
+- Remove sponsor handover from the public DevCon26 per-ticket choices. Additional tickets require an explicit gift recipient or community allocation before payment.
+- Keep existing order-management actions for historical buyer-managed purchases; sponsor allocations are arranged in EMS.
+
+## 2026-10-20 — Flexible DevCon26 ticket checkout
+
+- Replace the closed checkout redirect with a responsive quantity and per-seat allocation form. The server catalog owns the unit price, payment provider, maximum quantity, and payment availability.
+- Unify checkout into one continuous form surface and replace browser-native allocation selects with an accessible in-page choice list that explains each handoff option.
+- Add a separate one-ticket Paystack test rehearsal that requires the exact-origin preview-email catalog flag and a Turnstile challenge. Test checkout cannot issue real admission.
+- Verify flexible payments using their own session-scoped grant and show a payment record without admission credentials. Add private buyer-management and recipient-claim destinations for the lifecycle emails.
+
 ## 2026-10-19 — Consolidate dependency updates from #66
 
 - Include Astro 7.4.0, Zod 4.6.7, Cloudflare Workers types 5.20261016.1 and Wrangler 4.151.0 in the donation follow-up, preserving Inttegro 0.5.8 and the donation recovery build checks. Raise the Node engine minimum to 22.22.0 to match Astro 7.4.0.

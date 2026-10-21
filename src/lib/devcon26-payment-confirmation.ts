@@ -1,9 +1,11 @@
 import { DEVCON26_BUYER_GRANT_SESSION_KEY, DEVCON26_PUBLIC_CHECKOUT_PATH, devcon26Amount, devcon26Quote } from './devcon26-checkout-contract';
+import { FLEXIBLE_GRANT_SESSION_KEY } from './devcon26-flexible-checkout';
 
 const TEST_REFERENCE = /^devcon26-test-[a-f0-9]{32}$/;
 const BUYER_REFERENCE = /^DC26-[A-F0-9]{32}$/;
 const LIVE_REFERENCE = /^devcon26_[a-f0-9]{32}$/;
 const PUBLIC_VERIFY_PATH = DEVCON26_PUBLIC_CHECKOUT_PATH + '/verify';
+const FLEXIBLE_VERIFY_PATH = DEVCON26_PUBLIC_CHECKOUT_PATH + '/flexible/verify';
 const VERIFY_PATH = '/api/public/annual-conference/2026/test-checkout/verify';
 
 const TICKET_PRESENTATION = {
@@ -148,6 +150,31 @@ function livePaymentSummary(input: unknown): (TestPaymentSummary & { buyerGrant:
   };
 }
 
+function flexiblePaymentSummary(input: unknown): TestPaymentSummary | null {
+  if (!input || typeof input !== 'object' || Array.isArray(input)) return null;
+
+  const result = input as Record<string, unknown>;
+
+  if (result.mode !== 'live' || result.status !== 'verified' || result.currency !== 'GHS'
+    || !Number.isSafeInteger(result.quantity) || (result.quantity as number) < 1
+    || !Number.isSafeInteger(result.ticket_amount_minor) || (result.ticket_amount_minor as number) <= 0
+    || !Number.isSafeInteger(result.amount_paid_minor)
+    || (result.amount_paid_minor as number) < (result.ticket_amount_minor as number)) return null;
+
+  return {
+    status: 'verified',
+    ticketName: 'DevCon26 ticket',
+    quantity: result.quantity as number,
+    amount: devcon26Amount(result.amount_paid_minor as number),
+    baseAmount: devcon26Amount(result.ticket_amount_minor as number),
+    feeAmount: devcon26Amount((result.amount_paid_minor as number) - (result.ticket_amount_minor as number)),
+    discountAmount: 'GHS 0.00',
+    coupon: null,
+    hasDiscount: false,
+    photo: '/images/devcon26/ticket-community.webp',
+  };
+}
+
 export function initializeDevcon26PaymentConfirmation(
   root: HTMLElement,
   initializeCardPreview: (root: HTMLElement, quantity: number, buyerGrant?: string | null, canFinishLater?: boolean) => void = () => undefined,
@@ -180,7 +207,7 @@ export function initializeDevcon26PaymentConfirmation(
 
     abort = controller;
     const current = ++operation;
-  const reference = devcon26ConfirmationQueryReference(window.location.search)
+    const reference = devcon26ConfirmationQueryReference(window.location.search)
       ?? devcon26ConfirmationReference(window.location.hash);
 
     if (!reference) {
@@ -201,9 +228,26 @@ export function initializeDevcon26PaymentConfirmation(
 
     try {
       const liveCheckout = LIVE_REFERENCE.test(reference);
+      let flexibleGrant: { reference: string; checkout_grant: string; checkout_verifier: string } | null = null;
       let buyerGrant: { reference: string; buyer_grant: string; buyer_verifier: string } | null = null;
 
       if (liveCheckout) {
+        try {
+          const stored = JSON.parse(sessionStorage.getItem(FLEXIBLE_GRANT_SESSION_KEY) ?? 'null') as Record<string, unknown> | null;
+
+          if (stored && stored.reference === reference && typeof stored.checkout_grant === 'string'
+            && typeof stored.checkout_verifier === 'string') {
+            flexibleGrant = {
+              reference,
+              checkout_grant: stored.checkout_grant,
+              checkout_verifier: stored.checkout_verifier,
+            };
+          }
+        } catch {
+          flexibleGrant = null;
+        }
+
+        if (!flexibleGrant) {
         try {
           const stored = JSON.parse(sessionStorage.getItem(DEVCON26_BUYER_GRANT_SESSION_KEY) ?? 'null') as Record<string, unknown> | null;
 
@@ -218,18 +262,18 @@ export function initializeDevcon26PaymentConfirmation(
         } catch {
           buyerGrant = null;
         }
+        }
 
-        if (!buyerGrant) throw new Error('Secure ticket-card access is unavailable in this browser session.');
+        if (!buyerGrant && !flexibleGrant) throw new Error('Secure checkout access is unavailable in this browser session.');
       }
 
-      const response = await fetch(devcon26VerificationUrl(root.dataset.checkoutApiOrigin!).replace(VERIFY_PATH, liveCheckout ? PUBLIC_VERIFY_PATH : VERIFY_PATH), {
+      const verifyPath = flexibleGrant ? FLEXIBLE_VERIFY_PATH : liveCheckout ? PUBLIC_VERIFY_PATH : VERIFY_PATH;
+      const response = await fetch(devcon26VerificationUrl(root.dataset.checkoutApiOrigin!).replace(VERIFY_PATH, verifyPath), {
         method: 'POST',
         credentials: 'omit',
         cache: 'no-store',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(liveCheckout
-          ? { ...buyerGrant, reference }
-          : { reference }),
+        body: JSON.stringify(flexibleGrant ?? (liveCheckout ? { ...buyerGrant, reference } : { reference })),
         signal: controller.signal,
       });
 
@@ -265,7 +309,8 @@ export function initializeDevcon26PaymentConfirmation(
           return;
         }
       }
-      const summary = liveCheckout ? livePaymentSummary(payload) : devcon26TestPaymentSummary(payload);
+      const summary = flexibleGrant ? flexiblePaymentSummary(payload)
+        : liveCheckout ? livePaymentSummary(payload) : devcon26TestPaymentSummary(payload);
 
       if (current !== operation) return;
       if (!summary) throw new Error('Invalid verification result.');
@@ -282,8 +327,12 @@ export function initializeDevcon26PaymentConfirmation(
         root.querySelector<HTMLElement>('[data-payment-discount-row]')!.hidden = !summary.hasDiscount;
         root.querySelector<HTMLElement>('[data-payment-reference]')!.textContent = devcon26BuyerReference(reference);
         root.querySelector<HTMLImageElement>('[data-payment-photo]')!.src = summary.photo;
-        initializeCardPreview(root, summary.quantity, liveCheckout ? summary.buyerGrant : null, liveCheckout && summary.canFinishLater);
-        showState('verified', 'Payment confirmed.', 'All done. Your payment was successful, and the details are right here whenever you need them.');
+        if (!flexibleGrant) {
+          initializeCardPreview(root, summary.quantity, liveCheckout ? summary.buyerGrant : null, liveCheckout && summary.canFinishLater);
+        }
+        showState('verified', 'Payment confirmed.', flexibleGrant
+          ? 'Your payment is verified. Keep this payment record for your reference; it is not an admission ticket.'
+          : 'All done. Your payment was successful, and the details are right here whenever you need them.');
       } else if (summary.status === 'refund_required') {
         root.querySelector<HTMLElement>('[data-attention-reference]')!.textContent = devcon26BuyerReference(reference);
         root.querySelector<HTMLElement>('[data-attention-amount]')!.textContent = summary.amount;

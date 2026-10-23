@@ -35,14 +35,9 @@ const headlineParts = parseEmphasis(mission.headline);
           )}
         </h2>
         <p class="mission-body">{mission.body}</p>
-        <div class="mission-actions">
-          <a href={slackUrl} target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-mission">
-            {mission.cta}
-          </a>
-          <a href="https://connect.devcongress.org/" class="btn btn-yellow btn-mission">
-            Explore Connect
-          </a>
-        </div>
+        <a href={slackUrl} target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-mission">
+          {mission.cta}
+        </a>
       </div>
 
       <ol class="mission-list">
@@ -107,14 +102,8 @@ const headlineParts = parseEmphasis(mission.headline);
 
   .mission-pink { color: var(--pink); }
 
-  .mission-actions {
-    display: inline-grid;
-    align-self: flex-start;
-    gap: var(--s3);
-  }
-
   .btn-mission {
-    justify-content: center;
+    align-self: flex-start;
     padding: var(--s4) var(--s8);
     font-size: var(--text-lg);
   }

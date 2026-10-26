@@ -16,13 +16,13 @@
     "check:donation": "node scripts/check-donation-checkout.mjs"
   },
   "dependencies": {
-    "@inttegro/js": "0.7.1",
-    "astro": "^7.4.0",
+    "@inttegro/js": "0.7.2",
+    "astro": "^7.4.2",
     "zod": "^4.6.7"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "5.20261016.1",
-    "wrangler": "^4.151.0"
+    "@cloudflare/workers-types": "5.20261023.1",
+    "wrangler": "^4.152.0"
   },
   "pnpm": {
     "overrides": {

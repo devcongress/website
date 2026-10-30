@@ -96,10 +96,22 @@ Events page. Local development can copy `.env.example` to `.env` and opt in
 explicitly. This website flag does not disable direct requests to Events
 Management; the backend needs its own runtime switch for a system-wide shutdown.
 
+## DevCon26 checkout
+
+The website reads Testing or Live from the EMS managed checkout catalog at
+runtime. It does not select payment mode from a branch or build flag. Settings
+changes require the buyer to review the order again before an explicit payment
+submission. See [the checkout contract](docs/devcon26-flexible-checkout.md).
+
+`pnpm check:tickets` runs the existing Node checks plus managed-mode and actual
+private-email-link regressions. `pnpm build` generates the site and runs this
+suite, including built-page assertions. Provider and inbox acceptance remain
+separate from these local checks.
+
 ## Donation checkout presentation
 
 Donation links navigate to `/donate/`, which embeds the existing Inttegro checkout
-using `@inttegro/js` 0.7.1. The purchase intent, payment processing, hosted fields,
+using `@inttegro/js` 0.7.2. The purchase intent, payment processing, hosted fields,
 and invoice/receipt features are unchanged. The old presentation flag is no longer
 used; existing `modal` or `redirect` environment values do not change this flow.
 

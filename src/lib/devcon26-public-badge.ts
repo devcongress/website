@@ -1,3 +1,4 @@
+import { badgeRoleDots } from './devcon26-badge-role';
 import type { PublicDevcon26SocialCard } from './live-devcon26-social-cards';
 import { PHYSICAL_BADGE_PATH } from './devcon26-digital-badge';
 
@@ -49,7 +50,7 @@ export function renderPublicBadgeSvg(card: PublicDevcon26SocialCard, photoUrl: s
       ${photoUrl ? `<image href="${escapeBadgeText(photoUrl)}" x="134" y="300" width="810" height="651.521739" preserveAspectRatio="xMidYMid slice" clip-path="url(#portrait)"/>` : ''}
       <rect x="134" y="761.521739" width="810" height="190" fill="url(#fade)"/>
       ${name}
-      <text x="944" y="1234" text-anchor="end" font-size="44" fill="#ed008c">${role}</text>
+      <g fill="#ed008c" aria-label="${role}">${badgeRoleDots(card.role === 'speaker' ? 'speaker' : 'attendee').map(dot => `<circle cx="${dot.x}" cy="${dot.y}" r="${dot.radius}"/>`).join('')}</g>
     </g>
     <path d="M134 1180h810" stroke="#d4cfc2"/>
     <image href="${escapeBadgeText(logoUrl)}" x="134" y="1196" width="300" height="48" preserveAspectRatio="xMinYMid meet"/>

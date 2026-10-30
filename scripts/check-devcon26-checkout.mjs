@@ -274,7 +274,7 @@ const attentionElements = {};
 
 for (const selector of [
   'payment-title', 'payment-copy', 'payment-status', 'payment-receipt', 'payment-attention',
-  'payment-retry', 'payment-print', 'attention-reference', 'attention-amount',
+  'payment-retry', 'attention-reference', 'attention-amount', 'provider-receipt', 'provider-receipt-email',
 ]) {
   attentionElements[selector] = child(attentionRoot, '[data-' + selector + ']');
 }
@@ -308,14 +308,17 @@ vm.runInNewContext(confirmationCode, {
   }),
 });
 
+attentionElements['provider-receipt'].setAttribute('href', 'https://receipts.example.com/old');
+attentionElements['provider-receipt-email'].textContent = 'Old receipt guidance';
 attentionModule.exports.initializeDevcon26PaymentConfirmation(attentionRoot);
+assert.equal(attentionElements['provider-receipt'].attributes.has('href'), false, 'Verification start removes stale receipt URLs');
+assert.equal(attentionElements['provider-receipt-email'].textContent, '');
 resolveAttention({ ok: true, status: 200, json: async () => ({ ...quote, status: 'refund_required', amount_minor: 18999 }) });
 await tick();
 assert.equal(attentionRoot.dataset.paymentState, 'refund_required');
 assert.equal(attentionElements['payment-receipt'].hidden, true);
 assert.equal(attentionElements['payment-attention'].hidden, false);
 assert.equal(attentionElements['payment-title'].textContent, 'Your payment needs attention.');
-await attentionElements['payment-print'].fire('click');
 assert.equal(printed, false);
 
 async function readyFixture(options) {
@@ -679,42 +682,43 @@ for (const couponError of ['invalid', 'expired', 'ineligible', 'unavailable']) {
 const html = readFileSync(root + '/dist/devcon26/index.html', 'utf8');
 const homeHtml = readFileSync(root + '/dist/index.html', 'utf8');
 const sponsorSection = html.slice(html.indexOf('<section id="sponsors"'), html.indexOf('<section id="faqs"'));
+const pastSponsorsSection = html.slice(html.indexOf('<section class="past-sponsors-section page-shell"'));
 const checkoutSource = readFileSync(root + '/src/pages/devcon26/checkout.astro', 'utf8');
 const checkoutHtml = readFileSync(root + '/dist/devcon26/checkout/index.html', 'utf8');
 
 assert.ok(!html.includes('ticket-checkout-dialog'), 'The landing page no longer contains a checkout modal');
 
-assert.ok(html.includes('href="/devcon26/register/"'), 'The landing page leads to current registration availability');
+assert.ok(homeHtml.includes('href="/devcon26/#tickets"'), 'Homepage ticket actions lead to the conference registration section');
+assert.ok(html.includes('id="tickets"') && html.includes('GH₵150'), 'Registration section explains the individual ticket price');
+assert.ok(html.includes('href="/devcon26/checkout/"'), 'Registration section continues to ticket checkout');
 assert.ok(html.includes('href="/devcon26/speak/"'), 'The landing page links the annual conference CFP');
-assert.ok(!html.includes('data-ticket-checkout='), 'Group ticket sales are no longer advertised');
-assert.ok(readFileSync(root + '/dist/devcon26/register/index.html', 'utf8').includes('name="email"'));
-
-assert.ok(checkoutHtml.includes('data-checkout-page'));
-assert.ok(checkoutHtml.includes('Complete your booking.'));
+assert.ok(!html.includes('data-ticket-checkout='), 'Legacy group ticket sales are not advertised');
+assert.ok(checkoutHtml.includes('data-flexible-checkout'), 'Checkout uses the flexible individual-ticket flow');
 assert.ok(checkoutHtml.includes('noindex, nofollow'));
-assert.ok(checkoutHtml.includes('data-checkout-fields disabled'), 'Buyer fields are disabled without JavaScript');
+assert.match(checkoutHtml, /data-checkout-layout hidden/, 'Checkout form stays unavailable until the catalog is loaded');
+assert.match(checkoutHtml, /data-pay[^>]*disabled/, 'Payment cannot begin without JavaScript and verified availability');
 assert.ok(!/name="(?:purchaser_name|purchaser_email|coupon_code)"/.test(checkoutHtml), 'Native form fallback cannot send buyer details in a URL');
-assert.ok(!checkoutHtml.includes('<dialog'), 'Checkout has no dialog');
-assert.ok(checkoutHtml.includes('class="checkout-backdrop"') && checkoutHtml.includes('data-checkout-photo'), 'Checkout renders a decorative tier-selected background');
-assert.ok(checkoutHtml.includes('src="/images/logo.png"') && !checkoutHtml.includes('devcongress-logo.png'), 'Header uses the existing working logo asset');
+assert.ok(checkoutHtml.includes('src="/images/logo.png"'), 'Header uses the existing logo');
 assert.ok(readFileSync(root + '/public/images/logo.png').length > 0);
-assert.equal((checkoutHtml.match(/class="checkout-icon"/g) || []).length, 9, 'Navigation, ticket details, coupon, payment, and security icons render inline');
-assert.ok(checkoutHtml.includes('data-checkout-payment-label'), 'Payment label has its own node so icons survive state changes');
-assert.ok(checkoutHtml.includes('data-checkout-retry'), 'Price verification retry is separate from the payment action');
-assert.match(checkoutSource, /\.checkout-backdrop\s*\{[^}]*position: absolute;[^}]*height: 960px;/, 'Background geometry does not depend on the expanding coupon content');
-assert.match(checkoutSource, /\.checkout-backdrop img\s*\{[^}]*aspect-ratio: 5 \/ 4;[^}]*mask-image: radial-gradient/, 'Large photo keeps its crop and soft edge mask');
-assert.match(checkoutSource, /ellipse 50% 50% at 50% 50%,[\s\S]*?transparent 96%/, 'An inscribed centred ellipse fades completely before all four image edges');
-assert.match(checkoutSource, /\.checkout-backdrop img\s*\{[^}]*width: min\(1100px, 100%\);/, 'The photo stays within its container instead of clipping an oversized crop');
-assert.ok(!checkoutSource.includes('coupon-chevron'), 'Coupon disclosure no longer uses a chevron');
-assert.ok(checkoutSource.includes('CheckoutIcon name="plus"'), 'Coupon disclosure renders a plus icon');
-assert.match(checkoutSource, /\.coupon\[open\] \.coupon-symbol :global\(path:last-child\)\s*\{\s*opacity: 0;/, 'Open disclosure hides only the vertical stroke to show a minus');
-assert.match(checkoutSource, /\.coupon-symbol :global\(path:last-child\)\s*\{\s*transition: opacity 140ms/, 'The plus-to-minus change uses a brief interruptible opacity transition');
-assert.match(checkoutSource, /input:focus\s*\{[^}]*border-color: var\(--checkout-focus\);[^}]*outline: 2px solid var\(--checkout-focus\);[^}]*outline-offset: -1px;/, 'Focus uses a crisp subdued edge that remains visible without stacked black outlines');
-assert.ok(!/overflow-y: ?(?:auto|scroll)|max-height:/.test(checkoutSource), 'Checkout uses natural page scrolling, not a nested scroll viewport');
-assert.ok(checkoutSource.includes('grid-template-columns: minmax(0, 1fr);'), 'Mobile stacks buyer details and summary');
+assert.ok(checkoutHtml.includes('data-quantity') && checkoutHtml.includes('data-allocation-list'), 'Each individual ticket has a quantity and allocation');
+assert.ok(checkoutHtml.includes('data-provider') && checkoutHtml.includes('value="paystack"'), 'Available provider selection retains Paystack');
+assert.ok(checkoutHtml.includes('data-retry') && checkoutHtml.includes('data-status'), 'Availability retry and actionable checkout feedback remain available');
+assert.ok(checkoutHtml.includes('data-mobile-step-name') && checkoutHtml.includes('data-mobile-step-count'), 'Checkout has compact progress labels');
+assert.equal((checkoutHtml.match(/data-step-link=/g) || []).length, 3, 'Checkout retains three named navigable steps');
+assert.ok(checkoutHtml.includes('data-unit-price') && checkoutHtml.includes('data-subtotal')
+  && checkoutHtml.includes('data-processing-fee') && checkoutHtml.includes('data-total'),
+  'Order summary shows the runtime subtotal, processing fee, and total payable');
+const checkoutStyles = readFileSync(root + '/src/styles/devcon26-flexible-checkout.css', 'utf8');
+assert.ok(checkoutStyles.includes(':focus-visible'), 'Keyboard focus remains visible');
+
 assert.ok(!html.includes('partner-symbol'), 'The decorative pink plus signs are removed');
 
-assert.equal((sponsorSection.match(/class="sponsor-item"/g) || []).length, 1);
+assert.equal((sponsorSection.match(/class="sponsor-item"/g) || []).length, 3);
+assert.ok(sponsorSection.includes('AmaliTech') && sponsorSection.includes('https://amalitech.com'));
+assert.ok(sponsorSection.includes('Paystack') && sponsorSection.includes('https://paystack.com/'));
+assert.ok(sponsorSection.includes('/images/partners/amalitech.png'));
+assert.ok(!pastSponsorsSection.includes('AmaliTech'));
+assert.ok(pastSponsorsSection.includes('Paystack'), 'Paystack remains in its historical sponsor listing');
 const packagePlans = [...sponsorSection.matchAll(/<article\b[^>]*class="package-plan"[^>]*>([\s\S]*?)<\/article>/g)];
 
 assert.equal(packagePlans.length, 6);
@@ -883,27 +887,35 @@ for (const name of ['Ada', 'Your Name', 'Alexandra Nana Akua Mensah', 'Jean-Luc 
 
 assert.equal(digitalBadgeModule.exports.layoutDigitalBadgeName(digitalNameContext, 'W'.repeat(60)).valid, false, 'Unbreakable names fail visibly rather than clip');
 
+const rolePatterns = new Map();
+
 for (const role of [null, 'attendee', 'speaker']) {
   const text = [];
   const images = [];
+  const dots = [];
   const context = new Proxy({
     ...digitalNameContext,
     fillText(value) { text.push(value); },
     drawImage(...args) { images.push(args); },
+    arc(x, y, radius) { if (this.fillStyle === '#ed008c') dots.push([x, y, radius]); },
     createLinearGradient() { return { addColorStop() {} }; },
   }, { get(target, key) { return key in target ? target[key] : () => {}; } });
   const canvas = { getContext() { return context; } };
 
   await digitalBadgeModule.exports.paintDigitalBadge(canvas, 'Your Name', null, undefined, role);
-  assert.equal(text.includes('ATTENDEE'), role === 'attendee');
-  assert.equal(text.includes('SPEAKER'), role === 'speaker');
+  assert.ok(text.includes('Your Name'), 'Attendee name remains standard readable text');
+  assert.ok(dots.length > 0, 'Role is rendered as dotted lettering');
+  rolePatterns.set(role, JSON.stringify(dots));
   assert.equal(text.includes('COMMUNITY'), false, 'No placeholder footer role');
   assert.equal(images.at(-1)[0].src, '/images/logo.png', 'Uses the real shared DevCongress logo');
   assert.ok(images[0][0].src.endsWith('devcon26-v11-base-1080x1350.png'), 'Uses the homepage physical badge artwork');
   assert.equal(canvas.width, 1080);
   assert.equal(canvas.height, 1350);
 }
-assert.match(socialCardSource, /isRegistration \? layoutDigitalBadgeName\(context, value\) : layoutDevcon26CardName\(context, value\)/, 'Validation follows the selected renderer');
+assert.equal(rolePatterns.get(null), rolePatterns.get('attendee'), 'Default badge role is attendee');
+assert.notEqual(rolePatterns.get('attendee'), rolePatterns.get('speaker'), 'Speaker and attendee dot patterns differ');
+
+assert.match(socialCardSource, /usesDigitalBadge \? layoutDigitalBadgeName\(context, value\) : layoutDevcon26CardName\(context, value\)/, 'Validation follows the selected renderer');
 assert.match(socialCardSource, /if \(digital\) return \{ base: null, backdrop: null \}/, 'Digital badge does not depend on legacy bitmap artwork');
 assert.ok(socialCardSource.includes("paintDigitalBadge(workCanvas, card.name, card.photo, card.crop, 'attendee')"), 'Registration sharing cards display ATTENDEE');
 const registrationCardSource = readFileSync(root + '/src/components/Devcon26RegistrationCard.astro', 'utf8');
@@ -946,14 +958,14 @@ assert.match(confirmationRule('.payment-details'), /display:\s*grid;/, 'Receipt 
 assert.match(confirmationRule('.payment-details'), /row-gap:\s*6px;/, 'Receipt details retain their row spacing');
 assert.match(confirmationRule('.payment-details > div'), /padding-block:\s*8px;/, 'Receipt rows retain breathing room without separators');
 assert.ok(!/border/.test(confirmationRule('.payment-details > div')), 'Receipt rows use hierarchy instead of separator lines');
-assert.match(confirmationRule('.receipt-stub'), /display:\s*grid;/, 'Save action and disclaimer retain their grouped layout');
-assert.match(confirmationRule('.receipt-stub'), /gap:\s*8px;/, 'Receipt footer retains spacing between the save action and disclaimer');
+assert.match(confirmationRule('.receipt-stub'), /display:\s*grid;/, 'Provider receipt guidance and disclaimer retain their grouped layout');
+assert.match(confirmationRule('.receipt-stub'), /gap:\s*8px;/, 'Receipt footer retains spacing between provider guidance and disclaimer');
 assert.match(confirmationRule('.receipt-stub'), /margin-top:\s*28px;/, 'Receipt footer remains separated by whitespace');
 assert.match(confirmationRule('.receipt-stub'), /border-top:\s*1px dashed/, 'Receipt footer has a restrained perforation divider');
 assert.match(confirmationRule('.payment-details .amount-detail'), /padding-block:\s*12px 20px;/, 'Amount remains the leading receipt group');
 assert.ok(confirmationRule('.payment-details .ticket-detail').includes('margin-top: 16px'), 'Ticket selection begins a distinct spacing group');
 assert.ok(confirmationRule('.payment-details .reference-detail').includes('margin-top: 12px'), 'Payment reference begins a distinct spacing group');
-assert.ok(confirmationHtml.includes('data-payment-print') && confirmationHtml.includes('Print or save payment record') && confirmationHtml.includes('Payment record only. Not an admission ticket.'), 'Print/save action and non-admission boundary remain');
+assert.ok(!confirmationHtml.includes('data-payment-print') && confirmationHtml.includes('Payment record only. Not an admission ticket.'), 'No unreliable print action; non-admission boundary remains');
 assert.ok(confirmationHtml.includes('data-social-card-preview') && confirmationHtml.includes('data-social-card-share') && confirmationHtml.includes('data-social-card-download'), 'Verified checkout presents an editable ticket-style social card with share and download actions');
 assert.match(confirmationHtml, /id="social-card-title"[^>]*>I’m attending <em[^>]*>DevCon26\.<\/em>/, 'Social-card editor uses the attendee announcement framing');
 assert.ok(confirmationHtml.includes('data-social-ticket-canvas') && !confirmationHtml.includes('social-ticket-header'), 'Social-card preview uses one V11 canvas instead of a separate HTML yellow ticket');
@@ -990,7 +1002,7 @@ assert.match(socialCardSource, /\* 1\.04/, 'Photo cover crop includes the approv
 assert.match(socialCardSource, /DEFAULT_PHOTO_CROP: PhotoCrop = \{ zoom: 1, x: 0\.5, y: 0\.18 \}/, 'Default photo crop preserves approved zoom and 18 percent top overflow');
 assert.match(socialCardSource, /crop: PhotoCrop = DEFAULT_PHOTO_CROP/, 'Existing callers retain the approved crop');
 assert.match(socialCardSource, /\(height - PHOTO_BOX\.height\) \* crop\.y/, 'Photo position uses scaled overflow so it never exposes blank edges');
-assert.match(socialCardSource, /isRegistration \? root\.querySelector<HTMLDialogElement>\('\[data-photo-dialog\]'\) : null/, 'Photo adjustment UI is registration-only');
+assert.ok(socialCardSource.includes("const photoDialog = root.querySelector<HTMLDialogElement>('[data-photo-dialog]')"), 'Photo adjustment is available wherever its dialog is rendered');
 assert.match(socialCardSource, /NAME_TEXT = \{ x: 190, textWidth: 698 \}/, 'Name uses the approved V11 editorial width');
 assert.match(socialCardSource, /const baselines = layout\.layout\.lines\.length === 1 \? \[1092\] : \[1060, 1104\]/, 'Name uses the approved V11 single- and two-line baselines');
 assert.doesNotMatch(socialCardSource, /NAME_LABEL|context\.fillRect\(/, 'V11 draws editorial name text without a name plate or fill rectangle');
@@ -1012,8 +1024,8 @@ assert.match(socialCardSource, /if \(photoUploadVersions\[seatIndex\] !== upload
 assert.match(confirmationRule('.social-ticket'), /aspect-ratio:\s*4\s*\/\s*5;/, 'Social-card preview uses a portrait feed-friendly format');
 assert.match(confirmationRule('.social-preview-step .social-ticket'), /width:\s*440px;/, 'Share preview uses the additional vertical space');
 assert.ok(!/zoom\s*:/.test(confirmationSource), 'Preview is not reduced with CSS zoom');
-assert.match(confirmationSource, /@media \(min-width: 1281px\)[\s\S]*?grid-auto-columns: minmax\(0, 1fr\);/, 'Desktop card actions use equal-width columns');
-assert.match(confirmationSource, /\.confirmation-actions \.payment-actions\s*\{\s*margin-top: 0;/, 'Left and right actions align in a shared footer');
+assert.match(confirmationRule('.social-step-navigation'), /display:\s*flex;/, 'Badge actions use compact flex layout');
+assert.match(confirmationRule('.confirmation-actions .payment-actions'), /margin:\s*0;/, 'Minimal footer removes excess action margins');
 assert.match(socialCardSource, /preview.hidden = true;\s*navigation.hidden = true;/, 'Deferring hides the detached editor controls');
 assert.match(socialCardSource, /share\.hidden = step !== 2;\s*download\.hidden = step !== 2;/, 'Export actions only appear in the share step');
 assert.match(socialCardSource, /canvas\.width = CARD_WIDTH;[\s\S]*canvas\.height = CARD_HEIGHT;/, 'Downloaded social image uses a 4:5 portrait canvas');
@@ -1037,7 +1049,7 @@ assert.match(confirmationSource, /\.social-card-fields input\[type="text"\]:focu
 assert.match(confirmationSource, /\.social-card-fields input\[type="text"\],\s*\.social-card-fields \.social-photo-button\s*\{\s*box-sizing: border-box;\s*height: 48px;\s*min-height: 48px;/, 'Name and photo controls share a 48px border-box height');
 assert.match(confirmationRule('.social-card-fields .social-photo-button'), /grid-row: 2;/, 'Photo picker aligns with the name input, not its label');
 assert.match(confirmationSource, /@media \(max-width: 760px\)[\s\S]*?\.social-card-fields\s*\{\s*grid-template-columns:\s*minmax\(0, 1fr\);/, 'Social-card controls return to a single column on mobile');
-assert.match(confirmationSource, /@media print\s*\{[\s\S]*?\.payment-header, \.payment-status, \.payment-attention, \.payment-actions, \.print-button, \.skip-link, \.receipt-photo, \.next-steps, \.no-script\s*\{\s*display: none !important;/, 'Print hides the surrounding confirmation experience');
+assert.match(confirmationSource, /@media print\s*\{[\s\S]*?\.payment-header, \.payment-status, \.payment-attention, \.payment-actions, \.provider-receipt-link, \.skip-link, \.receipt-photo, \.next-steps, \.no-script\s*\{\s*display: none !important;/, 'Print hides the surrounding confirmation experience');
 assert.match(confirmationSource, /@media print\s*\{[\s\S]*?max-width:\s*150mm;/, 'Print constrains the record to a one-page receipt width');
 assert.match(confirmationSource, /@media print\s*\{[\s\S]*?(?:^|\n)\s+print-color-adjust:\s*exact;/m, 'Print preserves the receipt hierarchy when background graphics are available');
 assert.match(confirmationSource, /@media print\s*\{[\s\S]*?page-break-inside:\s*avoid;/, 'Print keeps the payment record together');

@@ -3,6 +3,7 @@ import { layoutDigitalBadgeName, loadDigitalBadgeFont, paintDigitalBadge, type D
 type Role = DigitalBadgeRole;
 
 type Card = {
+  is_test?: boolean;
   display_name: string;
   role: Role;
   crop: { x: number; y: number; scale: number };
@@ -65,8 +66,10 @@ function fileError(file: File): string | null {
 export function initializeDevcon26SocialCard(page: HTMLElement): void {
   const origin = validApiOrigin(page.dataset.socialCardApiOrigin ?? '');
   const fragment = window.location.hash.slice(1);
+  const buyerGrant = new URLSearchParams(fragment).get('buyer_grant');
   const collectionCapability = new URLSearchParams(fragment).get('collection');
-  const capability = collectionCapability ? '' : fragment;
+  const collectionMode = Boolean(collectionCapability || buyerGrant);
+  const capability = collectionMode ? '' : fragment;
   const content = page.querySelector<HTMLElement>('[data-social-card-content]')!;
   const error = page.querySelector<HTMLElement>('[data-social-card-error]')!;
   const status = page.querySelector<HTMLElement>('[data-social-card-status]')!;
@@ -111,20 +114,22 @@ export function initializeDevcon26SocialCard(page: HTMLElement): void {
   }
 
   function headers(): HeadersInit {
+    if (buyerGrant) return { 'X-Social-Card-Buyer-Grant': buyerGrant };
+
     return collectionCapability
       ? { 'X-Social-Card-Collection-Capability': collectionCapability }
       : { 'X-Social-Card-Capability': capability };
   }
 
   function managementPath(path: string): string {
-    if (!collectionCapability) return '/manage' + path;
+    if (!collectionMode) return '/manage' + path;
     if (activeSeatNumber === null) throw new Error('Choose a ticket card first.');
 
-    return `/collection/seats/${activeSeatNumber}${path}`;
+    return `${buyerGrant ? '/buyer' : ''}/collection/seats/${activeSeatNumber}${path}`;
   }
 
   async function request(path: string, init: RequestInit = {}): Promise<Card> {
-    if (!origin || (!collectionCapability && !capability) || capability.length > 200 || (collectionCapability && collectionCapability.length > 200)) throw new Error('This card link isn’t available.');
+    if (!origin || (!collectionMode && !capability) || capability.length > 200 || (collectionCapability && collectionCapability.length > 200) || (buyerGrant && buyerGrant.length > 2000)) throw new Error('This card link isn’t available.');
     const response = await fetch(endpoint(origin, managementPath(path)), {
       ...init,
       headers: { ...headers(), ...(init.headers ?? {}) },
@@ -156,7 +161,7 @@ export function initializeDevcon26SocialCard(page: HTMLElement): void {
     y.value = String(Math.round(crop.y * 100));
     scale.value = String(crop.scale);
     cropControls.disabled = !selectedFile;
-    publish.hidden = card.public_enabled;
+    publish.hidden = card.public_enabled || Boolean(card.is_test);
     revoke.hidden = !card.public_enabled;
     share.hidden = !card.public_enabled;
     const publicUrl = new URL('/devcon26/cards/' + encodeURIComponent(card.public_slug), window.location.origin).toString();
@@ -195,6 +200,7 @@ export function initializeDevcon26SocialCard(page: HTMLElement): void {
     badgeCanvas.width = canvas.width;
     badgeCanvas.height = canvas.height;
     context.drawImage(canvas, 0, 0);
+
     badgeCanvas.setAttribute('aria-label', `${snapshot.display_name} — ${snapshot.role} at DevCon26`);
     badgeCaption.textContent = `${snapshot.role === 'speaker' ? 'Speaker' : 'Attendee'} badge · For sharing, not admission.`;
     badgeCanvas.hidden = false;
@@ -217,18 +223,18 @@ export function initializeDevcon26SocialCard(page: HTMLElement): void {
 
   async function load(): Promise<void> {
     try {
-      if (collectionCapability) {
+      if (collectionMode) {
         await loadCollection();
       } else {
         card = await request('');
       }
       history.replaceState(null, '', window.location.pathname);
-      if (!collectionCapability) {
+      if (!collectionMode) {
         await loadPrivatePhoto();
         render();
       }
       content.hidden = false;
-      setStatus(collectionCapability ? 'Choose a ticket card to personalize.' : 'Your card is ready to personalise.');
+      setStatus(collectionMode ? 'Choose a ticket card to personalize.' : 'Your card is ready to personalise.');
     } catch {
       error.hidden = false;
       setStatus('');
@@ -236,8 +242,8 @@ export function initializeDevcon26SocialCard(page: HTMLElement): void {
   }
 
   async function loadCollection(): Promise<void> {
-    if (!origin || !collectionCapability) throw new Error('This collection link isn’t available.');
-    const response = await fetch(endpoint(origin, '/collection'), { headers: headers(), credentials: 'omit', cache: 'no-store' });
+    if (!origin || !collectionMode) throw new Error('This collection link isn’t available.');
+    const response = await fetch(endpoint(origin, buyerGrant ? '/buyer/collection' : '/collection'), { headers: headers(), credentials: 'omit', cache: 'no-store' });
     const payload = await response.json().catch(() => null) as { seats?: Array<{ seat_number?: unknown }>; error?: string } | null;
 
     if (!response.ok || !Array.isArray(payload?.seats) || !payload.seats.length) {

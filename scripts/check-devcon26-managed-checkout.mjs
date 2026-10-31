@@ -428,10 +428,13 @@ for (const options of [{ missingGrant: true }, { responseMode: 'live' }]) {
   const fixture = confirmationFixture(initialized('test').reference, 'test', options);
 
   await tick();
-  assert.equal(fixture.root.dataset.paymentState, 'error');
+  assert.equal(fixture.root.dataset.paymentState, options.missingGrant ? 'access_lost' : 'error');
   assert.equal(fixture.root.querySelector('[data-payment-receipt]').hidden, true);
   assert.equal(fixture.badgeCalls.length, 0);
-  if (options.missingGrant) assert.equal(fixture.requests.length, 0);
+  if (options.missingGrant) {
+    assert.equal(fixture.requests.length, 0);
+    assert.equal(fixture.root.querySelector('[data-payment-retry]').hidden, true);
+  }
 }
 
 for (const [reference, verifyPath] of [
@@ -506,3 +509,17 @@ assert.ok(!config.includes('WORKERS_CI_BRANCH') && !config.includes('full-test-e
 assert.ok(!page.includes('PUBLIC_DEVCON26_COMPLETE_TEST') && !page.includes('data-complete-test'));
 assert.ok(page.includes('data-payment-mode-notice') && page.includes('data-checkout-challenge'));
 console.log('PASS managed checkout: runtime test/live, stale-settings review without resubmission, bounded retries, fail-closed catalog/redirects, historical callbacks, and actual private email links.');
+
+for (const mode of ['test', 'live']) {
+  const fixture = confirmationFixture(initialized(mode).reference, mode, { missingGrant: true });
+
+  await tick();
+  assert.equal(fixture.requests.length, 0);
+  assert.equal(fixture.root.querySelector('[data-payment-retry]').hidden, true);
+  assert.equal(fixture.root.dataset.paymentState, 'access_lost');
+  assert.equal(fixture.root.querySelector('[data-checkout-recovery]').hidden, false);
+  assert.equal(fixture.root.querySelector('[data-payment-receipt]').hidden, true);
+  assert.equal(fixture.root.querySelector('[data-recovery-reference]').textContent, fixture.exports.devcon26BuyerReference(initialized(mode).reference));
+  assert.ok(fixture.root.querySelector('[data-recovery-contact]').attributes.get('href').startsWith('mailto:hello@devcongress.org?subject='));
+}
+console.log('PASS lost-session recovery: no unauthenticated request or useless Retry in either mode.');

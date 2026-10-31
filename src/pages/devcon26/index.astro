@@ -222,8 +222,9 @@ function packageEnquiryLink(sponsorship: (typeof sponsorshipPackages)[number]) {
               <span class="event-year">2026</span>
             </span>
           </p>
-          <h1 id="event-title">A year together.<br /><em>One big gathering.</em></h1>
-          <p class="hero-summary">Meetups, ideas, and new connections all year. Join the community at DevCon26.</p>
+          <h1 id="event-title">Technology for the <em>Next Generation</em></h1>
+          <p class="hero-tagline">Innovation • Community • Impact</p>
+          <p class="hero-summary">With a gathering of builders, researchers, designers, security professionals, product managers and marketers. Come gain knowledge and exchange knowledge at DevCon26</p>
           <div class="hero-actions">
             <a class="button button-primary" href="#tickets">Buy tickets <span aria-hidden="true">↗</span></a>
             <p>19 December 2026<br /><strong>Ghana Digital Center (formerly Accra Digital Center), Accra</strong></p>
@@ -682,6 +683,15 @@ function packageEnquiryLink(sponsorship: (typeof sponsorshipPackages)[number]) {
   .hero h1 {
     font-weight: 700;
     letter-spacing: -0.03em;
+  }
+
+  .hero-tagline {
+    max-width: 660px;
+    margin-top: 18px;
+    text-align: center;
+    font-size: var(--dc-text-body);
+    font-weight: 600;
+    line-height: 1.5;
   }
 
   .hero-summary {
@@ -2121,19 +2131,38 @@ function packageEnquiryLink(sponsorship: (typeof sponsorshipPackages)[number]) {
     }
 
     .hero h1 {
+      font-size: clamp(30px, 8.8vw, 42px);
       letter-spacing: -0.025em;
+      text-align: center;
+    }
+
+    .hero h1 em {
+      display: block;
+    }
+
+    .hero-tagline {
+      margin-top: 12px;
+      font-size: 15px;
+      line-height: 1.4;
     }
 
     .hero-summary {
-      margin-top: 22px;
+      max-width: none;
+      margin-top: 20px;
+      font-size: 16px;
+      line-height: 1.55;
     }
 
     .hero-actions {
-      gap: 18px;
-      margin-top: 24px;
+      flex-direction: column;
+      text-align: center;
+      gap: 16px;
+      margin-top: 20px;
     }
 
     .hero-actions p {
+      max-width: 32ch;
+      text-wrap: balance;
       font-size: 14px;
       letter-spacing: 0;
     }

@@ -679,7 +679,7 @@ export function initializeFlexibleCheckout(page: HTMLElement): void {
       checkoutLayout.hidden = false;
       status.textContent = settingsReviewRequired
         ? 'Checkout settings changed. Review your tickets and payment mode before continuing.'
-        : 'Checkout is open. Review your choices before continuing.';
+        : 'Checkout is open. Your seat is held for 15 minutes once checkout starts. Late payment confirmation may require a refund.';
       renderRows();
 
       if (settingsReviewRequired) {

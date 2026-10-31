@@ -1,5 +1,21 @@
 # Changelog
 
+## 2026-10-31 — Mobile DevCon26 hero
+
+- Keep the theme on two centred lines with a compact centred tagline, tighter introduction spacing and a centred content-sized ticket button on mobile. Centre the date and balance the wrapped venue text beneath it. Preserve the exact approved wording and desktop layout.
+
+## 2026-10-31 — Homepage growth accent
+
+- Highlight “grow.” in pink with a curved underline that reveals once on entering view. Preserve headline wording and use a static underline for reduced motion or unavailable JavaScript.
+
+## 2026-10-31 — DevCon26 theme copy
+
+- Replace the hero headline, tagline and introduction with the supplied Technology for the Next Generation wording.
+
+## 2026-10-31 — Center checkout access recovery
+
+- Center missing-browser-access guidance on the existing cream background with concise copy, a fixed 64 × 48 px ticket-and-envelope illustration, a plain duplicate-payment reminder, selectable payment reference and a contact email action carrying that reference. Keep retry and ticket details hidden, and clear recovery content when the confirmation state changes.
+
 ## 2026-10-30 — Polish private ticket claim controls
 
 - Match the claim page's primary action to the DevCon26 checkout pink while keeping the styling scoped to ticket-access pages.
@@ -369,3 +385,8 @@
 - Use an explicit two-column mobile quantity row so the label stays centered and the stepper sits at the right edge. Keep 44px button targets and allow the label to wrap on narrow screens.
 
 - Added a softly masked community photo behind the expanded mobile order summary at 10% opacity, preserving text contrast and the compact collapsed state.
+
+## 2026-10-30 — Checkout recovery
+
+- Explain the 15-minute checkout hold and late-payment outcome.
+- When a payment confirmation link has no browser grant, direct the buyer to their private ticket email instead of offering a Retry that cannot make a request; warn against paying again while payment may still complete.

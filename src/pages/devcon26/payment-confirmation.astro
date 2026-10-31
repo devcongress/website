@@ -14,6 +14,18 @@ const checkoutApiOrigin = import.meta.env.PUBLIC_DEVCON26_API_ORIGIN || 'https:/
       <Devcon26HomeLink />
       <div class="payment-status" data-payment-status role="status" aria-live="polite" aria-busy="true">
         <div class="status-intro">
+          <span class="recovery-icon" aria-hidden="true">
+            <svg viewBox="0 0 64 48" fill="none" width="64" height="48" focusable="false">
+              <path d="M6 22 31 6l27 16v22H6V22Z" fill="var(--bg)" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" />
+              <g transform="rotate(8 33 19)">
+                <path d="M17 3h34v9a4 4 0 0 0 0 8v13H17V20a4 4 0 0 0 0-8V3Z" fill="var(--bg)" stroke="currentColor" stroke-width="1.6" />
+                <path d="M40 5v26" stroke="currentColor" stroke-dasharray="2 3" />
+                <path d="M24 11h9m-9 5h6" stroke="var(--pink)" stroke-width="2" stroke-linecap="round" />
+              </g>
+              <path d="m6 22 26 15 26-15v22H6V22Z" fill="var(--bg)" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" />
+              <path d="m6 44 18-12m34 12L40 32" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" />
+            </svg>
+          </span>
           <p class="confirmation-label">DevCon26 <span>Good company awaits.</span></p>
           <h1 data-payment-title>Checking your payment.</h1>
           <p class="status-copy" data-payment-copy>Just a moment while we confirm your payment with Paystack.</p>
@@ -26,6 +38,17 @@ const checkoutApiOrigin = import.meta.env.PUBLIC_DEVCON26_API_ORIGIN || 'https:/
           <span>Payment received</span>
         </div>
       </div>
+      <section class="checkout-recovery" data-checkout-recovery hidden aria-label="Recover checkout access">
+        <p class="recovery-notice">Your payment may still complete. <strong>Please don’t pay again.</strong></p>
+        <div class="recovery-reference">
+          <span>Payment reference</span>
+          <code data-recovery-reference></code>
+        </div>
+        <a class="recovery-contact" data-recovery-contact href="mailto:hello@devcongress.org?subject=DevCon26%20payment">
+          Contact the team <span aria-hidden="true">↗</span>
+        </a>
+
+      </section>
       <p class="mode-notice" data-payment-mode-notice role="status" hidden></p>
       <noscript>
         <p class="no-script">JavaScript is required to verify this payment. Enable it and reload this page, or contact <a href="mailto:hello@devcongress.org">hello@devcongress.org</a> for help. No success is confirmed on this page without verification.</p>
@@ -1621,5 +1644,151 @@ const checkoutApiOrigin = import.meta.env.PUBLIC_DEVCON26_API_ORIGIN || 'https:/
       border-top-color: #777;
     }
 
+  }
+
+  /* Scope recovery layout to missing browser access, never payment outcomes. */
+  .recovery-icon {
+    display: none;
+  }
+
+  [data-payment-state='access_lost'] .page-shell {
+    width: min(calc(100% - 48px), 640px);
+    padding-block: clamp(24px, 6vh, 64px) 48px;
+  }
+
+  [data-payment-state='access_lost'] .payment-status {
+    display: block;
+    padding-block: 32px 20px;
+  }
+
+  [data-payment-state='access_lost'] .status-intro {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 64px;
+    grid-template-areas: "label label" "heading illustration" "copy copy";
+    column-gap: 20px;
+    align-items: center;
+  }
+
+  [data-payment-state='access_lost'] .recovery-icon {
+    display: block;
+    grid-area: illustration;
+    width: 64px;
+    height: 48px;
+    color: var(--text);
+  }
+
+  [data-payment-state='access_lost'] .confirmation-label {
+    grid-area: label;
+    margin-bottom: 16px;
+    color: var(--text-mid);
+    font-size: 14px;
+  }
+
+  [data-payment-state='access_lost'] .confirmation-label span,
+  [data-payment-state='access_lost'] .confirmation-actions {
+    display: none;
+  }
+
+  [data-payment-state='access_lost'] h1 {
+    grid-area: heading;
+    font-size: clamp(28px, 4vw, 36px);
+    line-height: 1.15;
+    text-wrap: balance;
+  }
+
+  [data-payment-state='access_lost'] .status-copy {
+    grid-area: copy;
+    max-width: none;
+    margin: 20px 0 0;
+    font-size: 17px;
+    line-height: 1.6;
+  }
+
+  .checkout-recovery[hidden] {
+    display: none;
+  }
+
+  .recovery-notice {
+    margin: 0 0 28px;
+    font-size: 17px;
+    line-height: 1.6;
+  }
+
+  .recovery-notice strong {
+    font-weight: 600;
+  }
+
+  .recovery-reference {
+    padding-block: 18px;
+    border-block: 1px solid var(--border-light);
+  }
+
+  .recovery-reference span {
+    display: block;
+    margin-bottom: 6px;
+    color: var(--text-mid);
+    font-size: 13px;
+  }
+
+  .recovery-reference code {
+    display: block;
+    font-size: 13px;
+    line-height: 1.6;
+    overflow-wrap: anywhere;
+    user-select: all;
+  }
+
+  .recovery-contact {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    min-height: 48px;
+    margin-top: 24px;
+    padding: 12px 20px;
+    border-radius: 6px;
+    background: #cf0870;
+    color: #fff;
+    font-size: 16px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: transform 120ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .recovery-contact:focus-visible {
+    outline: 2px solid var(--text);
+    outline-offset: 4px;
+  }
+
+  .recovery-contact:active {
+    transform: scale(0.98);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .recovery-contact:hover {
+      background: #b80068;
+      color: #fff;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .recovery-contact {
+      transition: none;
+    }
+
+    .recovery-contact:active {
+      transform: none;
+    }
+  }
+
+  @media (max-width: 600px) {
+    [data-payment-state='access_lost'] .page-shell {
+      width: calc(100% - 40px);
+      padding-top: 16px;
+    }
+
+    [data-payment-state='access_lost'] .status-intro {
+      column-gap: 12px;
+    }
   }
 </style>

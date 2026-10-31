@@ -35,7 +35,7 @@ const TICKET_PRESENTATION = {
 } as const;
 
 type PaymentStatus = 'verified' | 'pending' | 'failed' | 'refund_required';
-type PageState = PaymentStatus | 'loading' | 'invalid' | 'error';
+type PageState = PaymentStatus | 'loading' | 'invalid' | 'error' | 'access_lost';
 
 export interface TestPaymentSummary {
   status: PaymentStatus;
@@ -215,6 +215,9 @@ export function initializeDevcon26PaymentConfirmation(
   const status = root.querySelector<HTMLElement>('[data-payment-status]')!;
   const receipt = root.querySelector<HTMLElement>('[data-payment-receipt]')!;
   const modeNotice = root.querySelector<HTMLElement>('[data-payment-mode-notice]');
+  const recovery = root.querySelector<HTMLElement>('[data-checkout-recovery]');
+  const recoveryReference = root.querySelector<HTMLElement>('[data-recovery-reference]');
+  const recoveryContact = root.querySelector<HTMLAnchorElement>('[data-recovery-contact]');
   const attention = root.querySelector<HTMLElement>('[data-payment-attention]')!;
   const retry = root.querySelector<HTMLButtonElement>('[data-payment-retry]')!;
   const providerReceipt = root.querySelector<HTMLAnchorElement>('[data-provider-receipt]')!;
@@ -233,6 +236,13 @@ export function initializeDevcon26PaymentConfirmation(
     status.setAttribute('aria-busy', String(state === 'loading'));
     receipt.hidden = state !== 'verified';
     attention.hidden = state !== 'refund_required';
+    if (recovery) recovery.hidden = state !== 'access_lost';
+
+    if (state !== 'access_lost') {
+      if (recoveryReference) recoveryReference.textContent = '';
+      recoveryContact?.setAttribute('href', 'mailto:hello@devcongress.org?subject=DevCon26%20payment');
+    }
+
     retry.hidden = !canRetry;
     retry.disabled = state === 'loading';
     document.title = heading + ' | DevCon26';
@@ -305,7 +315,16 @@ export function initializeDevcon26PaymentConfirmation(
           }
         }
 
-        if (!buyerGrant && !flexibleGrant) throw new Error('Secure checkout access is unavailable in this browser session.');
+        if (!buyerGrant && !flexibleGrant) {
+          showState('access_lost', 'Can’t access your checkout', 'This browser can’t check your payment. Open the link in your ticket email, or contact us with the reference below.');
+          const buyerReference = devcon26BuyerReference(reference);
+
+          if (recoveryReference) recoveryReference.textContent = buyerReference;
+          recoveryContact?.setAttribute('href', 'mailto:hello@devcongress.org?subject='
+            + encodeURIComponent('DevCon26 payment — ' + buyerReference));
+
+          return;
+        }
       }
 
       const verifyPath = managedCheckout ? MANAGED_VERIFY_PATH

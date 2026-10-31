@@ -20,6 +20,8 @@ interface Props {
   youtubeEmbedUrl: string;
 }
 const { hero, slackUrl, donationPath, youtubeEmbedUrl } = Astro.props;
+const highlightGrowth = /\bgrow\.$/.test(hero.headline);
+const headlinePrefix = highlightGrowth ? hero.headline.slice(0, -5) : hero.headline;
 
 const colorClass: Record<string, string> = {
   pink:    'btn-primary',
@@ -34,7 +36,7 @@ const colorClass: Record<string, string> = {
     <div class="hero-top">
       <div class="hero-copy">
         <span class="eyebrow">{hero.eyebrow}</span>
-        <h1 class="heading-display hero-headline">{hero.headline}</h1>
+        <h1 class="heading-display hero-headline">{headlinePrefix}{highlightGrowth && <span class="growth-accent" data-growth-accent>grow.<svg viewBox="0 0 160 16" fill="none" aria-hidden="true" focusable="false"><path d="M5 8 Q76 1 155 10" stroke="currentColor" stroke-width="4" stroke-linecap="round" /></svg></span>}</h1>
         <p class="hero-invitation">We connect all year. This December, we come together at <strong>DevCon26.</strong></p>
         <div class="hero-conference-meta">
           <time datetime="2026-12-19">19 December 2026</time>
@@ -95,6 +97,24 @@ const colorClass: Record<string, string> = {
   </div>
 </section>
 
+<script>
+  if ('IntersectionObserver' in window) {
+    const observer = new IntersectionObserver((entries) => {
+      for (const entry of entries) {
+        if (!entry.isIntersecting) continue;
+
+        entry.target.classList.add('growth-accent--visible');
+        observer.unobserve(entry.target);
+      }
+    }, { threshold: 0.5 });
+
+    document.querySelectorAll('[data-growth-accent]').forEach((element) => {
+      element.classList.add('growth-accent--ready');
+      observer.observe(element);
+    });
+  }
+</script>
+
 <style>
   .hero {
     padding-top: clamp(3rem, 6vw, 5rem);
@@ -119,6 +139,28 @@ const colorClass: Record<string, string> = {
     margin-bottom: var(--s5);
     letter-spacing: -0.03em;
     text-wrap: balance;
+  }
+
+  .growth-accent {
+    position: relative;
+    display: inline-block;
+    color: var(--pink);
+    white-space: nowrap;
+  }
+
+  .growth-accent svg {
+    position: absolute;
+    inset: auto 0 -0.14em;
+    width: 100%;
+    height: 0.18em;
+    pointer-events: none;
+    transform-origin: left center;
+    transition: transform 280ms cubic-bezier(0.16, 1, 0.3, 1), opacity 280ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .growth-accent--ready:not(.growth-accent--visible) svg {
+    transform: scaleX(0);
+    opacity: 0;
   }
 
   .hero-invitation {
@@ -291,6 +333,12 @@ const colorClass: Record<string, string> = {
   }
 
   @media (prefers-reduced-motion: reduce) {
+    .growth-accent svg {
+      transition: none;
+      transform: none !important;
+      opacity: 1 !important;
+    }
+
     .btn-hero, .btn-hero > span {
       transition: none;
       transform: none !important;

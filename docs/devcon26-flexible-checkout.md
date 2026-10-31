@@ -129,3 +129,9 @@ Below 821px, progress uses the current step name, step count and three segments.
 ### Post-payment photo adjustment
 
 The payment badge editor opens the photo adjuster after a new image is selected and exposes Adjust photo in both editing and preview steps. Zoom and horizontal/vertical position use the existing seat card crop API (`scale`, `x`, `y`). Saving waits for the selected seat's upload, persists its crop, and preserves retry controls on failure. Previously saved crops are restored when reopening the editor. Desktop uses side-by-side controls; mobile stacks the preview and 44px controls within a scrollable dialog.
+
+## Failure recovery
+
+An order that cannot accept payment retains its request identity; the buyer is directed to check email or contact the organizer before starting again. The payment confirmation page hides Retry if its browser grant is absent and directs the buyer to their private ticket email. This does not infer that payment failed or authorize a new charge. The admission backend separately reconciles stored payment references.
+
+The missing-access state uses a centered, narrow layout on the existing cream background, with a fixed-size ticket-and-envelope illustration beside the heading on desktop and mobile. It displays the buyer-formatted reference as a support identifier and includes it in the contact-email subject; it is not proof of payment. Other confirmation states hide and clear these recovery details.

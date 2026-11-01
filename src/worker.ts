@@ -1,6 +1,7 @@
 /// <reference types="@cloudflare/workers-types" />
 
-import { ATTENDANCE_PATH, ATTENDANCE_RELAY_PATH, DEFAULT_API_ORIGIN, publishedAttendance } from './lib/devcon26-attendance-counter';
+import { ATTENDANCE_RELAY_PATH } from './lib/devcon26-attendance-counter';
+import { serveAttendanceCounter } from './lib/devcon26-attendance-relay';
 import { renderPublicBadgePage, renderPublicBadgeSvg } from './lib/devcon26-public-badge';
 import { PHYSICAL_BADGE_PATH } from './lib/devcon26-digital-badge';
 import { createEventsCalendar, createSingleEventCalendar } from './lib/event-calendar';
@@ -22,10 +23,6 @@ const SOCIAL_CARD_ROUTE = /^\/devcon26\/cards\/([A-Za-z0-9_-]{22,80})\/?$/;
 const SOCIAL_CARD_IMAGE_ROUTE = /^\/devcon26\/cards\/([A-Za-z0-9_-]{22,80})\/image\/?$/;
 const SOCIAL_CARD_PREVIEW_ROUTE = /^\/devcon26\/cards\/([A-Za-z0-9_-]{22,80})\/preview\.svg\/?$/;
 const CALENDAR_PATH = '/events/calendar.ics';
-const PROGRAMME_RELAY_PATH = '/__public/devcon26/programme';
-const PROGRAMME_UPSTREAM = 'https://em.devcongress.org/api/public/annual-conference/2026/programme';
-const WEBSITE_PREVIEW_HOST = /^[a-z0-9-]+-devcongress-website\.admins-a7d\.workers\.dev$/;
-const PROGRAMME_MAX_BYTES = 1024 * 1024;
 const EVENT_SHELL_PATH = '/events/';
 const SUPPORT_PATHS = new Set(['/support', '/support/']);
 const SUPPORT_URL = 'https://pages.inttegro.com/buy/sale_eLiPUNAEjfeHZOX4VHQPuy0oJWQT6n0g7Bdof5rr';
@@ -93,28 +90,6 @@ export default {
     return env.ASSETS.fetch(request);
   },
 };
-
-async function serveAttendanceCounter(): Promise<Response> {
-  try {
-    const upstream = await fetch(new URL(ATTENDANCE_PATH, DEFAULT_API_ORIGIN), {
-      method: 'GET',
-      headers: { Accept: 'application/json' },
-      cache: 'no-store',
-      redirect: 'manual',
-      signal: AbortSignal.timeout(12_000),
-    });
-
-    if (!upstream.ok) throw new Error('Attendance unavailable');
-
-    const attendance = publishedAttendance(await upstream.json());
-
-    return Response.json(attendance ?? { count: null, source: null }, {
-      headers: { 'Cache-Control': 'no-store' },
-    });
-  } catch {
-    return new Response(null, { status: 503, headers: { 'Cache-Control': 'no-store' } });
-  }
-}
 
 async function serveLiveSocialCardPage(request: Request, slug: string): Promise<Response> {
   if (!isDevcon26SocialCardSlug(slug)) return notFound();

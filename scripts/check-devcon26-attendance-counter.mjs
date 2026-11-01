@@ -39,6 +39,10 @@ assert.equal(attendanceEndpoint('https://user:pass@example.com', 'https://devcon
 assert.equal(attendanceEndpoint('https://example.com/path', 'https://devcongress.org'), null);
 assert.equal(attendanceEndpoint('http://example.com', 'https://devcongress.org'), null);
 assert.equal(attendanceEndpoint('https://em.devcongress.org', 'https://abc-devcongress-website.admins-a7d.workers.dev'), '/api/devcon26/attendance-counter');
+for (const localOrigin of ['http://localhost:4321', 'http://127.0.0.1:4321', 'http://[::1]:4321']) {
+  assert.equal(attendanceEndpoint('https://em.devcongress.org', localOrigin), '/api/devcon26/attendance-counter');
+}
+assert.equal(attendanceEndpoint('http://localhost:8787', 'http://localhost:4321'), 'http://localhost:8787/api/public/annual-conference/2026/attendance-counter');
 assert.equal(attendanceEndpoint('https://em.devcongress.org', 'https://unrelated.example'), 'https://em.devcongress.org/api/public/annual-conference/2026/attendance-counter');
 assert.equal(attendanceEndpoint('https://em.devcongress.org', 'https://devcongress.org'), 'https://em.devcongress.org/api/public/annual-conference/2026/attendance-counter');
 
@@ -60,6 +64,26 @@ for (const [input, label, estimated] of [
   assert.equal(root.count.textContent, label);
   assert.equal(root.estimate.hidden, !estimated);
 }
+for (const [variant, count, expected] of [
+  ['sticker', 1, '1 person is coming'],
+  ['hanging', 1250, '1,250 people are coming'],
+]) {
+  payload = { count, source: 'actual' };
+  const elements = {
+    '[data-attendance-count]': { textContent: '' },
+    '[data-attendance-sizer]': { textContent: '' },
+    '[data-attendance-wording]': { textContent: '' },
+    '[data-attendance-label]': { textContent: '' },
+  };
+  const root = { hidden: true, style: { setProperty() {} }, dataset: { attendanceVariant: variant }, querySelector: (selector) => elements[selector] };
+
+  await initializeAttendanceCounter([root], 'https://em.devcongress.org');
+  assert.equal(root.hidden, false);
+  assert.equal(elements['[data-attendance-label]'].textContent, expected);
+  assert.equal(elements['[data-attendance-count]'].textContent, count.toLocaleString('en-GH'));
+  assert.equal(elements['[data-attendance-sizer]'].textContent, count.toLocaleString('en-GH'));
+}
+
 for (const input of [{ count: null, source: null }, { count: 1, source: null }, { count: null, source: 'actual' }, { count: -1, source: 'actual' }]) {
   payload = input;
   const root = fixture();

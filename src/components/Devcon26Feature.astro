@@ -8,11 +8,13 @@ import AttendanceCounter from './AttendanceCounter.astro';
       <span class="devcon-feature-label">DevCon26</span>
       <h2 class="heading-display" id="devcon26-feature-title">See you at our big gathering.</h2>
       <p class="devcon-feature-meta">
-        <time datetime="2026-12-19">19 December 2026</time> · Ghana Digital Center, Accra
+        <time datetime="2026-12-19">19 December 2026</time> · Accra Digital Center
       </p>
-      <AttendanceCounter />
     </div>
-    <a class="devcon-feature-cta" href="/devcon26/#tickets">Buy tickets <span aria-hidden="true">↗</span></a>
+    <div class="devcon-feature-actions">
+      <AttendanceCounter variant="sticker" />
+      <a class="devcon-feature-cta" href="/devcon26/#tickets">Buy tickets <span aria-hidden="true">↗</span></a>
+    </div>
   </div>
 </section>
 
@@ -22,10 +24,7 @@ import AttendanceCounter from './AttendanceCounter.astro';
     grid-template-columns: minmax(0, 1fr) auto;
     align-items: center;
     gap: var(--s5);
-    padding: var(--s5) var(--s6);
-    border: 2px solid var(--black);
-    border-radius: var(--r-md);
-    background: var(--yellow-bg);
+    padding: var(--s5) 0;
   }
 
   .devcon-feature-copy {
@@ -58,6 +57,12 @@ import AttendanceCounter from './AttendanceCounter.astro';
   .devcon-feature-meta time {
     color: var(--text);
     font-weight: 600;
+  }
+
+  .devcon-feature-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--s7);
   }
 
   .devcon-feature-cta {
@@ -94,17 +99,23 @@ import AttendanceCounter from './AttendanceCounter.astro';
     .devcon-feature-cta:hover > span {
       transform: translate(2px, -2px);
     }
+  }
 
-    .devcon-feature-cta:hover {
-      text-decoration: underline;
-      text-underline-offset: 4px;
+  @media (min-width: 1100px) {
+    .devcon-feature-inner {
+      padding-inline-end: var(--s7);
     }
   }
 
   @media (max-width: 640px) {
     .devcon-feature-inner {
       grid-template-columns: minmax(0, 1fr);
-      padding: var(--s5);
+      gap: var(--s6);
+    }
+
+    .devcon-feature-actions {
+      flex-wrap: wrap;
+      gap: var(--s6);
     }
 
     .devcon-feature-cta {

@@ -3,7 +3,6 @@ import { getCollection } from 'astro:content';
 import Base from '../../layouts/Base.astro';
 import Devcon26HomeLink from '../../components/Devcon26HomeLink.astro';
 
-const speakerSlots = ['01', '02', '03'];
 const heroScenes = [
   {
     label: 'The April community gathered together',
@@ -121,7 +120,7 @@ heroSlots[0].photos.push({
 
 const faqs = [
   ['Who is DevCon26 for?', 'For the people building technology across Africa: developers, designers, founders, product people, researchers, and students.'],
-  ['When and where is it?', 'Meet us at Ghana Digital Center (formerly Accra Digital Center), Accra, Ghana on 19 December 2026. The programme will be announced here.'],
+  ['When and where is it?', 'Meet us at Ghana Digital Center (formerly Accra Digital Center), Accra, Ghana on 19 December 2026. See the programme above for the latest schedule.'],
   ['Can I come with my team?', 'Yes. Buy individual tickets together in one checkout, then choose who each ticket is for. Each ticket admits one person.'],
   ['How do I get a ticket?', 'Go to ticket checkout, choose your tickets, and complete payment. Your ticket email includes a QR ticket PDF and a link to personalize your conference badge.'],
 ];
@@ -278,12 +277,12 @@ function packageEnquiryLink(sponsorship: (typeof sponsorshipPackages)[number]) {
           <h2 id="day-title">The work<br />behind <em>the work.</em></h2>
           <p class="day-description">The honest question after a talk. The story you needed to hear. The person who’s been figuring out the same thing as you.</p>
           <p class="day-description">We’re shaping DevCon26 around useful stories and enough time to talk to the people in the room.</p>
-          <aside class="programme-note">
-            <span class="note-fold" aria-hidden="true">↗</span>
-            <p class="section-caption">A note on the programme</p>
-            <h3>Still taking shape.<br />Worth the wait.</h3>
-            <p>Speakers, workshops, and sessions will be announced here as they are confirmed.</p>
-          </aside>
+          <div class="programme" data-programme aria-busy="false">
+            <h3>Programme</h3>
+            <p class="programme-status" data-programme-status role="status" hidden></p>
+            <ol class="programme-list" data-programme-list></ol>
+            <noscript><p>Enable JavaScript to see the latest programme.</p></noscript>
+          </div>
         </div>
       </section>
 
@@ -295,36 +294,10 @@ function packageEnquiryLink(sponsorship: (typeof sponsorshipPackages)[number]) {
             <a class="button button-primary" href="/devcon26/speak/">Apply to speak <span aria-hidden="true">↗</span></a>
           </div>
         </div>
-        <div class="speaker-grid">
-          {speakerSlots.map((slot) => (
-            <article class="speaker-card">
-              <div class="speaker-placeholder" aria-hidden="true">
-                <span class="speaker-number">{slot}</span>
-                <svg class="speaker-art" viewBox="0 0 160 160" fill="none" stroke="currentColor" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
-                  {slot === '01' ? (
-                    <>
-                      <rect x="56" y="20" width="48" height="80" rx="24" />
-                      <path d="M40 74v6a40 40 0 0 0 80 0v-6M80 120v20M60 140h40" />
-                      <path d="M72 40h16M72 54h16" stroke-width="5" />
-                    </>
-                  ) : slot === '02' ? (
-                    <>
-                      <path d="M32 28h62a18 18 0 0 1 18 18v30a18 18 0 0 1-18 18H58l-26 22V94a18 18 0 0 1-18-18V46a18 18 0 0 1 18-18Z" />
-                      <path d="M112 60h16a18 18 0 0 1 18 18v30a18 18 0 0 1-18 18v18l-24-18H82a18 18 0 0 1-18-18v-6" />
-                      <path d="M40 60h44" stroke-width="5" />
-                    </>
-                  ) : (
-                    <>
-                      <path d="M20 70v20M40 52v56M60 32v96M80 20v120M100 42v76M120 58v44M140 72v16" />
-                    </>
-                  )}
-                </svg>
-                <small>Next voice, coming soon.</small>
-              </div>
-              <p class="speaker-status">Speaker announcement</p>
-              <h3>To be announced</h3>
-            </article>
-          ))}
+        <div data-programme-speakers aria-busy="false">
+          <p class="speakers-status" data-speakers-status role="status" hidden></p>
+          <ul class="speaker-list" data-speakers-list></ul>
+          <noscript><p>Enable JavaScript to see the latest speakers.</p></noscript>
         </div>
       </section>
 
@@ -534,11 +507,16 @@ function packageEnquiryLink(sponsorship: (typeof sponsorshipPackages)[number]) {
 
 <script>
   import { initDevcon26HeroSlideshow } from '../../lib/devcon26-hero-slideshow';
+  import { initializeDevcon26Programme } from '../../lib/devcon26-programme';
   import { initDevcon26ScrollReveals } from '../../lib/devcon26-scroll-reveals';
 
   const slideshow = document.querySelector<HTMLElement>('[data-hero-slideshow]');
   const revealPage = document.querySelector<HTMLElement>('.devcon-page');
 
+  initializeDevcon26Programme(
+    document.querySelector<HTMLElement>('[data-programme]'),
+    document.querySelector<HTMLElement>('[data-programme-speakers]'),
+  );
   if (slideshow) initDevcon26HeroSlideshow(slideshow);
   if (revealPage) initDevcon26ScrollReveals(revealPage);
 </script>
@@ -900,37 +878,72 @@ function packageEnquiryLink(sponsorship: (typeof sponsorshipPackages)[number]) {
     margin-top: 16px;
   }
 
-  .programme-note {
-    position: relative;
-    max-width: 380px;
-    margin: 38px 0 0 34px;
-    padding: 30px;
-    border-radius: 6px;
-    background: var(--dc-yellow);
-    box-shadow: 0 3px 3px rgb(0 0 0 / 0.03), 0 13px 24px rgb(0 0 0 / 0.06);
-    transform: rotate(3deg);
+  .programme {
+    margin-top: 38px;
   }
 
-  .note-fold {
-    position: absolute;
-    top: 12px;
-    right: 20px;
+  .programme h3 {
     font-size: 32px;
   }
 
-  .programme-note .section-caption {
-    padding-right: 25px;
-    font-size: var(--dc-text-meta);
-  }
-
-  .programme-note h3 {
-    font-size: 32px;
-  }
-
-  .programme-note > p:last-child {
-    margin-top: 18px;
-    font-size: 14px;
+  .programme-status {
+    margin-top: 16px;
+    color: var(--dc-muted);
     line-height: 1.6;
+  }
+
+  .programme-list {
+    margin: 20px 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .programme-list :global(li) {
+    display: grid;
+    grid-template-columns: minmax(76px, 110px) minmax(0, 1fr);
+    gap: 16px;
+    padding: 20px 0;
+    border-top: 1px solid currentColor;
+  }
+
+  .programme-list :global(.programme-time) {
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  .programme-list :global(h4) {
+    font-size: 20px;
+    line-height: 1.25;
+  }
+
+  .programme-list :global(p) {
+    margin-top: 8px;
+    color: var(--dc-muted);
+    line-height: 1.55;
+    white-space: pre-line;
+    overflow-wrap: anywhere;
+  }
+
+  :global(.programme-speakers) {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 16px;
+    margin-top: 14px;
+  }
+
+  :global(.programme-speaker) {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  :global(.programme-speaker img) {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
   }
 
   .speakers-section {
@@ -957,82 +970,38 @@ function packageEnquiryLink(sponsorship: (typeof sponsorshipPackages)[number]) {
     gap: 20px;
   }
 
-  .speaker-grid {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 36px;
-    margin: 50px 35px 0;
-    align-items: start;
-  }
-
-  .speaker-card:nth-child(2) {
-    margin-top: 62px;
-  }
-
-  .speaker-card:nth-child(3) {
-    margin-top: 20px;
-  }
-
-  .speaker-placeholder {
-    position: relative;
-    display: flex;
-    aspect-ratio: 1.08;
-    flex-direction: column;
-    justify-content: space-between;
-    overflow: hidden;
-    padding: 23px;
-    border-radius: 8px;
-    background: var(--dc-ink);
-    color: var(--dc-paper-light);
-  }
-
-  .speaker-number {
-    font-size: var(--dc-text-meta);
-    font-weight: 600;
-  }
-
-  .speaker-art {
-    position: absolute;
-    align-self: center;
-    top: 18%;
-    width: 58%;
-    max-width: 160px;
-    height: auto;
-    color: var(--dc-yellow);
-    pointer-events: none;
-    transform: rotate(-10deg);
-  }
-
-  .speaker-card:nth-child(2) .speaker-placeholder {
-    background: var(--dc-yellow);
-    color: var(--dc-ink);
-  }
-
-  .speaker-card:nth-child(2) .speaker-art {
-    color: var(--dc-ink);
-    transform: rotate(8deg);
-  }
-
-  .speaker-card:nth-child(3) .speaker-art {
-    color: oklch(0.76 0.14 354);
-    transform: rotate(-4deg);
-  }
-
-  .speaker-placeholder small {
-    position: relative;
-    font-size: var(--dc-text-meta);
-  }
-
-  .speaker-status {
-    margin-top: 18px;
+  .speakers-status {
+    margin-top: 32px;
     color: var(--dc-muted);
-    font-size: var(--dc-text-meta);
+    line-height: 1.6;
   }
 
-  .speaker-card h3 {
-    margin-top: 7px;
+  .speaker-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+    gap: 16px;
+    margin: 40px 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .speaker-list :global(li) {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px 0;
+    border-top: 1px solid currentColor;
     font-size: var(--dc-text-card);
-    letter-spacing: var(--tracking-heading);
+    font-weight: 700;
+    overflow-wrap: anywhere;
+  }
+
+  .speaker-list :global(img) {
+    width: 56px;
+    height: 56px;
+    flex: none;
+    border-radius: 50%;
+    object-fit: cover;
   }
 
   .location-section {
@@ -2017,11 +1986,6 @@ function packageEnquiryLink(sponsorship: (typeof sponsorshipPackages)[number]) {
       gap: 38px;
     }
 
-    .speaker-grid {
-      gap: 25px;
-      margin-inline: 0;
-    }
-
     .sponsors-section {
       column-gap: 40px;
     }
@@ -2226,10 +2190,8 @@ function packageEnquiryLink(sponsorship: (typeof sponsorshipPackages)[number]) {
       margin-top: 20px;
     }
 
-    .programme-note {
-      max-width: calc(100% - 20px);
-      margin: 30px 0 0 10px;
-      padding: 26px;
+    .programme {
+      margin-top: 30px;
     }
 
     .speakers-section {
@@ -2241,54 +2203,9 @@ function packageEnquiryLink(sponsorship: (typeof sponsorshipPackages)[number]) {
       gap: 22px;
     }
 
-    .speaker-grid {
+    .speaker-list {
       grid-template-columns: minmax(0, 1fr);
-      gap: 24px;
-      margin: 30px 0 0;
-    }
-
-    .speaker-card,
-    .speaker-card:nth-child(2),
-    .speaker-card:nth-child(3) {
-      display: grid;
-      grid-template-columns: 112px minmax(0, 1fr);
-      grid-template-rows: 1fr 1fr;
-      gap: 6px 18px;
-      margin: 0;
-    }
-
-    .speaker-placeholder {
-      grid-row: 1 / 3;
-      aspect-ratio: 1;
-      padding: 12px;
-    }
-
-    .speaker-number {
-      font-size: 12px;
-    }
-
-    .speaker-art {
-      top: 28%;
-      width: 58%;
-      max-width: 72px;
-    }
-
-    .speaker-placeholder small {
-      display: none;
-    }
-
-    .speaker-status {
-      align-self: end;
-      margin: 0;
-      font-size: 13px;
-      line-height: 1.4;
-    }
-
-    .speaker-card h3 {
-      align-self: start;
-      margin: 0;
-      font-size: 20px;
-      line-height: 1.2;
+      margin-top: 30px;
     }
 
     .location-section {

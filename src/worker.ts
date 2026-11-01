@@ -21,6 +21,10 @@ const SOCIAL_CARD_ROUTE = /^\/devcon26\/cards\/([A-Za-z0-9_-]{22,80})\/?$/;
 const SOCIAL_CARD_IMAGE_ROUTE = /^\/devcon26\/cards\/([A-Za-z0-9_-]{22,80})\/image\/?$/;
 const SOCIAL_CARD_PREVIEW_ROUTE = /^\/devcon26\/cards\/([A-Za-z0-9_-]{22,80})\/preview\.svg\/?$/;
 const CALENDAR_PATH = '/events/calendar.ics';
+const PROGRAMME_RELAY_PATH = '/__public/devcon26/programme';
+const PROGRAMME_UPSTREAM = 'https://em.devcongress.org/api/public/annual-conference/2026/programme';
+const WEBSITE_PREVIEW_HOST = /^[a-z0-9-]+-devcongress-website\.admins-a7d\.workers\.dev$/;
+const PROGRAMME_MAX_BYTES = 1024 * 1024;
 const EVENT_SHELL_PATH = '/events/';
 const SUPPORT_PATHS = new Set(['/support', '/support/']);
 const SUPPORT_URL = 'https://pages.inttegro.com/buy/sale_eLiPUNAEjfeHZOX4VHQPuy0oJWQT6n0g7Bdof5rr';
@@ -33,6 +37,17 @@ const READINESS_CACHE_MARKER = '1';
 export default {
   async fetch(request: Request, env: Env, context: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
+
+    if (url.pathname === PROGRAMME_RELAY_PATH) {
+      if (!WEBSITE_PREVIEW_HOST.test(url.hostname)) return notFound();
+      if (request.method !== 'GET') {
+        return new Response('Method not allowed', {
+          status: 405,
+          headers: { Allow: 'GET', 'Cache-Control': 'no-store' },
+        });
+      }
+      return servePreviewProgramme();
+    }
 
     if (SUPPORT_PATHS.has(url.pathname)) {
       return Response.redirect(SUPPORT_URL, 307);
@@ -77,6 +92,61 @@ export default {
     return env.ASSETS.fetch(request);
   },
 };
+
+async function servePreviewProgramme(): Promise<Response> {
+  try {
+    const upstream = await fetch(PROGRAMME_UPSTREAM, {
+      method: 'GET',
+      headers: { Accept: 'application/json' },
+      redirect: 'manual',
+      signal: AbortSignal.timeout(12_000),
+    });
+
+    const contentType = upstream.headers.get('Content-Type')?.split(';')[0].trim().toLowerCase();
+
+    if (!upstream.ok || !upstream.body || contentType !== 'application/json') {
+      return serviceUnavailable('Programme temporarily unavailable');
+    }
+
+    const reader = upstream.body.getReader();
+    const chunks: Uint8Array[] = [];
+    let total = 0;
+
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+
+        if (done) break;
+        total += value.byteLength;
+        if (total > PROGRAMME_MAX_BYTES) {
+          await reader.cancel();
+          return serviceUnavailable('Programme temporarily unavailable');
+        }
+        chunks.push(value);
+      }
+    } finally {
+      reader.releaseLock();
+    }
+
+    const body = new Uint8Array(total);
+    let offset = 0;
+
+    for (const chunk of chunks) {
+      body.set(chunk, offset);
+      offset += chunk.byteLength;
+    }
+
+    return new Response(body, {
+      headers: {
+        'Content-Type': 'application/json; charset=utf-8',
+        'Cache-Control': 'no-store',
+        'X-Content-Type-Options': 'nosniff',
+      },
+    });
+  } catch {
+    return serviceUnavailable('Programme temporarily unavailable');
+  }
+}
 
 async function serveLiveSocialCardPage(request: Request, slug: string): Promise<Response> {
   if (!isDevcon26SocialCardSlug(slug)) return notFound();

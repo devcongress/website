@@ -2,6 +2,7 @@
 import { getCollection } from 'astro:content';
 import Base from '../../layouts/Base.astro';
 import Devcon26HomeLink from '../../components/Devcon26HomeLink.astro';
+import AttendanceCounter from '../../components/AttendanceCounter.astro';
 
 const speakerSlots = ['01', '02', '03'];
 const heroScenes = [
@@ -229,6 +230,7 @@ function packageEnquiryLink(sponsorship: (typeof sponsorshipPackages)[number]) {
             <a class="button button-primary" href="#tickets">Buy tickets <span aria-hidden="true">↗</span></a>
             <p>19 December 2026<br /><strong>Ghana Digital Center (formerly Accra Digital Center), Accra</strong></p>
           </div>
+          <AttendanceCounter />
         </div>
 
         <div class="hero-images" data-hero-slideshow role="group" aria-label="DevCongress gatherings throughout the year">

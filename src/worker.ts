@@ -1,5 +1,6 @@
 /// <reference types="@cloudflare/workers-types" />
 
+import { ATTENDANCE_PATH, ATTENDANCE_RELAY_PATH, DEFAULT_API_ORIGIN, publishedAttendance } from './lib/devcon26-attendance-counter';
 import { renderPublicBadgePage, renderPublicBadgeSvg } from './lib/devcon26-public-badge';
 import { PHYSICAL_BADGE_PATH } from './lib/devcon26-digital-badge';
 import { createEventsCalendar } from './lib/event-calendar';
@@ -33,6 +34,11 @@ const READINESS_CACHE_MARKER = '1';
 export default {
   async fetch(request: Request, env: Env, context: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
+
+    if (url.pathname === ATTENDANCE_RELAY_PATH) {
+      if (request.method !== 'GET') return methodNotAllowed();
+      return serveAttendanceCounter();
+    }
 
     if (SUPPORT_PATHS.has(url.pathname)) {
       return Response.redirect(SUPPORT_URL, 307);
@@ -77,6 +83,28 @@ export default {
     return env.ASSETS.fetch(request);
   },
 };
+
+async function serveAttendanceCounter(): Promise<Response> {
+  try {
+    const upstream = await fetch(new URL(ATTENDANCE_PATH, DEFAULT_API_ORIGIN), {
+      method: 'GET',
+      headers: { Accept: 'application/json' },
+      cache: 'no-store',
+      redirect: 'error',
+      signal: AbortSignal.timeout(12_000),
+    });
+
+    if (!upstream.ok) throw new Error('Attendance unavailable');
+
+    const attendance = publishedAttendance(await upstream.json());
+
+    return Response.json(attendance ?? { count: null, source: null }, {
+      headers: { 'Cache-Control': 'no-store' },
+    });
+  } catch {
+    return new Response(null, { status: 503, headers: { 'Cache-Control': 'no-store' } });
+  }
+}
 
 async function serveLiveSocialCardPage(request: Request, slug: string): Promise<Response> {
   if (!isDevcon26SocialCardSlug(slug)) return notFound();

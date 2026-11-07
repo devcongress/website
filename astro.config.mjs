@@ -1,5 +1,6 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
+import { localAttendanceRelay } from './scripts/local-attendance-relay.mjs';
 import { localCfpProxy } from './scripts/local-cfp-proxy.mjs';
 
 export default defineConfig({
@@ -7,7 +8,7 @@ export default defineConfig({
   base: '/',
   output: 'static',
   vite: {
-    plugins: [localCfpProxy()],
+    plugins: [localCfpProxy(), localAttendanceRelay()],
   },
   markdown: {
     syntaxHighlight: false,

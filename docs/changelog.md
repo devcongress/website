@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-11-07 — Add online events to calendars
+
+- Add individual online events to Google Calendar or download an .ics file for Apple Calendar, Outlook and other apps, including the public meeting link. Preserve registration and live viewing actions.
+
 ## 2026-10-31 — Mobile DevCon26 hero
 
 - Keep the theme on two centred lines with a compact centred tagline, tighter introduction spacing and a centred content-sized ticket button on mobile. Centre the date and balance the wrapped venue text beneath it. Preserve the exact approved wording and desktop layout.

@@ -1,8 +1,10 @@
 /// <reference types="@cloudflare/workers-types" />
 
+import { ATTENDANCE_RELAY_PATH } from './lib/devcon26-attendance-counter';
+import { serveAttendanceCounter } from './lib/devcon26-attendance-relay';
 import { renderPublicBadgePage, renderPublicBadgeSvg } from './lib/devcon26-public-badge';
 import { PHYSICAL_BADGE_PATH } from './lib/devcon26-digital-badge';
-import { createEventsCalendar } from './lib/event-calendar';
+import { createEventsCalendar, createSingleEventCalendar } from './lib/event-calendar';
 import {
   fetchLiveDevcon26SocialCard,
   fetchLiveDevcon26SocialCardImage,
@@ -34,6 +36,11 @@ export default {
   async fetch(request: Request, env: Env, context: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
 
+    if (url.pathname === ATTENDANCE_RELAY_PATH) {
+      if (request.method !== 'GET') return methodNotAllowed();
+      return serveAttendanceCounter();
+    }
+
     if (SUPPORT_PATHS.has(url.pathname)) {
       return Response.redirect(SUPPORT_URL, 307);
     }
@@ -41,6 +48,12 @@ export default {
     if (url.pathname === CALENDAR_PATH) {
       if (!isReadableMethod(request.method)) return methodNotAllowed();
       return serveLiveCalendar(request, context);
+    }
+
+    const eventCalendarMatch = url.pathname.match(/^\/events\/([a-zA-Z0-9][a-zA-Z0-9_-]{0,239})\/calendar\.ics$/);
+    if (eventCalendarMatch) {
+      if (!isReadableMethod(request.method)) return methodNotAllowed();
+      return serveSingleEventCalendar(request, eventCalendarMatch[1], context);
     }
 
     const socialCardImageMatch = url.pathname.match(SOCIAL_CARD_IMAGE_ROUTE);
@@ -271,6 +284,29 @@ function readinessResponseFromCache(response: Response, method: string): Respons
     status: 204,
     headers,
   });
+}
+
+async function serveSingleEventCalendar(request: Request, slug: string, context: ExecutionContext): Promise<Response> {
+  const cacheKey = createCacheKey(request);
+  const cachedResponse = await readCache(cacheKey);
+  if (cachedResponse) return responseForMethod(cachedResponse, request.method);
+
+  try {
+    const event = await fetchLivePublicEvent(slug);
+    if (!event) return notFound();
+    const response = new Response(createSingleEventCalendar(event), {
+      headers: {
+        ...cacheHeaders(CALENDAR_CACHE_SECONDS),
+        'Content-Type': 'text/calendar; charset=utf-8',
+        'Content-Disposition': `attachment; filename="${slug}.ics"`,
+      },
+    });
+    cacheResponse(context, cacheKey, response);
+    return responseForMethod(response, request.method);
+  } catch (error) {
+    console.error(JSON.stringify({ event: 'public_event_calendar_lookup_failed', slug, error_name: error instanceof Error ? error.name : 'Error' }));
+    return serviceUnavailable('Public event calendar temporarily unavailable');
+  }
 }
 
 async function serveLiveCalendar(request: Request, context: ExecutionContext): Promise<Response> {

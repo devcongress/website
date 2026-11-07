@@ -1,0 +1,227 @@
+---
+interface Props {
+  variant?: 'plain' | 'sticker' | 'hanging';
+}
+
+const { variant = 'plain' } = Astro.props;
+---
+
+{variant !== 'plain' ? (
+  <div class:list={['attendance-sticker', { 'attendance-hanging': variant === 'hanging' }]} data-attendance-counter data-attendance-variant={variant} hidden>
+    {variant === 'sticker' && <svg class="attendance-sticker-rays" viewBox="0 0 48 40" fill="none" aria-hidden="true">
+      <path d="M4 20V9M20 14L25 2M32 22L43 15" stroke="currentColor" stroke-width="3" stroke-linecap="round" />
+    </svg>}
+    <div class="attendance-sticker-face" aria-hidden="true">
+      <strong class="attendance-sticker-number"><span data-attendance-sizer></span><span data-attendance-count></span></strong>
+      <span data-attendance-wording></span>
+    </div>
+    <span class="visually-hidden" data-attendance-label></span>
+  </div>
+) : (
+  <p class="attendance-counter" data-attendance-counter hidden>
+    <strong data-attendance-count></strong>
+    <span data-attendance-estimate hidden>Estimated turnout</span>
+  </p>
+)}
+
+<script>
+  import { initializeAttendanceCounter } from '../lib/devcon26-attendance-counter';
+
+  initializeAttendanceCounter(
+    document.querySelectorAll<HTMLElement>('[data-attendance-counter]'),
+    import.meta.env.PUBLIC_DEVCON26_API_ORIGIN?.trim() || 'https://em.devcongress.org',
+  );
+</script>
+
+<style>
+  .attendance-counter {
+    margin-top: 12px;
+    color: var(--text);
+    font-size: var(--text-sm);
+    line-height: 1.4;
+  }
+
+  .attendance-counter span {
+    color: var(--text-mid);
+    font-weight: 400;
+  }
+
+  .attendance-counter span:not([hidden])::before {
+    content: ' · ';
+  }
+
+  .attendance-sticker {
+    position: relative;
+    flex: 0 0 auto;
+    transform: rotate(-6deg);
+  }
+
+  .attendance-sticker[hidden] {
+    display: none;
+  }
+
+  .attendance-sticker-face {
+    display: flex;
+    min-width: 160px;
+    min-height: 140px;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: var(--s4) var(--s5);
+    border: 2px solid var(--black);
+    border-radius: var(--r-lg);
+    outline: 1px dashed var(--pink);
+    outline-offset: -8px;
+    background: var(--pink-light);
+    text-align: center;
+  }
+
+  .attendance-sticker-number {
+    display: grid;
+    color: #a80058;
+    font-family: var(--font-display);
+    font-size: min(clamp(2.5rem, 5vw, 3.5rem), var(--attendance-number-limit, 3.5rem));
+    font-variant-numeric: tabular-nums;
+    font-weight: 800;
+    line-height: 1;
+  }
+
+  .attendance-sticker-number > span {
+    grid-area: 1 / 1;
+    margin: 0;
+    font: inherit;
+    white-space: nowrap;
+  }
+
+  .attendance-sticker-number > [data-attendance-sizer] {
+    visibility: hidden;
+  }
+
+  .attendance-sticker-number > [data-attendance-count] {
+    display: flex;
+    justify-content: center;
+  }
+
+  .attendance-sticker-number :global(.attendance-digit-window) {
+    display: inline-block;
+    height: 1em;
+    overflow: hidden;
+  }
+
+  .attendance-sticker-number :global(.attendance-digit-leading) {
+    animation: attendance-digit-appear 1ms 120ms backwards;
+  }
+
+  @keyframes attendance-digit-appear {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  .attendance-sticker-number :global(.attendance-digit-strip),
+  .attendance-sticker-number :global(.attendance-digit-strip > span) {
+    display: block;
+    height: 1em;
+    line-height: 1;
+  }
+
+  .attendance-sticker-face > span {
+    margin-top: var(--s2);
+    font-size: var(--text-sm);
+    font-weight: 700;
+    line-height: 1.2;
+  }
+
+  .attendance-sticker-rays {
+    position: absolute;
+    top: -23px;
+    right: -32px;
+    width: 48px;
+    color: var(--pink);
+  }
+
+  .attendance-hanging {
+    z-index: 1;
+    width: fit-content;
+    max-width: calc(100% - 16px);
+    margin: 0 auto;
+    padding-top: 22px;
+    transform: none;
+    transform-origin: center top;
+  }
+
+  .attendance-hanging::before, .attendance-hanging::after {
+    position: absolute;
+    z-index: 1;
+    top: -6px;
+    width: 2px;
+    height: 34px;
+    background: #876331;
+    content: '';
+  }
+
+  .attendance-hanging::before {
+    left: 18px;
+  }
+
+  .attendance-hanging::after {
+    right: 18px;
+  }
+
+  .attendance-hanging .attendance-sticker-face {
+    position: relative;
+    min-width: 0;
+    min-height: 0;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 13px 24px;
+    border: 1px solid #c5a15f;
+    border-radius: 6px;
+    outline: none;
+    background: #f7e4ad;
+    box-shadow: 0 3px 8px rgba(105, 72, 29, 0.16);
+  }
+
+  .attendance-hanging .attendance-sticker-face::before,
+  .attendance-hanging .attendance-sticker-face::after {
+    position: absolute;
+    top: 4px;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: #876331;
+    content: '';
+  }
+
+  .attendance-hanging .attendance-sticker-face::before {
+    left: 14px;
+  }
+
+  .attendance-hanging .attendance-sticker-face::after {
+    right: 14px;
+  }
+
+  .attendance-hanging .attendance-sticker-number {
+    min-width: 0;
+    color: #65451f;
+    font-size: min(clamp(1rem, 4vw, 1.5rem), var(--attendance-number-limit, 1.5rem));
+  }
+
+  .attendance-hanging .attendance-sticker-number > span {
+    white-space: nowrap;
+  }
+
+  .attendance-hanging .attendance-sticker-face > span {
+    margin-top: 0;
+    color: #65451f;
+  }
+
+  .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+</style>

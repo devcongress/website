@@ -112,6 +112,19 @@ const calendarEvents = events.map((event) => {
           </div>
           <aside class="event-detail-action" aria-label="Event action">
             <a class="btn btn-primary event-detail-cta" id="event-detail-cta" hidden></a>
+            <div class="calendar-subscribe-control" id="event-detail-calendar-control" hidden>
+              <button
+                class="btn btn-primary event-calendar-trigger"
+                type="button"
+                aria-expanded="false"
+                aria-controls="calendar-subscribe-panel"
+              >
+                <span>Add to calendar</span>
+                <svg class="calendar-subscribe-chevron" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                  <path d="m3.5 6 4.5 4.5L12.5 6" />
+                </svg>
+              </button>
+            </div>
             <p class="event-detail-state" id="event-detail-state" role="status"></p>
           </aside>
         </section>
@@ -157,7 +170,7 @@ const calendarEvents = events.map((event) => {
                     </button>
                   </div>
                   <nav class="calendar-provider-links" aria-label="Calendar subscription options">
-                    <a href={googleCalendarUrl} target="_blank" rel="noopener noreferrer">
+                    <a class="calendar-google-option" href={googleCalendarUrl} target="_blank" rel="noopener noreferrer">
                       <span class="calendar-provider-icon google-calendar-icon" aria-hidden="true">
                         <svg viewBox="0 0 256 262" aria-hidden="true">
                           <path fill="#4285F4" d="M255.878 133.451c0-10.734-.871-18.567-2.756-26.69H130.55v48.448h71.947c-1.45 12.04-9.283 30.172-26.69 42.356l-.244 1.622 38.755 30.023 2.685.268c24.659-22.774 38.875-56.282 38.875-96.027" />
@@ -169,7 +182,7 @@ const calendarEvents = events.map((event) => {
                       <span class="calendar-provider-copy"><span>Google Calendar</span><small>Subscribe with Google</small></span>
                       <svg class="calendar-provider-external" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M9 3h4v4m-.5-3.5L7 9m-1-4H4a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2" /></svg>
                     </a>
-                    <a href={appleCalendarUrl}>
+                    <a class="calendar-apple-option" href={appleCalendarUrl}>
                       <span class="calendar-provider-icon apple-calendar-icon" aria-hidden="true">
                         <svg viewBox="0 0 256 315" aria-hidden="true">
                           <path fill="#000" d="M213.803 167.031c.442 47.579 41.739 63.412 42.197 63.614-.349 1.117-6.599 22.564-21.757 44.717-13.104 19.153-26.704 38.235-48.129 38.63-21.052.388-27.821-12.484-51.889-12.484-24.061 0-31.582 12.088-51.51 12.872-20.68.783-36.428-20.711-49.641-39.793C6.075 235.553-14.558 164.286 13.147 116.18c13.763-23.89 38.359-39.017 65.056-39.405 20.307-.387 39.475 13.662 51.889 13.662 12.406 0 35.699-16.896 60.186-14.414 10.251.426 39.026 4.141 57.503 31.186-1.489.923-34.334 20.044-33.977 59.822" />
@@ -178,6 +191,10 @@ const calendarEvents = events.map((event) => {
                       </span>
                       <span class="calendar-provider-copy"><span>Apple Calendar</span><small>Open in your calendar app</small></span>
                       <svg class="calendar-provider-external" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M9 3h4v4m-.5-3.5L7 9m-1-4H4a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2" /></svg>
+                    </a>
+                    <a class="calendar-event-download" href="#" hidden>
+                      <span class="calendar-download-icons" aria-hidden="true"></span>
+                      <span class="calendar-provider-copy"><span>Download calendar file</span><small>Apple Calendar, Outlook and other apps (.ics)</small></span>
                     </a>
                     <button type="button" id="calendar-copy-option" aria-expanded="false" aria-controls="calendar-copy-details">
                       <span class="calendar-provider-icon outlook-calendar-icon" aria-hidden="true">
@@ -304,8 +321,9 @@ const calendarEvents = events.map((event) => {
                 </div>
                 <h2 class="heading-display event-name" title={event.title}>{event.title}</h2>
                 <p class="event-desc">{event.summary}</p>
-                {directAction && (
+                {(directAction || (event.status === 'upcoming' && event.onlineUrl)) && (
                   <div class="event-card-actions">
+                    {directAction && (
                     <a
                       href={directAction.href}
                       class="btn btn-primary event-cta"
@@ -314,6 +332,23 @@ const calendarEvents = events.map((event) => {
                     >
                       {directAction.label}
                     </a>
+                    )}
+                    {event.status === 'upcoming' && event.onlineUrl && (
+                      <div class="calendar-subscribe-control">
+                        <button
+                          class:list={['btn', directAction ? 'btn-yellow' : 'btn-primary', 'event-cta', 'event-calendar-trigger']}
+                          type="button"
+                          data-event-slug={event.slug}
+                          aria-expanded="false"
+                          aria-controls="calendar-subscribe-panel"
+                        >
+                          <span>Add to calendar</span>
+                          <svg class="calendar-subscribe-chevron" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                            <path d="m3.5 6 4.5 4.5L12.5 6" />
+                          </svg>
+                        </button>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -378,6 +413,7 @@ const calendarEvents = events.map((event) => {
   import { fetchLivePublicEvent, fetchLivePublicEvents } from '../../lib/live-public-events';
   import type { WebsiteEvent } from '../../lib/events';
   import { getEventCardAction, getEventPrimaryAction } from '../../lib/event-card-actions';
+  import { googleEventCalendarUrl } from '../../lib/event-calendar';
   import { getEventReturnLink } from '../../lib/event-navigation';
 
   const statusConfig = {
@@ -452,6 +488,8 @@ const calendarEvents = events.map((event) => {
   const calendarFeedAddress = 'https://devcongress.org/events/calendar.ics';
   const monthPattern = /^\d{4}-(0[1-9]|1[0-2])$/;
   let activePopoverAnchor = null;
+  let activeCalendarTrigger = calendarSubscribeButton;
+  let calendarCloseTimer = null;
   let calendarCopyStateTimer = null;
   let calendarCopyRequestVersion = 0;
   let routeRequestVersion = 0;
@@ -497,6 +535,7 @@ const calendarEvents = events.map((event) => {
   }
 
   function setView(view, shouldUpdateUrl = true) {
+    closeCalendarSubscription();
     const showCalendar = view === 'calendar';
     listPanel.hidden = showCalendar;
     calendarPanel.hidden = !showCalendar;
@@ -620,15 +659,35 @@ const calendarEvents = events.map((event) => {
     summary.className = 'event-desc';
     summary.textContent = event.summary;
     body.append(meta, title, summary);
-    if (directAction) {
+    if (directAction || (status === 'upcoming' && event.onlineUrl)) {
       const actions = document.createElement('div');
       actions.className = 'event-card-actions';
-      const cta = document.createElement('a');
-      cta.href = directAction.href;
-      cta.className = 'btn btn-primary event-cta';
-      cta.textContent = directAction.label;
-      applyExternalLinkAttributes(cta, directAction.href);
-      actions.append(cta);
+      if (directAction) {
+        const cta = document.createElement('a');
+        cta.href = directAction.href;
+        cta.className = 'btn btn-primary event-cta';
+        cta.textContent = directAction.label;
+        applyExternalLinkAttributes(cta, directAction.href);
+        actions.append(cta);
+      }
+      if (status === 'upcoming' && event.onlineUrl) {
+        const control = document.createElement('div');
+        control.className = 'calendar-subscribe-control';
+        const trigger = document.createElement('button');
+        trigger.type = 'button';
+        trigger.className = `btn ${directAction ? 'btn-yellow' : 'btn-primary'} event-cta event-calendar-trigger`;
+        for (const attribute of calendarSubscribeButton?.attributes || []) {
+          if (attribute.name.startsWith('data-astro-cid-')) trigger.setAttribute(attribute.name, attribute.value);
+        }
+        trigger.dataset.eventSlug = event.slug;
+        trigger.setAttribute('aria-expanded', 'false');
+        trigger.setAttribute('aria-controls', 'calendar-subscribe-panel');
+        trigger.append('Add to calendar');
+        const chevron = document.querySelector('.calendar-subscribe-button .calendar-subscribe-chevron');
+        if (chevron) trigger.append(chevron.cloneNode(true));
+        control.append(trigger);
+        actions.append(control);
+      }
       body.append(actions);
     }
     if (detailLink) item.append(detailLink);
@@ -638,6 +697,7 @@ const calendarEvents = events.map((event) => {
 
   function renderLiveEventList(events) {
     if (!(eventsGrid instanceof HTMLUListElement)) return;
+    closeCalendarSubscription();
     eventsGrid.replaceChildren(...events.map(createLiveEventCard));
     if (eventsPageSub) {
       eventsPageSub.textContent = `${events.length} event${events.length === 1 ? '' : 's'} and counting.`;
@@ -658,20 +718,30 @@ const calendarEvents = events.map((event) => {
     }
   }
 
-  function closeCalendarSubscription(restoreFocus = false) {
-    if (!(calendarSubscribeButton instanceof HTMLButtonElement) || !(calendarSubscribePanel instanceof HTMLElement)) return;
+  function closeCalendarSubscription(restoreFocus = false, animate = false) {
+    if (!(calendarSubscribePanel instanceof HTMLElement)) return;
 
-    resetCalendarCopyState();
-    calendarSubscribeButton.setAttribute('aria-expanded', 'false');
-    calendarSubscribePanel.hidden = true;
-    calendarSubscribePanel.classList.remove('opens-above');
-    calendarSubscribePanel.style.maxHeight = '';
-    if (calendarCopyOption instanceof HTMLButtonElement && calendarCopyDetails instanceof HTMLElement) {
-      calendarCopyOption.setAttribute('aria-expanded', 'false');
-      calendarCopyDetails.hidden = true;
+    clearTimeout(calendarCloseTimer);
+    activeCalendarTrigger?.setAttribute('aria-expanded', 'false');
+    if (restoreFocus && activeCalendarTrigger instanceof HTMLButtonElement && !activeCalendarTrigger.disabled) {
+      activeCalendarTrigger.focus({ preventScroll: true });
     }
-    if (restoreFocus && !calendarSubscribeButton.disabled) {
-      calendarSubscribeButton.focus({ preventScroll: true });
+    calendarSubscribePanel.inert = true;
+    calendarSubscribePanel.classList.remove('is-open');
+    const finishClose = () => {
+      calendarSubscribePanel.hidden = true;
+      calendarSubscribePanel.classList.remove('opens-above');
+      calendarSubscribePanel.style.maxHeight = '';
+      resetCalendarCopyState();
+      if (calendarCopyOption instanceof HTMLButtonElement && calendarCopyDetails instanceof HTMLElement) {
+        calendarCopyOption.setAttribute('aria-expanded', 'false');
+        calendarCopyDetails.hidden = true;
+      }
+    };
+    if (animate && !reduceMotion.matches && !calendarSubscribePanel.hidden) {
+      calendarCloseTimer = window.setTimeout(finishClose, 200);
+    } else {
+      finishClose();
     }
   }
 
@@ -680,9 +750,10 @@ const calendarEvents = events.map((event) => {
       !(calendarSubscribeButton instanceof HTMLButtonElement)
       || !(calendarSubscribePanel instanceof HTMLElement)
       || calendarSubscribePanel.hidden
+      || activeCalendarTrigger?.getAttribute('aria-expanded') !== 'true'
     ) return;
 
-    const triggerBounds = calendarSubscribeButton.getBoundingClientRect();
+    const triggerBounds = activeCalendarTrigger.getBoundingClientRect();
     const availableBelow = window.innerHeight - triggerBounds.bottom - 16;
     const availableAbove = triggerBounds.top - 16;
     const previousScrollTop = calendarSubscribePanel.scrollTop;
@@ -692,18 +763,31 @@ const calendarEvents = events.map((event) => {
     const availableHeight = opensAbove ? availableAbove : availableBelow;
 
     calendarSubscribePanel.classList.toggle('opens-above', opensAbove);
+    const panelWidth = Math.min(336, window.innerWidth - 32);
+    const left = Math.max(16, Math.min(triggerBounds.right - panelWidth, window.innerWidth - panelWidth - 16));
+    calendarSubscribePanel.style.left = `${left}px`;
+    calendarSubscribePanel.style.top = opensAbove ? 'auto' : `${triggerBounds.bottom + 8}px`;
+    calendarSubscribePanel.style.bottom = opensAbove ? `${window.innerHeight - triggerBounds.top + 8}px` : 'auto';
     calendarSubscribePanel.style.maxHeight = `${Math.max(80, availableHeight - 16)}px`;
     calendarSubscribePanel.scrollTop = previousScrollTop;
   }
 
-  function setCalendarSubscriptionOpen(open) {
-    if (!(calendarSubscribeButton instanceof HTMLButtonElement) || !(calendarSubscribePanel instanceof HTMLElement)) return;
-    if (calendarSubscribeButton.disabled && open) return;
+  function setCalendarSubscriptionOpen() {
+    if (!(calendarSubscribePanel instanceof HTMLElement) || activeCalendarTrigger.disabled) return;
 
-    calendarSubscribeButton.setAttribute('aria-expanded', String(open));
-    calendarSubscribePanel.hidden = !open;
-    if (open) fitCalendarSubscriptionPanel();
-    else closeCalendarSubscription();
+    clearTimeout(calendarCloseTimer);
+    const wasHidden = calendarSubscribePanel.hidden;
+    activeCalendarTrigger.setAttribute('aria-expanded', 'true');
+    if (wasHidden) calendarSubscribePanel.style.transition = 'none';
+    calendarSubscribePanel.hidden = false;
+    calendarSubscribePanel.inert = false;
+    fitCalendarSubscriptionPanel();
+    // Establish the positioned closed state before enabling its entrance transition.
+    if (wasHidden) {
+      void calendarSubscribePanel.offsetHeight;
+      calendarSubscribePanel.style.transition = '';
+    }
+    calendarSubscribePanel.classList.add('is-open');
   }
 
   function selectCalendarAddressForManualCopy() {
@@ -785,7 +869,7 @@ const calendarEvents = events.map((event) => {
   }
 
   function setDetailMode(active) {
-    if (active) closeCalendarSubscription();
+    closeCalendarSubscription();
     if (eventsPageHeader) eventsPageHeader.hidden = active;
     if (eventsBody) eventsBody.hidden = active;
     if (eventsViewBar) eventsViewBar.hidden = active;
@@ -824,6 +908,8 @@ const calendarEvents = events.map((event) => {
       detailCover.removeAttribute('src');
     }
     if (detailCta instanceof HTMLAnchorElement) detailCta.hidden = true;
+    const detailCalendarControl = document.querySelector('#event-detail-calendar-control');
+    if (detailCalendarControl instanceof HTMLElement) detailCalendarControl.hidden = true;
   }
 
   function renderLiveEventDetail(event) {
@@ -856,6 +942,14 @@ const calendarEvents = events.map((event) => {
         detailCta.removeAttribute('rel');
       }
     }
+    const detailCalendarControl = document.querySelector('#event-detail-calendar-control');
+    const detailCalendarTrigger = detailCalendarControl?.querySelector('button');
+    if (detailCalendarControl && detailCalendarTrigger) {
+      detailCalendarControl.hidden = !(status === 'upcoming' && event.onlineUrl);
+      detailCalendarTrigger.dataset.eventSlug = event.slug;
+      detailCalendarTrigger.classList.toggle('btn-yellow', Boolean(action));
+      detailCalendarTrigger.classList.toggle('btn-primary', !action);
+    }
     document.title = `${event.title} — DevCongress`;
   }
 
@@ -876,6 +970,8 @@ const calendarEvents = events.map((event) => {
       detailCover.removeAttribute('src');
     }
     if (detailCta instanceof HTMLAnchorElement) detailCta.hidden = true;
+    const detailCalendarControl = document.querySelector('#event-detail-calendar-control');
+    if (detailCalendarControl instanceof HTMLElement) detailCalendarControl.hidden = true;
   }
 
   async function refreshLiveEvents(routeVersion = routeRequestVersion) {
@@ -1270,11 +1366,63 @@ const calendarEvents = events.map((event) => {
     animatePanel(calendarMonthSummary, direction);
   }
 
-  calendarSubscribeButton?.addEventListener('click', () => {
-    const isOpen = calendarSubscribeButton.getAttribute('aria-expanded') === 'true';
-    setCalendarSubscriptionOpen(!isOpen);
+  function openCalendarPicker(trigger, event) {
+    if (!(calendarSubscribePanel instanceof HTMLElement) || !(calendarCopyOption instanceof HTMLButtonElement)) return;
+
+    const wasOpen = activeCalendarTrigger === trigger && trigger.getAttribute('aria-expanded') === 'true';
+    if (wasOpen) {
+      closeCalendarSubscription(true, true);
+      return;
+    }
+    if (activeCalendarTrigger === trigger && !calendarSubscribePanel.hidden) {
+      setCalendarSubscriptionOpen();
+      calendarSubscribePanel.querySelector('.calendar-google-option')?.focus({ preventScroll: true });
+      return;
+    }
+    closeCalendarSubscription();
+
+    const google = calendarSubscribePanel.querySelector('.calendar-google-option');
+    const apple = calendarSubscribePanel.querySelector('.calendar-apple-option');
+    const eventDownload = calendarSubscribePanel.querySelector('.calendar-event-download');
+    const title = calendarSubscribePanel.querySelector('#calendar-subscribe-panel-title');
+    const download = calendarSubscribePanel.querySelector('.calendar-download-option');
+    const googleCopy = google?.querySelector('small');
+    if (!(google instanceof HTMLAnchorElement) || !(apple instanceof HTMLAnchorElement)
+      || !(eventDownload instanceof HTMLAnchorElement) || !(title instanceof HTMLElement)
+      || !(download instanceof HTMLElement) || !(googleCopy instanceof HTMLElement)) return;
+
+    activeCalendarTrigger = trigger;
+    document.body.append(calendarSubscribePanel);
+    title.textContent = event ? 'Add this event' : 'Add DevCongress events';
+    google.href = event ? googleEventCalendarUrl(event) : 'https://calendar.google.com/calendar/r?cid=' + encodeURIComponent('webcal://devcongress.org/events/calendar.ics');
+    googleCopy.textContent = event ? 'Add this event to Google' : 'Subscribe with Google';
+    apple.hidden = Boolean(event);
+    calendarCopyOption.hidden = Boolean(event);
+    download.hidden = Boolean(event);
+    eventDownload.hidden = !event;
+    if (event) {
+      eventDownload.href = `/events/${encodeURIComponent(event.slug)}/calendar.ics`;
+      eventDownload.download = `${event.slug}.ics`;
+    }
+    setCalendarSubscriptionOpen();
+    google.focus({ preventScroll: true });
+  }
+
+  const eventDownloadIcons = calendarSubscribePanel?.querySelector('.calendar-download-icons');
+  for (const selector of ['.apple-calendar-icon', '.outlook-calendar-icon']) {
+    const icon = calendarSubscribePanel?.querySelector(selector);
+    if (icon && eventDownloadIcons) eventDownloadIcons.append(icon.cloneNode(true));
+  }
+
+  document.addEventListener('click', (click) => {
+    if (!(click.target instanceof Element)) return;
+    const trigger = click.target.closest('.event-calendar-trigger, #calendar-subscribe-button');
+    if (!(trigger instanceof HTMLButtonElement)) return;
+    const event = trigger.dataset.eventSlug ? liveEventDetails.get(trigger.dataset.eventSlug) : null;
+    if (trigger.dataset.eventSlug && !event) return;
+    openCalendarPicker(trigger, event);
   });
-  calendarSubscribeClose?.addEventListener('click', () => closeCalendarSubscription(true));
+  calendarSubscribeClose?.addEventListener('click', () => closeCalendarSubscription(true, true));
   calendarCopyOption?.addEventListener('click', () => {
     if (!(calendarCopyDetails instanceof HTMLElement)) return;
     const isOpen = calendarCopyOption.getAttribute('aria-expanded') === 'true';
@@ -1285,20 +1433,16 @@ const calendarEvents = events.map((event) => {
     if (!isOpen && calendarCopyStatus instanceof HTMLElement) calendarCopyStatus.textContent = '';
   });
   calendarCopyButton?.addEventListener('click', () => void copyCalendarAddress());
-  calendarSubscribe?.addEventListener('focusout', (event) => {
-    const nextTarget = event.relatedTarget;
-    if (!(nextTarget instanceof Node) || !calendarSubscribe.contains(nextTarget)) {
-      closeCalendarSubscription();
-    }
+  document.addEventListener('focusin', (event) => {
+    if (activeCalendarTrigger?.getAttribute('aria-expanded') !== 'true' || calendarSubscribePanel?.contains(event.target) || activeCalendarTrigger === event.target) return;
+    closeCalendarSubscription(false, true);
   });
-  calendarSubscribe?.addEventListener('click', (event) => {
-    if (!(event.target instanceof Element)) return;
-    const providerLink = event.target.closest('.calendar-provider-links a');
-    if (providerLink) closeCalendarSubscription();
+  calendarSubscribePanel?.addEventListener('click', (event) => {
+    if (event.target instanceof Element && event.target.closest('.calendar-provider-links a')) closeCalendarSubscription(true, true);
   });
   document.addEventListener('pointerdown', (event) => {
-    if (!(event.target instanceof Node) || calendarSubscribe?.contains(event.target)) return;
-    closeCalendarSubscription();
+    if (calendarSubscribePanel?.contains(event.target) || activeCalendarTrigger?.contains(event.target)) return;
+    closeCalendarSubscription(false, true);
   });
   window.addEventListener('resize', fitCalendarSubscriptionPanel);
   window.addEventListener('scroll', (event) => {
@@ -1306,9 +1450,9 @@ const calendarEvents = events.map((event) => {
     fitCalendarSubscriptionPanel();
   }, true);
   document.addEventListener('keydown', (event) => {
-    if (event.key !== 'Escape' || calendarSubscribeButton?.getAttribute('aria-expanded') !== 'true') return;
+    if (event.key !== 'Escape' || activeCalendarTrigger?.getAttribute('aria-expanded') !== 'true') return;
     event.preventDefault();
-    closeCalendarSubscription(true);
+    closeCalendarSubscription(true, true);
   });
 
   viewButtons.forEach((button) => {
@@ -1355,10 +1499,13 @@ const calendarEvents = events.map((event) => {
   .events-page-buttons { display: flex; align-items: center; justify-content: flex-end; gap: var(--s3); flex-wrap: wrap; }
   .events-page-actions > p { color: var(--text-muted); font-size: var(--text-xs); }
   .calendar-subscribe-control { position: relative; }
+  .calendar-provider-links [hidden], .calendar-download-option[hidden] { display: none !important; }
+  .event-card-actions .calendar-subscribe-control { pointer-events: auto; }
+  .event-detail-action .calendar-subscribe-control { position: relative; }
   .calendar-subscribe-panel[hidden],
   .calendar-copy-details[hidden] { display: none !important; }
   .calendar-subscribe-panel {
-    position: absolute; top: calc(100% + var(--s2)); right: 0; z-index: 120;
+    position: fixed; top: 0; right: auto; z-index: 120;
     width: min(336px, calc(100vw - 32px));
     max-height: min(32rem, calc(100dvh - 32px));
     overflow-y: auto; overscroll-behavior: contain;
@@ -1368,8 +1515,13 @@ const calendarEvents = events.map((event) => {
     background: var(--bg-white);
     box-shadow: var(--shadow-solid);
     color: var(--black);
+    opacity: 0;
+    transform: translateY(-8px);
+    transition: opacity 200ms cubic-bezier(0.16, 1, 0.3, 1), transform 200ms cubic-bezier(0.16, 1, 0.3, 1);
   }
-  .calendar-subscribe-panel.opens-above { top: auto; bottom: calc(100% + var(--s2)); }
+  .calendar-subscribe-panel.opens-above { transform: translateY(8px); }
+  .calendar-subscribe-panel.is-open { opacity: 1; transform: translateY(0); }
+
   .calendar-subscribe-panel-header {
     display: flex;
     align-items: center;
@@ -1443,6 +1595,8 @@ const calendarEvents = events.map((event) => {
     border-radius: 8px;
     background: #fff;
   }
+  .calendar-download-icons { display: flex; flex: none; }
+  .calendar-download-icons .calendar-provider-icon + .calendar-provider-icon { margin-left: -4px; }
   .calendar-provider-icon svg { width: 20px; height: 20px; overflow: visible; }
   .outlook-calendar-icon svg { width: 22px; height: 22px; }
   .calendar-provider-external,
@@ -1470,9 +1624,11 @@ const calendarEvents = events.map((event) => {
     transition: transform 180ms cubic-bezier(0.16, 1, 0.3, 1);
   }
   .calendar-subscribe-button[aria-expanded="true"] .calendar-subscribe-chevron,
+  .event-calendar-trigger[aria-expanded="true"] .calendar-subscribe-chevron,
   #calendar-copy-option[aria-expanded="true"] .calendar-copy-chevron {
     transform: rotate(180deg);
   }
+  .event-calendar-trigger .calendar-subscribe-chevron { width: 16px; height: 16px; flex: none; }
   .calendar-subscribe-chevron path {
     stroke: currentColor;
     stroke-width: 1.7;
@@ -1982,7 +2138,6 @@ const calendarEvents = events.map((event) => {
     .events-page-actions { align-items: flex-start; width: 100%; }
     .events-page-buttons { width: 100%; flex-direction: column; align-items: stretch; }
     .calendar-subscribe-control { width: 100%; }
-    .calendar-subscribe-panel { right: 0; left: 0; width: auto; transform: none; }
     .event-submit-button,
     .calendar-subscribe-button { width: 100%; }
     .events-page-actions > p { max-width: 100%; line-height: 1.45; text-align: left; }
@@ -2033,7 +2188,7 @@ const calendarEvents = events.map((event) => {
     }
   }
   @media (prefers-reduced-motion: reduce) {
-    .mnav-back, .event-detail-back, .event-cover-image, .view-switcher-highlight, .view-switcher-button, .calendar-nav-button, .calendar-today-button,
+    .calendar-subscribe-panel, .mnav-back, .event-detail-back, .event-cover-image, .view-switcher-highlight, .view-switcher-button, .calendar-nav-button, .calendar-today-button,
     .calendar-day-popover-close, .calendar-subscribe-chevron, .calendar-copy-chevron, .calendar-subscribe-close,
     .calendar-provider-links a, .calendar-provider-links button, .calendar-copy-button-state,
     :global(.calendar-event), :global(.calendar-more-button),

@@ -30,8 +30,7 @@ programme content:
 - Desktop and mobile navigation link to `/devcon26/`.
 - The homepage hero pairs the existing community headline with real community
   photography and the invitation: "We connect all year. This December, we come
-  together at DevCon26." 19 December 2026 and the confirmed Ghana Digital Center
-  (formerly Accra Digital Center), Accra venue sit below it.
+  together at DevCon26." 19 December 2026 and the Accra Digital Center venue sit below it.
 - The yellow primary hero action is Get DevCon26 tickets, linking directly to
   `/devcon26/#tickets` and remaining first and visually dominant. Join the
   community (the existing Slack link) and Support us (the stable `/donate`

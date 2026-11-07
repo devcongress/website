@@ -2,6 +2,7 @@
 import { getCollection } from 'astro:content';
 import Base from '../../layouts/Base.astro';
 import Devcon26HomeLink from '../../components/Devcon26HomeLink.astro';
+import AttendanceCounter from '../../components/AttendanceCounter.astro';
 
 const speakerSlots = ['01', '02', '03'];
 const heroScenes = [
@@ -121,7 +122,7 @@ heroSlots[0].photos.push({
 
 const faqs = [
   ['Who is DevCon26 for?', 'For the people building technology across Africa: developers, designers, founders, product people, researchers, and students.'],
-  ['When and where is it?', 'Meet us at Ghana Digital Center (formerly Accra Digital Center), Accra, Ghana on 19 December 2026. The programme will be announced here.'],
+  ['When and where is it?', 'Meet us at Accra Digital Center in Accra, Ghana on 19 December 2026. The programme will be announced here.'],
   ['Can I come with my team?', 'Yes. Buy individual tickets together in one checkout, then choose who each ticket is for. Each ticket admits one person.'],
   ['How do I get a ticket?', 'Go to ticket checkout, choose your tickets, and complete payment. Your ticket email includes a QR ticket PDF and a link to personalize your conference badge.'],
 ];
@@ -227,30 +228,33 @@ function packageEnquiryLink(sponsorship: (typeof sponsorshipPackages)[number]) {
           <p class="hero-summary">With a gathering of builders, researchers, designers, security professionals, product managers and marketers. Come gain knowledge and exchange knowledge at DevCon26</p>
           <div class="hero-actions">
             <a class="button button-primary" href="#tickets">Buy tickets <span aria-hidden="true">↗</span></a>
-            <p>19 December 2026<br /><strong>Ghana Digital Center (formerly Accra Digital Center), Accra</strong></p>
+            <p>19 December 2026<br /><strong>Accra Digital Center</strong></p>
           </div>
         </div>
 
-        <div class="hero-images" data-hero-slideshow role="group" aria-label="DevCongress gatherings throughout the year">
-          {heroSlots.map((slot, slotIndex) => (
-            <figure class:list={['hero-photo', { 'hero-photo-main': slotIndex === 0 }]} data-hero-slot={slot.name}>
-              {slot.photos.map((photo, photoIndex) => (
-                <img
-                  class:list={{ 'is-active': photoIndex === 0 }}
-                  src={photoIndex === 0 ? photo.src : undefined}
-                  data-hero-src={photo.src}
-                  alt={photo.alt}
-                  aria-hidden={photoIndex !== 0 ? 'true' : undefined}
-                  width={photo.width}
-                  height={photo.height}
-                  style={'object-position: ' + photo.position}
-                  loading={photoIndex === 0 ? 'eager' : 'lazy'}
-                  fetchpriority={slotIndex === 0 && photoIndex === 0 ? 'high' : 'auto'}
-                  decoding="async"
-                />
-              ))}
-            </figure>
-          ))}
+        <div class="hero-visual">
+          <div class="hero-images" data-hero-slideshow role="group" aria-label="DevCongress gatherings throughout the year">
+            {heroSlots.map((slot, slotIndex) => (
+              <figure class:list={['hero-photo', { 'hero-photo-main': slotIndex === 0 }]} data-hero-slot={slot.name}>
+                {slot.photos.map((photo, photoIndex) => (
+                  <img
+                    class:list={{ 'is-active': photoIndex === 0 }}
+                    src={photoIndex === 0 ? photo.src : undefined}
+                    data-hero-src={photo.src}
+                    alt={photo.alt}
+                    aria-hidden={photoIndex !== 0 ? 'true' : undefined}
+                    width={photo.width}
+                    height={photo.height}
+                    style={'object-position: ' + photo.position}
+                    loading={photoIndex === 0 ? 'eager' : 'lazy'}
+                    fetchpriority={slotIndex === 0 && photoIndex === 0 ? 'high' : 'auto'}
+                    decoding="async"
+                  />
+                ))}
+              </figure>
+            ))}
+          </div>
+          <AttendanceCounter variant="hanging" />
         </div>
       </section>
 
@@ -332,14 +336,11 @@ function packageEnquiryLink(sponsorship: (typeof sponsorshipPackages)[number]) {
         <div class="location-place" aria-label="Accra, Ghana">
           <span>Meet us in</span>
           <strong>Accra<span aria-hidden="true">.</span></strong>
-          <span class="location-country">
-            Ghana Digital Center
-            <span class="location-former-name">(formerly Accra Digital Center)</span>
-          </span>
+          <span class="location-country">Accra Digital Center</span>
         </div>
         <div class="location-copy">
           <h2 id="location-title">Built here.<br />Open to everyone.</h2>
-          <p>Ghana Digital Center (formerly Accra Digital Center), Accra, Ghana. A place for the people and communities moving the city’s technology scene forward.</p>
+          <p>Accra Digital Center in Accra, Ghana. A place for the people and communities moving the city’s technology scene forward.</p>
           <a class="location-directions" href="https://www.google.com/maps/search/?api=1&query=Accra%20Digital%20Centre%2C%20Accra%2C%20Ghana" target="_blank" rel="noopener noreferrer">Find the venue <span aria-hidden="true">↗</span><span class="sr-only"> (opens in a new tab)</span></a>
         </div>
       </section>
@@ -683,12 +684,13 @@ function packageEnquiryLink(sponsorship: (typeof sponsorshipPackages)[number]) {
   .hero h1 {
     font-weight: 700;
     letter-spacing: -0.03em;
+    text-align: left;
   }
 
   .hero-tagline {
     max-width: 660px;
     margin-top: 18px;
-    text-align: center;
+    text-align: left;
     font-size: var(--dc-text-body);
     font-weight: 600;
     line-height: 1.5;
@@ -698,6 +700,7 @@ function packageEnquiryLink(sponsorship: (typeof sponsorshipPackages)[number]) {
     max-width: 28rem;
     margin-top: 22px;
     color: var(--dc-muted);
+    text-align: left;
     font-size: var(--dc-text-body);
     line-height: 1.65;
     text-wrap: pretty;
@@ -706,9 +709,11 @@ function packageEnquiryLink(sponsorship: (typeof sponsorshipPackages)[number]) {
   .hero-actions {
     display: flex;
     align-items: center;
+    justify-content: flex-start;
     flex-wrap: wrap;
     gap: 24px;
     margin-top: 30px;
+    text-align: left;
   }
 
   .hero-actions p {
@@ -747,6 +752,11 @@ function packageEnquiryLink(sponsorship: (typeof sponsorshipPackages)[number]) {
   .button-primary {
     color: var(--dc-ink);
     background: var(--dc-yellow);
+  }
+
+  .hero-visual {
+    min-width: 0;
+    align-self: center;
   }
 
   .hero-images {
@@ -1091,13 +1101,6 @@ function packageEnquiryLink(sponsorship: (typeof sponsorshipPackages)[number]) {
     font-weight: 600;
     line-height: 1.5;
     text-wrap: pretty;
-  }
-
-  .location-former-name {
-    display: block;
-    margin-top: 4px;
-    color: var(--dc-muted);
-    font-weight: 400;
   }
 
   .location-copy h2 {
@@ -2133,7 +2136,6 @@ function packageEnquiryLink(sponsorship: (typeof sponsorshipPackages)[number]) {
     .hero h1 {
       font-size: clamp(30px, 8.8vw, 42px);
       letter-spacing: -0.025em;
-      text-align: center;
     }
 
     .hero h1 em {
@@ -2142,6 +2144,7 @@ function packageEnquiryLink(sponsorship: (typeof sponsorshipPackages)[number]) {
 
     .hero-tagline {
       margin-top: 12px;
+      text-align: center;
       font-size: 15px;
       line-height: 1.4;
     }
@@ -2149,15 +2152,18 @@ function packageEnquiryLink(sponsorship: (typeof sponsorshipPackages)[number]) {
     .hero-summary {
       max-width: none;
       margin-top: 20px;
+      margin-inline: auto;
+      text-align: center;
       font-size: 16px;
       line-height: 1.55;
     }
 
     .hero-actions {
       flex-direction: column;
-      text-align: center;
+      justify-content: center;
       gap: 16px;
       margin-top: 20px;
+      text-align: center;
     }
 
     .hero-actions p {

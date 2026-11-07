@@ -14,7 +14,7 @@
     "deploy:dry-run": "pnpm build && wrangler deploy --dry-run",
     "astro": "astro",
     "check:donation": "node scripts/check-donation-checkout.mjs",
-    "check:tickets": "node scripts/check-devcon26-attendance-counter.mjs && node scripts/check-devcon26-managed-checkout.mjs && node scripts/check-community-tickets.mjs && node scripts/check-devcon26-payment-confirmation.mjs && node scripts/check-payment-receipts.mjs && node scripts/check-devcon26-badge.mjs && node scripts/check-devcon26-checkout.mjs"
+    "check:tickets": "node scripts/check-devcon26-attendance-counter.mjs && node scripts/check-devcon26-managed-checkout.mjs && node scripts/check-devcon26-programme.mjs && node scripts/check-devcon26-programme-relay.mjs && node scripts/check-community-tickets.mjs && node scripts/check-devcon26-payment-confirmation.mjs && node scripts/check-payment-receipts.mjs && node scripts/check-devcon26-badge.mjs && node scripts/check-devcon26-checkout.mjs"
   },
   "dependencies": {
     "@inttegro/js": "0.7.2",

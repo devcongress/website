@@ -4,6 +4,10 @@
 
 - Add individual online events to Google Calendar or download an .ics file for Apple Calendar, Outlook and other apps, including the public meeting link. Preserve registration and live viewing actions.
 
+## 2026-11-01 — Live DevCon26 programme
+
+- Show the saved EMS programme and linked speakers on the DevCon26 page, including distinct empty and unavailable states. Route website-owned Cloudflare previews through a bounded public programme relay.
+
 ## 2026-10-31 — Mobile DevCon26 hero
 
 - Keep the theme on two centred lines with a compact centred tagline, tighter introduction spacing and a centred content-sized ticket button on mobile. Centre the date and balance the wrapped venue text beneath it. Preserve the exact approved wording and desktop layout.

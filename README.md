@@ -67,6 +67,8 @@ unavailable, the static snapshot remains usable where the route exists.
 same validated Events Management feed as `/events/`. On Cloudflare it is
 generated dynamically, so newly published events do not wait for the next
 Astro build. The static build still produces a fallback feed for GitHub Pages.
+Individual online-event downloads also have a static fallback for events in the
+build snapshot; newly published events require a new build on GitHub Pages.
 It includes only published events that are still in progress or have not
 started at request/build time; past events remain available on the website but
 are not carried into subscribers' calendars.

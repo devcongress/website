@@ -1,0 +1,31 @@
+<p class="attendance-counter" data-attendance-counter hidden>
+  <strong data-attendance-count></strong>
+  <span data-attendance-estimate hidden>Estimated turnout</span>
+</p>
+
+<script>
+  import { initializeAttendanceCounter } from '../lib/devcon26-attendance-counter';
+
+  initializeAttendanceCounter(
+    document.querySelectorAll<HTMLElement>('[data-attendance-counter]'),
+    import.meta.env.PUBLIC_DEVCON26_API_ORIGIN?.trim() || 'https://em.devcongress.org',
+  );
+</script>
+
+<style>
+  .attendance-counter {
+    margin-top: 12px;
+    color: var(--text);
+    font-size: var(--text-sm);
+    line-height: 1.4;
+  }
+
+  .attendance-counter span {
+    color: var(--text-mid);
+    font-weight: 400;
+  }
+
+  .attendance-counter span:not([hidden])::before {
+    content: ' · ';
+  }
+</style>

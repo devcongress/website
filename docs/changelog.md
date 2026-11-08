@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-11-08 — Space event card actions
+
+- Keep registration and calendar actions evenly sized and separated on event details and cards, including live-loaded cards and phone layouts.
+
 ## 2026-11-07 — Add online events to calendars
 
 - Add individual online events to Google Calendar or download an .ics file for Apple Calendar, Outlook and other apps, including the public meeting link. Preserve registration and live viewing actions.

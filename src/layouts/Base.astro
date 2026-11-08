@@ -410,6 +410,14 @@ const site        = siteEntries[0]!.data;
     align-self: auto;
     margin-top: 0;
   }
+  #events-list-view .event-card .event-card-actions .event-cta {
+    min-height: 48px;
+    justify-content: center;
+  }
+  #events-list-view .event-card .event-card-actions > .calendar-subscribe-control {
+    position: relative;
+    width: auto;
+  }
   #events-list-view .events-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -418,6 +426,14 @@ const site        = siteEntries[0]!.data;
   #events-list-view[hidden],
   #events-calendar-view[hidden],
   #event-detail-view[hidden] { display: none !important; }
+
+  @media (max-width: 640px) {
+    #events-list-view .event-card .event-card-actions > .event-cta,
+    #events-list-view .event-card .event-card-actions > .calendar-subscribe-control,
+    #events-list-view .event-card .event-card-actions > .calendar-subscribe-control .event-cta {
+      width: 100%;
+    }
+  }
 
   @media (hover: hover) and (pointer: fine) {
     [data-home-events-grid] > .meetup-card.card:hover,

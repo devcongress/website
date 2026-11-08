@@ -1981,10 +1981,21 @@ const calendarEvents = events.map((event) => {
   .event-detail-back:hover { color: var(--pink); }
   .event-detail-layout { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--s7); margin-top: var(--s7); }
   .event-detail-summary { max-width: 46rem; color: var(--text-mid); font-size: var(--text-lg); line-height: var(--leading-body); }
-  .event-detail-action { padding-top: var(--s6); }
-  .event-detail-action .btn { white-space: nowrap; }
+  .event-detail-action {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s3);
+    padding-top: var(--s6);
+  }
+  .event-detail-action .btn {
+    width: 100%;
+    min-height: 48px;
+    justify-content: center;
+    white-space: nowrap;
+  }
   .event-detail-cta[hidden] { display: none !important; }
   .event-detail-state { max-width: 16rem; color: var(--text-muted); font-size: var(--text-sm); line-height: var(--leading-body); }
+  .event-detail-state:empty { display: none; }
 
   .calendar-panel { overflow: hidden; background: var(--bg-white); }
   .calendar-panel:hover { transform: none; box-shadow: none; }

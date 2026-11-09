@@ -1,8 +1,16 @@
 # Changelog
 
+## 2026-11-08 — Space event card actions
+
+- Keep registration and calendar actions evenly sized and separated on event details and cards, including live-loaded cards and phone layouts.
+
 ## 2026-11-07 — Add online events to calendars
 
 - Add individual online events to Google Calendar or download an .ics file for Apple Calendar, Outlook and other apps, including the public meeting link. Preserve registration and live viewing actions.
+
+## 2026-11-01 — Live DevCon26 programme
+
+- Show the saved EMS programme and linked speakers on the DevCon26 page, including distinct empty and unavailable states. Route website-owned Cloudflare previews through a bounded public programme relay.
 
 ## 2026-10-31 — Mobile DevCon26 hero
 

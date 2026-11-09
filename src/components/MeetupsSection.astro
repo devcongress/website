@@ -1,4 +1,5 @@
 ---
+import EventCalendarPicker from './EventCalendarPicker.astro';
 import type { WebsiteEvent } from '../lib/events';
 import { getEventCardAction } from '../lib/event-card-actions';
 import { withHomepageEventContext } from '../lib/event-navigation';
@@ -36,7 +37,7 @@ const statusConfig = {
 };
 ---
 
-<section class="section" id="events">
+<section class="section" id="events" data-home-event-snapshot={JSON.stringify(events)}>
   <div class="container">
 
     <div class="meetups-header">
@@ -85,16 +86,22 @@ const statusConfig = {
                 </div>
                 <h3 class="heading-display meetup-name" title={event.title}>{event.title}</h3>
                 <p class="meetup-desc">{event.summary}</p>
-                {directAction && (
+                {(directAction || (event.status === 'upcoming' && event.onlineUrl)) && (
                   <div class="meetup-card-actions">
-                    <a
+                    {directAction && <a
                       href={directAction.href}
                       class="btn btn-primary meetup-cta"
                       target={actionExternal ? '_blank' : undefined}
                       rel={actionExternal ? 'noopener noreferrer' : undefined}
                     >
                       {directAction.label}
-                    </a>
+                    </a>}
+                    {event.status === 'upcoming' && event.onlineUrl && (
+                      <button class:list={['btn', directAction ? 'btn-yellow' : 'btn-primary', 'meetup-cta', 'event-calendar-trigger']} type="button" data-event-slug={event.slug} aria-expanded="false" aria-controls="calendar-subscribe-panel">
+                        <span>Add to calendar</span>
+                        <svg class="calendar-subscribe-chevron" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="m3.5 6 4.5 4.5L12.5 6" /></svg>
+                      </button>
+                    )}
                   </div>
                 )}
               </div>
@@ -103,19 +110,31 @@ const statusConfig = {
         })}
       </ul>
     </div>
-
-
-
+    <EventCalendarPicker />
   </div>
 </section>
 
 <script>
+  import { initializeEventCalendarPicker } from '../lib/event-calendar-picker';
   import { fetchLivePublicEvents } from '../lib/live-public-events';
   import { getEventCardAction } from '../lib/event-card-actions';
   import { withHomepageEventContext } from '../lib/event-navigation';
   import { sortEventsBySoonest } from '../lib/event-order';
 
   const grid = document.querySelector('[data-home-events-grid]');
+  const section = document.querySelector('[data-home-event-snapshot]');
+  let liveEvents = [];
+  let pendingEvents = null;
+
+  try {
+    liveEvents = JSON.parse(section?.getAttribute('data-home-event-snapshot') || '[]');
+  } catch {
+    liveEvents = [];
+  }
+
+  const closeCalendarSubscription = initializeEventCalendarPicker((slug) =>
+    liveEvents.find((event) => event.slug === slug),
+  );
   const statusConfig = {
     upcoming: { label: 'Upcoming' },
     live: { label: '● Live' },
@@ -135,6 +154,13 @@ const statusConfig = {
 
   function render(events) {
     if (!(grid instanceof HTMLUListElement)) return;
+    if (grid.querySelector('.event-calendar-trigger[aria-expanded="true"]')) {
+      pendingEvents = events;
+      return;
+    }
+
+    closeCalendarSubscription();
+    liveEvents = events;
     grid.replaceChildren();
     sortEventsBySoonest(events)
       .slice(0, 3)
@@ -189,15 +215,38 @@ const statusConfig = {
         description.className = 'meetup-desc';
         description.textContent = event.summary;
         body.append(meta, title, description);
-        if (directAction) {
+        if (directAction || (status === 'upcoming' && event.onlineUrl)) {
           const actions = document.createElement('div');
           actions.className = 'meetup-card-actions';
-          const cta = document.createElement('a');
-          cta.href = directAction.href;
-          cta.className = 'btn btn-primary meetup-cta';
-          cta.textContent = directAction.label;
-          applyExternalLinkAttributes(cta, directAction.href);
-          actions.append(cta);
+          if (directAction) {
+            const cta = document.createElement('a');
+            cta.href = directAction.href;
+            cta.className = 'btn btn-primary meetup-cta';
+            cta.textContent = directAction.label;
+            applyExternalLinkAttributes(cta, directAction.href);
+            actions.append(cta);
+          }
+
+          if (status === 'upcoming' && event.onlineUrl) {
+            const trigger = document.createElement('button');
+            trigger.type = 'button';
+            trigger.className = `btn ${directAction ? 'btn-yellow' : 'btn-primary'} meetup-cta event-calendar-trigger`;
+            trigger.dataset.eventSlug = event.slug;
+            trigger.setAttribute('aria-expanded', 'false');
+            trigger.setAttribute('aria-controls', 'calendar-subscribe-panel');
+            trigger.append('Add to calendar');
+            const icon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            icon.classList.add('calendar-subscribe-chevron');
+            icon.setAttribute('viewBox', '0 0 16 16');
+            icon.setAttribute('fill', 'none');
+            icon.setAttribute('aria-hidden', 'true');
+            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            path.setAttribute('d', 'm3.5 6 4.5 4.5L12.5 6');
+            icon.append(path);
+            trigger.append(icon);
+            actions.append(trigger);
+          }
+
           body.append(actions);
         }
         card.append(detailLink, cover, body);
@@ -211,6 +260,27 @@ const statusConfig = {
       element.rel = 'noopener noreferrer';
     }
   }
+
+  document.querySelector('#calendar-subscribe-panel')?.addEventListener('calendar-picker-closed', () => {
+    window.setTimeout(() => {
+      if (!pendingEvents || grid?.querySelector('.event-calendar-trigger[aria-expanded="true"]')) return;
+      const focusedTrigger = document.activeElement;
+      const focusedSlug = focusedTrigger instanceof HTMLButtonElement
+        && grid?.contains(focusedTrigger)
+        && focusedTrigger.classList.contains('event-calendar-trigger')
+        ? focusedTrigger.dataset.eventSlug
+        : null;
+      const events = pendingEvents;
+      pendingEvents = null;
+      render(events);
+
+      if (focusedSlug) {
+        const replacement = grid?.querySelector(`.event-calendar-trigger[data-event-slug="${CSS.escape(focusedSlug)}"]`);
+        if (replacement instanceof HTMLButtonElement) replacement.focus({ preventScroll: true });
+        else section?.querySelector('.meetups-all-btn')?.focus({ preventScroll: true });
+      }
+    }, 0);
+  });
 
   void fetchLivePublicEvents().then(render).catch(() => undefined);
 </script>
@@ -403,6 +473,7 @@ const statusConfig = {
     pointer-events: auto;
   }
   .meetup-card-actions .meetup-cta { align-self: auto; margin-top: 0; }
+  .meetup-card-actions :global(.event-calendar-trigger) { display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
 
   @media (prefers-reduced-motion: reduce) {
     .meetup-cover-image { transition: none; }

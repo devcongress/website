@@ -46,7 +46,7 @@ function initializeAnimatedCounter(root: HTMLElement, attendance: Attendance): v
   if (!count || !sizer || !wording || !label) return;
 
   const formatted = attendance.count.toLocaleString('en-GH');
-  const suffix = attendance.count === 1 ? 'person is coming' : 'people are coming';
+  const suffix = attendance.count === 1 ? 'person is going' : 'people are going';
 
   sizer.textContent = formatted;
   root.style.setProperty('--attendance-number-limit', `calc((100vw - 100px) / ${formatted.length * 0.7})`);
@@ -171,7 +171,7 @@ export async function initializeAttendanceCounter(roots: NodeListOf<HTMLElement>
 
       if (!count || !estimate) continue;
 
-      count.textContent = `${attendance.count.toLocaleString('en-GH')} ${attendance.count === 1 ? 'person is' : 'people are'} attending`;
+      count.textContent = `${attendance.count.toLocaleString('en-GH')} ${attendance.count === 1 ? 'person is' : 'people are'} going`;
       estimate.hidden = attendance.source !== 'estimate';
       root.hidden = false;
     }

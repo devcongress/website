@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-11-10 — Clarify managed payment recovery
+
+- Offer a check of the existing payment after returning from Paystack, and show supported provider observations and reservation expiry separately without inferring payment from the hold. Preserve verified fulfillment and refund precedence and support older EMS responses.
+
 ## 2026-11-07 — Add online events to calendars
 
 - Add individual online events to Google Calendar or download an .ics file for Apple Calendar, Outlook and other apps, including the public meeting link. Preserve registration and live viewing actions.

@@ -38,6 +38,7 @@ const checkoutApiOrigin = import.meta.env.PUBLIC_DEVCON26_API_ORIGIN || 'https:/
           <span>Payment received</span>
         </div>
       </div>
+      <p class="status-copy" data-payment-outcome-detail hidden></p>
       <section class="checkout-recovery" data-checkout-recovery hidden aria-label="Recover checkout access">
         <p class="recovery-notice">Your payment may still complete. <strong>Please don’t pay again.</strong></p>
         <div class="recovery-reference">
@@ -58,7 +59,7 @@ const checkoutApiOrigin = import.meta.env.PUBLIC_DEVCON26_API_ORIGIN || 'https:/
         <p>Keep this reference handy when contacting the event team.</p>
         <dl>
           <div><dt>Payment reference</dt><dd data-attention-reference></dd></div>
-          <div><dt>Expected checkout total</dt><dd data-attention-amount></dd></div>
+          <div data-attention-amount-row hidden><dt>Expected checkout total</dt><dd data-attention-amount></dd></div>
         </dl>
       </section>
 
@@ -183,9 +184,10 @@ const checkoutApiOrigin = import.meta.env.PUBLIC_DEVCON26_API_ORIGIN || 'https:/
       <div class="confirmation-actions">
         <div class="payment-actions">
           <button class="action-button retry-button" data-payment-retry type="button" hidden>Check payment status <span aria-hidden="true">↗</span></button>
-          <a class="support-link event-button" href="/devcon26/">Back to DevCon26</a>
-          <span class="footer-divider" aria-hidden="true">·</span>
-          <a class="support-link" href="mailto:hello@devcongress.org?subject=DevCon26%20payment">Contact us</a>
+          <div class="payment-secondary-actions">
+            <a class="support-link event-button" href="/devcon26/">Back to DevCon26</a>
+            <a class="support-link" href="mailto:hello@devcongress.org?subject=DevCon26%20payment">Contact us</a>
+          </div>
         </div>
 
       </div>
@@ -1420,8 +1422,6 @@ const checkoutApiOrigin = import.meta.env.PUBLIC_DEVCON26_API_ORIGIN || 'https:/
   .confirmation-actions {
     display: block;
     margin-top: 24px;
-    padding-top: 16px;
-    border-top: 1px solid var(--border);
   }
 
   .confirmation-actions .payment-actions {
@@ -1514,6 +1514,13 @@ const checkoutApiOrigin = import.meta.env.PUBLIC_DEVCON26_API_ORIGIN || 'https:/
     align-items: center;
   }
 
+  .payment-secondary-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 20px;
+  }
+
   .confirmation-actions .support-link {
     font-size: 13px;
     color: var(--text-mid);
@@ -1551,9 +1558,9 @@ const checkoutApiOrigin = import.meta.env.PUBLIC_DEVCON26_API_ORIGIN || 'https:/
     }
 
     .confirmation-actions .payment-actions {
-      flex-direction: row;
-      justify-content: center;
-      gap: 0 12px;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 4px;
     }
 
     .confirmation-actions .support-link {
@@ -1562,10 +1569,6 @@ const checkoutApiOrigin = import.meta.env.PUBLIC_DEVCON26_API_ORIGIN || 'https:/
       min-height: 44px;
       padding: 0;
     }
-  }
-
-  .footer-divider {
-    color: var(--text-mid);
   }
 
   @media (hover: hover) and (pointer: fine) {

@@ -153,6 +153,8 @@ export function initializeFlexibleCheckout(page: HTMLElement): void {
   const pay = page.querySelector<HTMLButtonElement>('[data-pay]')!;
   const retry = page.querySelector<HTMLButtonElement>('[data-retry]')!;
   const status = page.querySelector<HTMLElement>('[data-status]')!;
+  const existingCheckout = page.querySelector<HTMLElement>('[data-existing-checkout]');
+  const existingCheckoutLink = page.querySelector<HTMLAnchorElement>('[data-existing-checkout-link]');
   const availability = page.querySelector<HTMLElement>('[data-availability]')!;
   const availabilityHeading = page.querySelector<HTMLElement>('[data-availability-heading]')!;
   const availabilityMessage = page.querySelector<HTMLElement>('[data-availability-message]')!;
@@ -819,7 +821,27 @@ export function initializeFlexibleCheckout(page: HTMLElement): void {
     initializationOperation += 1;
   });
 
+  function showExistingCheckout(): void {
+    if (!existingCheckout || !existingCheckoutLink) return;
+
+    try {
+      const stored = JSON.parse(sessionStorage.getItem(FLEXIBLE_GRANT_SESSION_KEY) ?? 'null') as Record<string, unknown> | null;
+      const reference = stored?.reference;
+
+      if (stored?.flow !== 'managed' || typeof reference !== 'string'
+        || !/^devcon26-managed-(test|live)-[a-f0-9]{32}$/.test(reference)
+        || typeof stored.checkout_grant !== 'string' || !stored.checkout_grant
+        || typeof stored.checkout_verifier !== 'string' || !/^[A-Za-z0-9_-]{40,100}$/.test(stored.checkout_verifier)) return;
+
+      existingCheckoutLink.href = '/devcon26/payment-confirmation/#reference=' + encodeURIComponent(reference);
+      existingCheckout.hidden = false;
+    } catch {
+      existingCheckout.hidden = true;
+    }
+  }
+
   window.addEventListener('pageshow', (event) => {
+    showExistingCheckout();
     if (event.persisted) {
       liveBusy = false;
       (window as unknown as { turnstile?: { reset: () => void } }).turnstile?.reset();
@@ -827,6 +849,7 @@ export function initializeFlexibleCheckout(page: HTMLElement): void {
     }
   });
 
+  showExistingCheckout();
   renderRows();
   void checkLive();
 }

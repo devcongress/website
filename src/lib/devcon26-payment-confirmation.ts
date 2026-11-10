@@ -1,3 +1,4 @@
+import { signalVerifiedTicketPurchase } from './devcon26-attendance-counter';
 import { DEVCON26_BUYER_GRANT_SESSION_KEY, DEVCON26_PUBLIC_CHECKOUT_PATH, devcon26Amount, devcon26Quote } from './devcon26-checkout-contract';
 import { paymentReceiptPresentation, renderPaymentReceipt } from './payment-receipts';
 import { FLEXIBLE_GRANT_SESSION_KEY } from './devcon26-flexible-checkout';
@@ -206,6 +207,52 @@ function flexiblePaymentSummary(input: unknown, mode: 'live' | 'test' = 'live'):
   };
 }
 
+function paymentOutcomeDetail(input: unknown): string {
+  if (!input || typeof input !== 'object' || Array.isArray(input)) return '';
+
+  const result = input as Record<string, unknown>;
+  const observation = result.payment_observation;
+  const hold = result.checkout_hold;
+  const details: string[] = [];
+
+  if (observation && typeof observation === 'object' && !Array.isArray(observation)) {
+    const last = observation as Record<string, unknown>;
+    const observations: Record<string, string> = {
+      success: 'The provider previously reported a payment; the order is still being confirmed.',
+      failed: 'The provider’s last recorded check reported an unsuccessful payment.',
+      abandoned: 'The provider’s last recorded check reported that checkout was abandoned.',
+      reversed: 'The provider’s last recorded check reported a reversal.',
+      pending: 'The provider’s last recorded check reported a pending payment.',
+      ongoing: 'The provider’s last recorded check reported a payment in progress.',
+      processing: 'The provider’s last recorded check reported a payment being processed.',
+      queued: 'The provider’s last recorded check reported a queued payment.',
+    };
+    const reasons: Record<string, string> = {
+      customer_cancelled: 'The provider reported that checkout was cancelled.',
+      insufficient_funds: 'The provider reported insufficient funds.',
+      declined: 'The provider reported that the payment was declined.',
+      expired_card: 'The provider reported an expired card.',
+      bank_unavailable: 'The provider reported that the bank was unavailable.',
+      timed_out: 'The provider reported that the payment timed out.',
+      card_verification_failed: 'The provider reported that card verification failed.',
+    };
+
+    const hasReason = ['failed', 'abandoned', 'reversed'].includes(String(last.status))
+      && typeof last.reason === 'string' && Object.hasOwn(reasons, last.reason);
+
+    if (hasReason) details.push('The provider’s last recorded check: ' + reasons[last.reason as string].replace(/^The provider reported (that )?/, ''));
+    else if (typeof last.status === 'string' && Object.hasOwn(observations, last.status)) details.push(observations[last.status]);
+    if (last.check_failed === true) details.push('The latest status check was unavailable, so this information may be out of date.');
+  }
+
+  if (hold && typeof hold === 'object' && !Array.isArray(hold)
+    && (hold as Record<string, unknown>).status === 'expired') {
+    details.push('Your ticket reservation has expired. This does not confirm the payment outcome.');
+  }
+
+  return details.join(' ');
+}
+
 export function initializeDevcon26PaymentConfirmation(
   root: HTMLElement,
   initializeCardPreview: (root: HTMLElement, quantity: number, buyerGrant?: string | null, canFinishLater?: boolean) => void = () => undefined,
@@ -213,6 +260,7 @@ export function initializeDevcon26PaymentConfirmation(
   const title = root.querySelector<HTMLElement>('[data-payment-title]')!;
   const copy = root.querySelector<HTMLElement>('[data-payment-copy]')!;
   const status = root.querySelector<HTMLElement>('[data-payment-status]')!;
+  const outcomeDetail = root.querySelector<HTMLElement>('[data-payment-outcome-detail]');
   const receipt = root.querySelector<HTMLElement>('[data-payment-receipt]')!;
   const modeNotice = root.querySelector<HTMLElement>('[data-payment-mode-notice]');
   const recovery = root.querySelector<HTMLElement>('[data-checkout-recovery]');
@@ -230,12 +278,19 @@ export function initializeDevcon26PaymentConfirmation(
       if (modeNotice) modeNotice.hidden = true;
       renderPaymentReceipt(providerReceipt, providerReceiptEmail, { kind: 'reference' });
     }
+    if (outcomeDetail) {
+      outcomeDetail.hidden = true;
+      outcomeDetail.textContent = '';
+    }
     root.dataset.paymentState = state;
     title.textContent = heading;
     copy.textContent = description;
     status.setAttribute('aria-busy', String(state === 'loading'));
     receipt.hidden = state !== 'verified';
     attention.hidden = state !== 'refund_required';
+    const attentionAmountRow = root.querySelector<HTMLElement>('[data-attention-amount-row]');
+
+    if (attentionAmountRow) attentionAmountRow.hidden = true;
     if (recovery) recovery.hidden = state !== 'access_lost';
 
     if (state !== 'access_lost') {
@@ -345,6 +400,24 @@ export function initializeDevcon26PaymentConfirmation(
 
         return;
       }
+      if (response.status === 503 && managedCheckout) {
+        let detail = '';
+
+        try {
+          detail = paymentOutcomeDetail(await response.json());
+        } catch {
+          // Older servers may return no usable diagnostic details.
+        }
+        if (current !== operation) return;
+
+        showState('error', 'We couldn’t confirm the payment yet.', 'Verification is temporarily unavailable. Check the status again before starting another payment. This retry only checks the existing payment.', true);
+        if (outcomeDetail) {
+          outcomeDetail.textContent = detail;
+          outcomeDetail.hidden = !detail;
+        }
+
+        return;
+      }
       if (!response.ok) throw new Error('Verification unavailable.');
 
       const payload = await response.json();
@@ -355,19 +428,39 @@ export function initializeDevcon26PaymentConfirmation(
 
         if (liveStatus === 'refund_required') {
           root.querySelector<HTMLElement>('[data-attention-reference]')!.textContent = devcon26BuyerReference(reference);
-          showState('refund_required', 'Your payment needs attention.', 'We couldn’t complete this payment safely. Contact the event team with the reference below so they can review it. Please don’t start another payment while this is being resolved.', true);
+          const refundStatus = (payload as Record<string, unknown>).refund_status;
+          const refundCopy: Record<string, string> = {
+            required: 'Your payment requires a refund. Contact the event team with the reference below for help.',
+            processing: 'Your refund is being processed. Contact the event team with the reference below if you need help.',
+            refunded: 'Your order has been refunded. Contact the event team with the reference below if you need help.',
+            failed: 'Your refund needs attention. Contact the event team with the reference below for help.',
+            needs_attention: 'Your refund needs attention. Contact the event team with the reference below for help.',
+          };
+          const description = typeof refundStatus === 'string' && Object.hasOwn(refundCopy, refundStatus)
+            ? refundCopy[refundStatus]
+            : 'We couldn’t complete this payment safely. Contact the event team with the reference below so they can review it. Please don’t start another payment while this is being resolved.';
+
+          showState('refund_required', 'Your payment needs attention.', description, true);
 
           return;
         }
 
         if (liveStatus === 'pending') {
-          showState('pending', 'Your payment is still pending.', 'Paystack hasn’t confirmed success yet. Check the status again; there’s no need to start another payment.', true);
+          showState('pending', 'Your payment is still pending.', 'Check this payment again before starting another. Contact the event team if you need help.', true);
+          if (outcomeDetail) {
+            outcomeDetail.textContent = paymentOutcomeDetail(payload);
+            outcomeDetail.hidden = !outcomeDetail.textContent;
+          }
 
           return;
         }
 
         if (liveStatus === 'failed') {
-          showState('failed', 'Payment wasn’t successful.', 'No successful payment was confirmed. Return to DevCon26 when you’re ready to try again.');
+          showState('failed', 'Your payment needs checking.', 'Check this payment again or contact the event team before starting another payment.', true);
+          if (outcomeDetail) {
+            outcomeDetail.textContent = paymentOutcomeDetail(payload);
+            outcomeDetail.hidden = !outcomeDetail.textContent;
+          }
 
           return;
         }
@@ -379,6 +472,8 @@ export function initializeDevcon26PaymentConfirmation(
       if (!summary) throw new Error('Invalid verification result.');
 
       if (summary.status === 'verified') {
+        if (paymentMode === 'live') signalVerifiedTicketPurchase();
+
         // The validated reference and verification response agree on the stored
         // order mode; current checkout settings never select this payment's mode.
         renderPaymentReceipt(providerReceipt, providerReceiptEmail,
@@ -414,7 +509,10 @@ export function initializeDevcon26PaymentConfirmation(
       } else if (summary.status === 'refund_required') {
         root.querySelector<HTMLElement>('[data-attention-reference]')!.textContent = devcon26BuyerReference(reference);
         root.querySelector<HTMLElement>('[data-attention-amount]')!.textContent = summary.amount;
+        const attentionAmountRow = root.querySelector<HTMLElement>('[data-attention-amount-row]');
+
         showState('refund_required', 'Your payment needs attention.', 'We couldn’t complete this payment safely. Contact the event team with the reference below so they can review it. Please don’t start another payment while this is being resolved.', true);
+        if (attentionAmountRow) attentionAmountRow.hidden = false;
       } else if (summary.status === 'pending') {
         showState('pending', 'Your payment is still pending.', 'Paystack hasn’t confirmed success yet. Check the status again; there’s no need to start another payment.', true);
       } else {

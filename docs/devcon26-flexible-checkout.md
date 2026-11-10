@@ -132,6 +132,8 @@ The payment badge editor opens the photo adjuster after a new image is selected 
 
 ## Failure recovery
 
+Returning from managed Paystack checkout offers a link to check the existing reference with its saved browser grant. It never starts a replacement payment automatically. Managed confirmation can show an optional, allowlisted provider observation and a separate expired reservation notice; these are historical context, not proof of fulfillment or that a new charge is safe. Verified fulfillment and order-level refund states take precedence, and older EMS responses without this metadata retain a safe fallback.
+
 An order that cannot accept payment retains its request identity; the buyer is directed to check email or contact the organizer before starting again. The payment confirmation page hides Retry if its browser grant is absent and directs the buyer to their private ticket email. This does not infer that payment failed or authorize a new charge. The admission backend separately reconciles stored payment references.
 
 The missing-access state uses a centered, narrow layout on the existing cream background, with a fixed-size ticket-and-envelope illustration beside the heading on desktop and mobile. It displays the buyer-formatted reference as a support identifier and includes it in the contact-email subject; it is not proof of payment. Other confirmation states hide and clear these recovery details.

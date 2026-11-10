@@ -40,18 +40,21 @@ const links = conference ? [
       <span></span><span></span><span></span>
     </button>
   </div>
+  <div class="mobile-backdrop" aria-hidden="true"></div>
   <div class="mobile-menu" id="site-mobile-menu" aria-hidden="true" inert>
     <nav aria-label={conference ? 'DevCon26 mobile sections' : 'Mobile navigation'}>
       {links.map((link) => (
-        <a href={link.href} aria-current={Astro.url.pathname === link.href ? 'page' : undefined} data-confirm-navigation={guardNavigation || undefined}><span class="nav-link-label">{link.label}</span><span aria-hidden="true">↗</span></a>
+        <a href={link.href} aria-current={Astro.url.pathname === link.href ? 'page' : undefined} data-confirm-navigation={guardNavigation || undefined}><span class="nav-link-label">{link.label}</span>{!link.href.includes('#') && <span aria-hidden="true">↗</span>}</a>
       ))}
     </nav>
     <div class="mobile-actions">
+      {conference && <a href="/devcon26/#tickets" class="nav-button nav-tickets">Buy tickets</a>}
       <a href={donationPath} class="nav-button nav-support">Support the community</a>
       <a href={slackUrl} target="_blank" rel="noopener noreferrer" class="nav-button nav-slack">Join Slack</a>
     </div>
   </div>
 </header>
+<div class="navbar-placeholder" aria-hidden="true"></div>
 
 <style>
   .navbar {
@@ -171,8 +174,9 @@ const links = conference ? [
     justify-content: center;
     align-items: center;
     gap: 5px;
-    border: 1px solid var(--border-light);
+    border: 0;
     border-radius: 8px;
+    background: transparent;
     transition: transform 120ms cubic-bezier(0.4, 0, 0.2, 1);
   }
 
@@ -199,7 +203,7 @@ const links = conference ? [
     transform: scale(0.97);
   }
 
-  .mobile-menu {
+  .navbar-placeholder, .mobile-menu, .mobile-backdrop {
     display: none;
   }
 
@@ -239,6 +243,17 @@ const links = conference ? [
   }
 
   @media (max-width: 960px) {
+    .navbar[data-open='true'] {
+      position: fixed;
+      left: 0;
+      right: 0;
+    }
+
+    .navbar[data-open='true'] + .navbar-placeholder {
+      display: block;
+      height: 68px;
+    }
+
     .navbar-logo {
       flex-shrink: 1;
       min-width: 0;
@@ -283,20 +298,40 @@ const links = conference ? [
       margin-left: auto;
     }
 
+    .navbar[data-ready] .mobile-backdrop {
+      position: fixed;
+      inset: 68px 0 0;
+      display: block;
+      background: rgb(17 17 17 / 18%);
+      backdrop-filter: blur(3px);
+      visibility: hidden;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 180ms cubic-bezier(0.16, 1, 0.3, 1), visibility 0s linear 180ms;
+    }
+
+    .navbar[data-open='true'] .mobile-backdrop {
+      visibility: visible;
+      opacity: 1;
+      pointer-events: auto;
+      transition-delay: 0s;
+    }
+
     .navbar[data-ready] .mobile-menu {
       position: absolute;
+      z-index: 1;
       top: 100%;
       left: 0;
       right: 0;
       display: block;
-      padding: var(--s5) var(--pad);
+      padding: 0 var(--pad) var(--s5);
       max-height: calc(100dvh - 70px);
       overflow-y: auto;
       overscroll-behavior: contain;
-      background: var(--bg-white);
-      border-top: 2px solid var(--black);
-      border-bottom: 1px solid rgb(17 17 17 / 28%);
-      box-shadow: 0 12px 20px rgb(17 17 17 / 8%);
+      background: var(--bg);
+      border-top: 1px solid var(--border-light);
+      border-radius: 0 0 12px 12px;
+      box-shadow: 0 16px 28px rgb(17 17 17 / 16%);
       visibility: hidden;
       opacity: 0;
       pointer-events: none;
@@ -315,17 +350,17 @@ const links = conference ? [
     .mobile-menu nav {
       display: flex;
       flex-direction: column;
-      gap: var(--s1);
     }
 
     .mobile-menu nav a {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      min-height: 44px;
+      min-height: 52px;
       padding-block: var(--s2);
+      border-bottom: 1px solid var(--border-light);
       color: var(--text);
-      font-size: 18px;
+      font-size: 16px;
       font-weight: 600;
     }
 
@@ -337,10 +372,23 @@ const links = conference ? [
       display: flex;
       flex-direction: column;
       align-items: stretch;
-      gap: var(--s3);
+      gap: var(--s2);
       margin-top: var(--s4);
-      padding-top: var(--s4);
-      border-top: 1px solid var(--border-light);
+    }
+
+    .mobile-actions .nav-button {
+      min-height: 44px;
+      font-size: 14px;
+    }
+
+    .mobile-actions .nav-tickets {
+      color: var(--black);
+      background: var(--bg-yellow);
+      font-size: 16px;
+    }
+
+    .mobile-actions .nav-support {
+      border-color: var(--border-light);
     }
   }
 
@@ -359,7 +407,7 @@ const links = conference ? [
       transition: none;
     }
 
-    .navbar :is(.mobile-menu, .nav-toggle, .nav-toggle span, .nav-button) {
+    .navbar :is(.mobile-menu, .mobile-backdrop, .nav-toggle, .nav-toggle span, .nav-button) {
       transition: none;
     }
 
@@ -373,12 +421,36 @@ const links = conference ? [
   const header = document.querySelector<HTMLElement>('[data-site-navbar]');
   const toggle = header?.querySelector<HTMLButtonElement>('.nav-toggle');
   const menu = header?.querySelector<HTMLElement>('.mobile-menu');
+  const backdrop = header?.querySelector<HTMLElement>('.mobile-backdrop');
 
-  if (header && toggle && menu) {
+  if (header && toggle && menu && backdrop) {
     const mobile = window.matchMedia('(max-width: 960px)');
+    const inertStates = new Map<HTMLElement, boolean>();
+    let previousHtmlOverflow = '';
+    let locked = false;
 
     const setOpen = (requested: boolean) => {
       const open = requested && mobile.matches;
+
+      if (open && !locked) {
+        previousHtmlOverflow = document.documentElement.style.overflow;
+        document.documentElement.style.overflow = 'hidden';
+
+        for (const child of document.body.children) {
+          if (child instanceof HTMLElement && child !== header) {
+            inertStates.set(child, child.inert);
+            child.inert = true;
+          }
+        }
+
+        locked = true;
+      } else if (!open && locked) {
+        document.documentElement.style.overflow = previousHtmlOverflow;
+
+        for (const [element, wasInert] of inertStates) element.inert = wasInert;
+        inertStates.clear();
+        locked = false;
+      }
 
       header.dataset.open = String(open);
       toggle.setAttribute('aria-expanded', String(open));
@@ -391,6 +463,10 @@ const links = conference ? [
     header.dataset.ready = 'true';
 
     toggle.addEventListener('click', () => setOpen(header.dataset.open !== 'true'));
+    backdrop.addEventListener('click', () => {
+      setOpen(false);
+      toggle.focus({ preventScroll: true });
+    });
 
     menu.addEventListener('click', (event) => {
       if (event.target instanceof Element && event.target.closest('a')) {
@@ -400,6 +476,19 @@ const links = conference ? [
     });
 
     document.addEventListener('keydown', (event) => {
+      if (event.key === 'Tab' && header.dataset.open === 'true') {
+        const links = Array.from(menu.querySelectorAll<HTMLAnchorElement>('a[href]'));
+        const last = links.at(-1);
+
+        if (event.shiftKey && document.activeElement === toggle && last) {
+          event.preventDefault();
+          last.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault();
+          toggle.focus();
+        }
+      }
+
       if (event.key === 'Escape' && header.dataset.open === 'true') {
         setOpen(false);
         toggle.focus({ preventScroll: true });

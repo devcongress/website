@@ -13,7 +13,10 @@ const { variant = 'plain' } = Astro.props;
     </svg>}
     <div class="attendance-sticker-face" aria-hidden="true">
       <strong class="attendance-sticker-number"><span data-attendance-sizer></span><span data-attendance-count></span></strong>
-      <span data-attendance-wording></span>
+      <span class="attendance-sticker-wording"><span data-attendance-wording></span> <svg class="attendance-wave" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false">
+        <path d="M8 12V5a1.4 1.4 0 0 1 2.8 0v5M10.8 10V3.8a1.4 1.4 0 0 1 2.8 0V10m0 0V5a1.4 1.4 0 0 1 2.8 0v6m0 0V7.5a1.4 1.4 0 0 1 2.8 0v6.7c0 4-2.7 6.8-6.6 6.8h-.7c-2.3 0-4-.9-5.3-2.7L4.3 15a1.5 1.5 0 0 1 2.2-2l1.5 1.5V12Z" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" />
+        <path d="M4.5 4.5 3 3m1 5H2m18-3 1.5-1.5M21 9h2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" />
+      </svg></span>
     </div>
     <span class="visually-hidden" data-attendance-label></span>
   </div>
@@ -129,6 +132,18 @@ const { variant = 'plain' } = Astro.props;
     font-size: var(--text-sm);
     font-weight: 700;
     line-height: 1.2;
+    white-space: pre-line;
+  }
+
+  .attendance-wave {
+    width: 1.15em;
+    height: 1.15em;
+    color: #a80058;
+    vertical-align: -0.2em;
+  }
+
+  .attendance-hanging .attendance-wave {
+    color: #876331;
   }
 
   .attendance-sticker-rays {

@@ -53,9 +53,9 @@ function fixture() {
 }
 
 for (const [input, label, estimated] of [
-  [{ count: 0, source: 'actual' }, '0 people are coming. Are you?', false],
-  [{ count: 1, source: 'actual' }, '1 person is coming. Are you?', false],
-  [{ count: 1250, source: 'estimate' }, '1,250 people are coming. Are you?', true],
+  [{ count: 0, source: 'actual' }, '0 people are attending', false],
+  [{ count: 1, source: 'actual' }, '1 person is attending', false],
+  [{ count: 1250, source: 'estimate' }, '1,250 people are attending', true],
 ]) {
   payload = input;
   const root = fixture();
@@ -65,8 +65,8 @@ for (const [input, label, estimated] of [
   assert.equal(root.estimate.hidden, !estimated);
 }
 for (const [variant, count, expected] of [
-  ['sticker', 1, '1 person is coming. Are you?'],
-  ['hanging', 1250, '1,250 people are coming. Are you?'],
+  ['sticker', 1, '1 person is coming'],
+  ['hanging', 1250, '1,250 people are coming'],
 ]) {
   payload = { count, source: 'actual' };
   const elements = {

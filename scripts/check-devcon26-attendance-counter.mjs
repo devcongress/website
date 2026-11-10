@@ -22,7 +22,8 @@ const context = {
   module: counterModule,
   URL,
   AbortSignal,
-  window: { location: { origin: 'https://devcongress.org' } },
+  window: { location: { origin: 'https://devcongress.org' }, addEventListener() {}, removeEventListener() {}, setInterval() { return 1; }, setTimeout() { return 1; }, clearInterval() {}, clearTimeout() {} },
+  document: { visibilityState: 'visible', addEventListener() {}, removeEventListener() {} },
   fetch: async (url, options) => {
     requests.push({ url, options });
     if (fail) throw new Error('Network failure');
@@ -49,13 +50,14 @@ assert.equal(attendanceEndpoint('https://em.devcongress.org', 'https://devcongre
 function fixture() {
   const count = { textContent: '' };
   const estimate = { hidden: true };
-  return { hidden: true, count, estimate, querySelector: (selector) => selector.includes('count]') ? count : estimate };
+  return { hidden: true, count, estimate, querySelector: (selector) => selector === '[data-attendance-count]' ? count : selector === '[data-attendance-estimate]' ? estimate : null };
 }
 
 for (const [input, label, estimated] of [
   [{ count: 0, source: 'actual' }, '0 people are attending', false],
   [{ count: 1, source: 'actual' }, '1 person is attending', false],
   [{ count: 1250, source: 'estimate' }, '1,250 people are attending', true],
+  [{ count: 25, source: 'ticket_count' }, '25 tickets', false],
 ]) {
   payload = input;
   const root = fixture();
@@ -108,6 +110,52 @@ assert.equal(requests[0].options.credentials, 'omit');
 assert.equal(requests[0].options.cache, 'no-store');
 assert.ok(requests[0].options.signal);
 
+// Exercise refresh signals and ensure a slow response cannot overlap a newer read.
+const listeners = {};
+const timers = [];
+let refreshPayload = { count: 20, source: 'ticket_count' };
+let calls = 0;
+let release;
+const lifecycleModule = { exports: {} };
+const lifecycleContext = {
+  module: lifecycleModule, URL, AbortSignal,
+  window: {
+    location: { origin: 'https://devcongress.org' },
+    addEventListener(name, callback) { listeners[name] = callback; },
+    removeEventListener() {},
+    setTimeout(callback) { timers.push(callback); return timers.length; },
+    clearTimeout() {}, setInterval(callback) { listeners.interval = callback; return 1; }, clearInterval() {},
+  },
+  document: { visibilityState: 'visible', addEventListener(name, callback) { listeners[name] = callback; }, removeEventListener() {} },
+  fetch: async () => {
+    calls += 1;
+    if (release) await new Promise((resolve) => { release = resolve; });
+    return { ok: true, json: async () => refreshPayload };
+  },
+};
+vm.runInNewContext(await bundle('src/lib/devcon26-attendance-counter.ts'), lifecycleContext);
+const lifecycleRoot = fixture();
+await lifecycleModule.exports.initializeAttendanceCounter([lifecycleRoot], 'https://em.devcongress.org');
+assert.equal(lifecycleRoot.count.textContent, '20 tickets');
+refreshPayload = { count: 25, source: 'ticket_count' };
+listeners.storage({ key: 'devcon26-ticket-counter-refresh' });
+await new Promise((resolve) => setImmediate(resolve));
+assert.equal(lifecycleRoot.count.textContent, '25 tickets');
+assert.equal(timers.length, 3);
+refreshPayload = { count: 26, source: 'ticket_count' };
+listeners.visibilitychange();
+await new Promise((resolve) => setImmediate(resolve));
+assert.equal(lifecycleRoot.count.textContent, '26 tickets');
+release = true;
+listeners.interval();
+listeners.interval();
+const duringRequest = calls;
+release();
+release = null;
+await new Promise((resolve) => setImmediate(resolve));
+assert.equal(calls, duringRequest + 1, 'overlapping signals coalesce into one follow-up read');
+listeners.pagehide({ persisted: false });
+
 const workerModule = { exports: {} };
 let upstreamRequest;
 let upstreamFails = false;
@@ -118,12 +166,12 @@ vm.runInNewContext(await bundle('src/worker.ts'), {
     upstreamRequest = { url: String(url), options };
     if (upstreamFails) throw new Error('Unavailable');
     if (upstreamRedirects) return Response.redirect('https://example.com/', 302);
-    return Response.json({ count: 42, source: 'estimate', private: 'discarded' });
+    return Response.json({ count: 42, source: 'ticket_count', private: 'discarded' });
   },
 });
 const worker = workerModule.exports.default;
 const response = await worker.fetch(new Request('https://preview.workers.dev/api/devcon26/attendance-counter?other=1', { headers: { Cookie: 'secret', Authorization: 'secret' } }), { ASSETS: {} }, {});
-assert.deepEqual(await response.json(), { count: 42, source: 'estimate' });
+assert.deepEqual(await response.json(), { count: 42, source: 'ticket_count' });
 assert.equal(response.headers.get('Cache-Control'), 'no-store');
 assert.equal(upstreamRequest.url, 'https://em.devcongress.org/api/public/annual-conference/2026/attendance-counter');
 assert.deepEqual(Object.keys(upstreamRequest.options.headers), ['Accept']);

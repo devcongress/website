@@ -18,6 +18,9 @@ const apiOrigin = import.meta.env.PUBLIC_DEVCON26_API_ORIGIN || 'https://em.devc
         <p>Your ticket. Your community. A day of building what’s next.</p>
       </header>
 
+      <p class="checkout-test-notice" data-existing-checkout hidden>
+        Returned from payment? <a class="existing-checkout-link" data-existing-checkout-link href="/devcon26/payment-confirmation/">Check your existing payment</a> before starting another.
+      </p>
       <p class="checkout-test-notice" data-payment-mode-notice role="status" hidden></p>
 
       <section class="checkout-card checkout-availability" data-availability aria-live="polite" aria-atomic="true">
@@ -186,3 +189,11 @@ const apiOrigin = import.meta.env.PUBLIC_DEVCON26_API_ORIGIN || 'https://em.devc
 
   if (page) initializeFlexibleCheckout(page);
 </script>
+
+<style>
+  .existing-checkout-link {
+    color: var(--pink);
+    font-weight: 700;
+    text-decoration: underline;
+  }
+</style>

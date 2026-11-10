@@ -172,7 +172,7 @@ function checkoutFixture(handler) {
     module, document, URL, URLSearchParams, AbortController, crypto: { randomUUID },
     console: { warn() {} },
     FormData: class { get() { return challenge; } },
-    sessionStorage: { setItem: (key, value) => storage.set(key, value) },
+    sessionStorage: { setItem: (key, value) => storage.set(key, value), getItem: (key) => storage.get(key) ?? null },
     window: {
       setTimeout, clearTimeout,
       matchMedia: (query) => ({ matches: query.includes('reduced-motion'), addEventListener() {} }),
@@ -314,6 +314,19 @@ await tick();
 assert.equal(departed.steps[0].hidden, false, 'BFCache restoration notices a settings change and requires review');
 assert.equal(departed.requests.filter((request) => request.body).length, 1, 'Restoration only refreshes the catalog');
 
+
+let returnedFixture;
+returnedFixture = checkoutFixture((request) => response(request.body ? initialized() : catalog()));
+await tick();
+await returnedFixture.review();
+await returnedFixture.form.fire('submit');
+await returnedFixture.windowEvents.fire('pagehide');
+await returnedFixture.windowEvents.fire('pageshow', { persisted: true });
+await tick();
+assert.equal(returnedFixture.page.querySelector('[data-existing-checkout]').hidden, false);
+assert.match(returnedFixture.page.querySelector('[data-existing-checkout-link]').href, /#reference=devcon26-managed-test-/);
+assert.equal(returnedFixture.requests.filter((request) => request.body).length, 1, 'Returning never initializes a replacement checkout');
+
 let retryCount = 0;
 const retry = checkoutFixture((request) => {
   if (!request.body) return response(catalog('live'));
@@ -380,17 +393,20 @@ function confirmationFixture(reference, mode, options = {}) {
   const root = new Element();
   const requests = [];
   const badgeCalls = [];
+  const signals = [];
   const module = { exports: {} };
 
   root.dataset.checkoutApiOrigin = apiOrigin;
   vm.runInNewContext(confirmationCode, {
-    module, URL, URLSearchParams, AbortController, document: {},
+    module, URL, URLSearchParams, AbortController, Event, document: {},
+    localStorage: { setItem: (key) => signals.push(key) },
     sessionStorage: { getItem: () => options.missingGrant ? null : JSON.stringify({
       reference, checkout_grant: 'scoped-grant', checkout_verifier: verifier,
     }) },
     window: {
       location: { search: '?reference=' + reference, hash: '', pathname: '/devcon26/payment-confirmation/' },
       history: { replaceState() {} }, setTimeout, clearTimeout, addEventListener() {},
+      dispatchEvent: (event) => signals.push(event.type),
     },
     fetch: async (url, init) => {
       requests.push({ url, body: JSON.parse(init.body) });
@@ -398,13 +414,14 @@ function confirmationFixture(reference, mode, options = {}) {
       return response({
         mode: options.responseMode ?? mode, status: options.status ?? 'verified', currency: 'GHS', quantity: 1,
         ticket_amount_minor: 15000, processing_fee_minor: 299, amount_paid_minor: 15299,
-        card_quantity: 1, buyer_grant: 'self-seat-grant',
-      });
+        card_quantity: options.cardQuantity ?? 1, buyer_grant: 'self-seat-grant',
+        ...options.extra,
+      }, options.httpStatus ?? 200);
     },
   });
   module.exports.initializeDevcon26PaymentConfirmation(root, (...args) => badgeCalls.push(args));
 
-  return { root, requests, badgeCalls, exports: module.exports };
+  return { root, requests, badgeCalls, signals, exports: module.exports };
 }
 
 for (const mode of ['test', 'live']) {
@@ -414,6 +431,7 @@ for (const mode of ['test', 'live']) {
   assert.equal(fixture.requests[0].url, apiOrigin + path + '/verify');
   assert.deepEqual(Object.keys(fixture.requests[0].body).sort(), ['checkout_grant', 'checkout_verifier', 'reference']);
   assert.equal(fixture.root.dataset.paymentState, 'verified');
+  assert.deepEqual(fixture.signals, mode === 'live' ? ['devcon26-ticket-counter-refresh', 'devcon26-ticket-counter-refresh'] : []);
   assert.equal(fixture.root.querySelector('[data-payment-mode-notice]').hidden, mode !== 'test');
   assert.equal(fixture.root.querySelector('[data-payment-fee-row]').hidden, false);
   assert.equal(fixture.root.querySelector('[data-payment-fee]').textContent, 'GHS 2.99');
@@ -423,6 +441,87 @@ for (const mode of ['test', 'live']) {
 
   assert.equal(fixture.exports.devcon26ConfirmationReference('#reference=' + shown), initialized(mode).reference);
 }
+
+const communityConfirmation = confirmationFixture(initialized('live').reference, 'live', { cardQuantity: 0 });
+await tick();
+assert.equal(communityConfirmation.root.dataset.paymentState, 'verified');
+assert.deepEqual(communityConfirmation.signals, ['devcon26-ticket-counter-refresh', 'devcon26-ticket-counter-refresh']);
+assert.equal(communityConfirmation.badgeCalls.length, 0);
+
+const pendingConfirmation = confirmationFixture(initialized('live').reference, 'live', { status: 'pending' });
+await tick();
+assert.equal(pendingConfirmation.root.dataset.paymentState, 'pending');
+assert.deepEqual(pendingConfirmation.signals, []);
+
+
+for (const mode of ['test', 'live']) {
+  const failed = confirmationFixture(initialized(mode).reference, mode, {
+    status: 'failed',
+    extra: { payment_observation: { status: 'abandoned', reason: 'customer_cancelled', check_failed: true }, checkout_hold: { status: 'expired' } },
+  });
+
+  await tick();
+  assert.equal(failed.root.dataset.paymentState, 'failed');
+  assert.match(failed.root.querySelector('[data-payment-outcome-detail]').textContent, /cancelled.*out of date.*reservation has expired/);
+  assert.equal(failed.root.querySelector('[data-payment-retry]').hidden, false);
+  assert.equal(failed.root.querySelector('[data-payment-receipt]').hidden, true);
+  assert.equal(failed.badgeCalls.length, 0);
+  await failed.root.querySelector('[data-payment-retry]').fire('click');
+  await tick();
+  assert.deepEqual(failed.requests[1].body, failed.requests[0].body, 'Retry checks the same granted reference');
+
+  const verified = confirmationFixture(initialized(mode).reference, mode, {
+    extra: { payment_observation: { status: 'failed', reason: 'declined', check_failed: true }, checkout_hold: { status: 'expired' } },
+  });
+
+  await tick();
+  assert.equal(verified.root.dataset.paymentState, 'verified');
+  assert.equal(verified.root.querySelector('[data-payment-outcome-detail]').hidden, true, 'Verified fulfillment overrides stale observations');
+
+  const refund = confirmationFixture(initialized(mode).reference, mode, {
+    status: 'refund_required', extra: { refund_status: 'refunded', payment_observation: { status: 'success' } },
+  });
+
+  await tick();
+  assert.match(refund.root.querySelector('[data-payment-copy]').textContent, /has been refunded/);
+  assert.equal(refund.root.querySelector('[data-payment-receipt]').hidden, true);
+  assert.equal(refund.root.querySelector('[data-payment-outcome-detail]').hidden, true);
+}
+
+for (const httpStatus of [429, 503]) {
+  const unavailable = confirmationFixture(initialized('live').reference, 'live', { httpStatus });
+
+  await tick();
+  assert.equal(unavailable.root.dataset.paymentState, 'error');
+  assert.equal(unavailable.root.querySelector('[data-payment-retry]').hidden, false);
+  assert.equal(unavailable.root.querySelector('[data-payment-receipt]').hidden, true);
+  assert.equal(unavailable.badgeCalls.length, 0);
+}
+
+const unavailableDetail = confirmationFixture(initialized('live').reference, 'live', {
+  httpStatus: 503, extra: { payment_observation: { status: 'success', check_failed: true }, checkout_hold: { status: 'expired' } },
+});
+await tick();
+assert.equal(unavailableDetail.root.dataset.paymentState, 'error');
+assert.match(unavailableDetail.root.querySelector('[data-payment-outcome-detail]').textContent, /still being confirmed.*out of date.*reservation has expired/);
+assert.equal(unavailableDetail.root.querySelector('[data-payment-receipt]').hidden, true);
+assert.equal(unavailableDetail.badgeCalls.length, 0);
+
+const pendingSuccess = confirmationFixture(initialized('live').reference, 'live', {
+  status: 'pending', extra: { payment_observation: { status: 'success' } },
+});
+await tick();
+assert.equal(pendingSuccess.root.dataset.paymentState, 'pending');
+assert.match(pendingSuccess.root.querySelector('[data-payment-outcome-detail]').textContent, /still being confirmed/);
+assert.equal(pendingSuccess.root.querySelector('[data-payment-receipt]').hidden, true);
+assert.equal(pendingSuccess.badgeCalls.length, 0);
+
+const unknownMetadata = confirmationFixture(initialized('live').reference, 'live', {
+  status: 'pending', extra: { payment_observation: { status: 'unknown-provider-text', reason: '<unsafe>' }, checkout_hold: { status: 'unknown' } },
+});
+await tick();
+assert.equal(unknownMetadata.root.querySelector('[data-payment-outcome-detail]').hidden, true);
+
 
 for (const options of [{ missingGrant: true }, { responseMode: 'live' }]) {
   const fixture = confirmationFixture(initialized('test').reference, 'test', options);

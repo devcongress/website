@@ -225,10 +225,10 @@ function packageEnquiryLink(sponsorship: (typeof sponsorshipPackages)[number]) {
           </p>
           <h1 id="event-title">Technology for the <em>Next Generation</em></h1>
           <p class="hero-tagline">Innovation • Community • Impact</p>
-          <p class="hero-summary">With a gathering of builders, researchers, designers, security professionals, product managers and marketers. Come gain knowledge and exchange knowledge at DevCon26</p>
+          <p class="hero-summary"><span class="hero-summary-desktop">With a gathering of builders, researchers, designers, security professionals, product managers and marketers. Come gain knowledge and exchange knowledge at DevCon26</span><span class="hero-summary-mobile">Meet Ghana’s builders, researchers and creators. Share ideas and learn together at DevCon26.</span></p>
           <div class="hero-actions">
+            <p>19 December 2026<span class="hero-details-separator" aria-hidden="true"> · </span><br /><strong>Accra Digital Center</strong></p>
             <a class="button button-primary" href="#tickets">Buy tickets <span aria-hidden="true">↗</span></a>
-            <p>19 December 2026<br /><strong>Accra Digital Center</strong></p>
           </div>
         </div>
 
@@ -706,6 +706,10 @@ function packageEnquiryLink(sponsorship: (typeof sponsorshipPackages)[number]) {
     text-wrap: pretty;
   }
 
+  .hero-summary-mobile, .hero-details-separator {
+    display: none;
+  }
+
   .hero-actions {
     display: flex;
     align-items: center;
@@ -717,6 +721,7 @@ function packageEnquiryLink(sponsorship: (typeof sponsorshipPackages)[number]) {
   }
 
   .hero-actions p {
+    order: 1;
     font-size: 12px;
     line-height: 1.6;
   }
@@ -2134,7 +2139,7 @@ function packageEnquiryLink(sponsorship: (typeof sponsorshipPackages)[number]) {
     }
 
     .hero h1 {
-      font-size: clamp(30px, 8.8vw, 42px);
+      font-size: clamp(36px, 9vw, 40px);
       letter-spacing: -0.025em;
     }
 
@@ -2144,7 +2149,7 @@ function packageEnquiryLink(sponsorship: (typeof sponsorshipPackages)[number]) {
 
     .hero-tagline {
       margin-top: 12px;
-      text-align: center;
+      text-align: left;
       font-size: 15px;
       line-height: 1.4;
     }
@@ -2152,25 +2157,39 @@ function packageEnquiryLink(sponsorship: (typeof sponsorshipPackages)[number]) {
     .hero-summary {
       max-width: none;
       margin-top: 20px;
-      margin-inline: auto;
-      text-align: center;
+      text-align: left;
       font-size: 16px;
       line-height: 1.55;
     }
 
+    .hero-summary-desktop, .hero-actions p br {
+      display: none;
+    }
+
+    .hero-summary-mobile, .hero-details-separator {
+      display: inline;
+    }
+
     .hero-actions {
       flex-direction: column;
-      justify-content: center;
+      align-items: stretch;
       gap: 16px;
       margin-top: 20px;
-      text-align: center;
+      text-align: left;
     }
 
     .hero-actions p {
-      max-width: 32ch;
-      text-wrap: balance;
+      order: 0;
       font-size: 14px;
       letter-spacing: 0;
+    }
+
+    .hero-actions .button {
+      min-height: 50px;
+    }
+
+    .hero-actions .button span {
+      font-size: 18px;
     }
 
     .hero-images {

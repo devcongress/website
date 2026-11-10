@@ -2,7 +2,7 @@ export const ATTENDANCE_PATH = '/api/public/annual-conference/2026/attendance-co
 export const ATTENDANCE_RELAY_PATH = '/api/devcon26/attendance-counter';
 export const DEFAULT_API_ORIGIN = 'https://em.devcongress.org';
 
-type Attendance = { count: number; source: 'estimate' | 'actual' };
+type Attendance = { count: number; source: 'estimate' | 'actual' | 'ticket_count' };
 
 export function publishedAttendance(value: unknown): Attendance | null {
   if (!value || typeof value !== 'object') return null;
@@ -10,7 +10,7 @@ export function publishedAttendance(value: unknown): Attendance | null {
   const candidate = value as Record<string, unknown>;
 
   if (!Number.isSafeInteger(candidate.count) || (candidate.count as number) < 0) return null;
-  if (candidate.source !== 'estimate' && candidate.source !== 'actual') return null;
+  if (candidate.source !== 'estimate' && candidate.source !== 'actual' && candidate.source !== 'ticket_count') return null;
 
   return { count: candidate.count as number, source: candidate.source };
 }
@@ -37,16 +37,16 @@ export function attendanceEndpoint(configuredOrigin: string, websiteOrigin: stri
   }
 }
 
-function initializeAnimatedCounter(root: HTMLElement, attendance: Attendance): void {
+function initializeAnimatedCounter(root: HTMLElement, attendance: Attendance): () => void {
   const count = root.querySelector<HTMLElement>('[data-attendance-count]');
   const sizer = root.querySelector<HTMLElement>('[data-attendance-sizer]');
   const wording = root.querySelector<HTMLElement>('[data-attendance-wording]');
   const label = root.querySelector<HTMLElement>('[data-attendance-label]');
 
-  if (!count || !sizer || !wording || !label) return;
+  if (!count || !sizer || !wording || !label) return () => {};
 
   const formatted = attendance.count.toLocaleString('en-GH');
-  const suffix = attendance.count === 1 ? 'person is coming' : 'people are coming';
+  const suffix = attendance.source === 'ticket_count' ? (attendance.count === 1 ? 'ticket' : 'tickets') : attendance.count === 1 ? 'person is coming' : 'people are coming';
 
   sizer.textContent = formatted;
   root.style.setProperty('--attendance-number-limit', `calc((100vw - 100px) / ${formatted.length * 0.7})`);
@@ -56,7 +56,7 @@ function initializeAnimatedCounter(root: HTMLElement, attendance: Attendance): v
 
   if (!('IntersectionObserver' in window) || !window.matchMedia || attendance.count === 0) {
     count.textContent = formatted;
-    return;
+    return () => {};
   }
 
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -74,13 +74,14 @@ function initializeAnimatedCounter(root: HTMLElement, attendance: Attendance): v
 
   if (reducedMotion.matches || typeof Element.prototype.animate !== 'function') {
     settle();
-    return;
+    return () => {};
   }
 
   count.textContent = '0';
-  reducedMotion.addEventListener('change', (event) => {
+  const onMotionChange = (event: MediaQueryListEvent) => {
     if (event.matches) settle();
-  });
+  };
+  reducedMotion.addEventListener('change', onMotionChange);
 
   const observer = new IntersectionObserver((entries) => {
     if (!entries.some((entry) => entry.isIntersecting)) return;
@@ -138,6 +139,28 @@ function initializeAnimatedCounter(root: HTMLElement, attendance: Attendance): v
   });
 
   observer.observe(root);
+
+  return () => {
+    observer.disconnect();
+    reducedMotion.removeEventListener('change', onMotionChange);
+    settle();
+  };
+}
+
+export const TICKET_COUNTER_SIGNAL = 'devcon26-ticket-counter-refresh';
+
+export function signalVerifiedTicketPurchase(): void {
+  try {
+    window.dispatchEvent(new Event(TICKET_COUNTER_SIGNAL));
+  } catch {
+    // A counter refresh must never interrupt payment confirmation.
+  }
+
+  try {
+    localStorage.setItem(TICKET_COUNTER_SIGNAL, `${Date.now()}-${Math.random()}`);
+  } catch {
+    // Visibility and periodic refresh still work when storage is blocked.
+  }
 }
 
 export async function initializeAttendanceCounter(roots: NodeListOf<HTMLElement>, configuredOrigin: string): Promise<void> {
@@ -147,35 +170,118 @@ export async function initializeAttendanceCounter(roots: NodeListOf<HTMLElement>
 
   if (!endpoint) return;
 
-  try {
-    const response = await fetch(endpoint, {
-      credentials: 'omit',
-      cache: 'no-store',
-      signal: AbortSignal.timeout(12_000),
-    });
+  let inFlight = false;
+  let pending = false;
+  let stopped = false;
+  const timers: number[] = [];
+  const animated = new Map<HTMLElement, () => void>();
+  const rendered = new WeakSet<HTMLElement>();
 
-    if (!response.ok) return;
-
-    const attendance = publishedAttendance(await response.json());
-
-    if (!attendance) return;
-
-    for (const root of roots) {
-      if (root.dataset?.attendanceVariant === 'sticker' || root.dataset?.attendanceVariant === 'hanging') {
-        initializeAnimatedCounter(root, attendance);
-        continue;
-      }
-
-      const count = root.querySelector<HTMLElement>('[data-attendance-count]');
-      const estimate = root.querySelector<HTMLElement>('[data-attendance-estimate]');
-
-      if (!count || !estimate) continue;
-
-      count.textContent = `${attendance.count.toLocaleString('en-GH')} ${attendance.count === 1 ? 'person is' : 'people are'} attending`;
-      estimate.hidden = attendance.source !== 'estimate';
-      root.hidden = false;
+  async function refresh(): Promise<void> {
+    if (inFlight) {
+      pending = true;
+      return;
     }
-  } catch {
-    // The public counter is optional; keep it hidden when unavailable.
+
+    inFlight = true;
+
+    try {
+      const response = await fetch(endpoint!, {
+        credentials: 'omit',
+        cache: 'no-store',
+        signal: AbortSignal.timeout(12_000),
+      });
+
+      if (!response.ok) throw new Error('Counter unavailable');
+      const attendance = publishedAttendance(await response.json());
+
+      if (!attendance) throw new Error('Invalid counter');
+      if (stopped) return;
+
+      for (const root of roots) {
+        const count = root.querySelector<HTMLElement>('[data-attendance-count]');
+        const estimate = root.querySelector<HTMLElement>('[data-attendance-estimate]');
+        const isAnimated = root.dataset?.attendanceVariant === 'sticker' || root.dataset?.attendanceVariant === 'hanging';
+
+        if (!count) continue;
+        if (isAnimated && !rendered.has(root)) {
+          animated.set(root, initializeAnimatedCounter(root, attendance));
+          rendered.add(root);
+          continue;
+        }
+
+        animated.get(root)?.();
+        animated.delete(root);
+        const formatted = attendance.count.toLocaleString('en-GH');
+
+        if (isAnimated) {
+          const sizer = root.querySelector<HTMLElement>('[data-attendance-sizer]');
+          const wording = root.querySelector<HTMLElement>('[data-attendance-wording]');
+          const label = root.querySelector<HTMLElement>('[data-attendance-label]');
+          const suffix = attendance.source === 'ticket_count' ? (attendance.count === 1 ? 'ticket' : 'tickets') : attendance.count === 1 ? 'person is coming' : 'people are coming';
+
+          if (!sizer || !wording || !label) continue;
+          sizer.textContent = formatted;
+          root.style.setProperty('--attendance-number-limit', `calc((100vw - 100px) / ${formatted.length * 0.7})`);
+          count.textContent = formatted;
+          wording.textContent = suffix;
+          label.textContent = `${formatted} ${suffix}`;
+        } else {
+          if (!estimate) continue;
+          count.textContent = attendance.source === 'ticket_count'
+            ? `${formatted} ${attendance.count === 1 ? 'ticket' : 'tickets'}` : `${formatted} ${attendance.count === 1 ? 'person is' : 'people are'} attending`;
+          estimate.hidden = attendance.source !== 'estimate';
+        }
+
+        root.hidden = false;
+      }
+    } catch {
+      if (!stopped) {
+        for (const root of roots) root.hidden = true;
+      }
+    } finally {
+      inFlight = false;
+
+      if (pending && !stopped) {
+        pending = false;
+        void refresh();
+      }
+    }
   }
+
+  function recheck(): void {
+    timers.splice(0).forEach((timer) => window.clearTimeout(timer));
+    void refresh();
+
+    for (const delay of [2_000, 5_000, 10_000]) {
+      timers.push(window.setTimeout(() => void refresh(), delay));
+    }
+  }
+
+  const onVisibility = () => {
+    if (document.visibilityState === 'visible') recheck();
+  };
+  const onStorage = (event: StorageEvent) => {
+    if (event.key === TICKET_COUNTER_SIGNAL) recheck();
+  };
+
+  document.addEventListener('visibilitychange', onVisibility);
+  window.addEventListener('storage', onStorage);
+  window.addEventListener(TICKET_COUNTER_SIGNAL, recheck);
+  const interval = window.setInterval(() => {
+    if (document.visibilityState === 'visible') void refresh();
+  }, 60_000);
+  window.addEventListener('pagehide', (event) => {
+    if (event.persisted) return;
+
+    stopped = true;
+    document.removeEventListener('visibilitychange', onVisibility);
+    window.removeEventListener('storage', onStorage);
+    window.removeEventListener(TICKET_COUNTER_SIGNAL, recheck);
+    window.clearInterval(interval);
+    timers.forEach((timer) => window.clearTimeout(timer));
+    animated.forEach((cleanup) => cleanup());
+  });
+
+  await refresh();
 }

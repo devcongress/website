@@ -37,6 +37,10 @@ export function attendanceEndpoint(configuredOrigin: string, websiteOrigin: stri
   }
 }
 
+function attendanceSuffix(count: number): string {
+  return count === 1 ? 'person is coming. Are you?' : 'people are coming. Are you?';
+}
+
 function initializeAnimatedCounter(root: HTMLElement, attendance: Attendance): () => void {
   const count = root.querySelector<HTMLElement>('[data-attendance-count]');
   const sizer = root.querySelector<HTMLElement>('[data-attendance-sizer]');
@@ -46,11 +50,11 @@ function initializeAnimatedCounter(root: HTMLElement, attendance: Attendance): (
   if (!count || !sizer || !wording || !label) return () => {};
 
   const formatted = attendance.count.toLocaleString('en-GH');
-  const suffix = attendance.source === 'ticket_count' ? (attendance.count === 1 ? 'ticket' : 'tickets') : attendance.count === 1 ? 'person is coming' : 'people are coming';
+  const suffix = attendanceSuffix(attendance.count);
 
   sizer.textContent = formatted;
   root.style.setProperty('--attendance-number-limit', `calc((100vw - 100px) / ${formatted.length * 0.7})`);
-  wording.textContent = suffix;
+  wording.textContent = suffix.replace(' Are you?', '\nAre you?');
   label.textContent = `${formatted} ${suffix}`;
   root.hidden = false;
 
@@ -218,18 +222,17 @@ export async function initializeAttendanceCounter(roots: NodeListOf<HTMLElement>
           const sizer = root.querySelector<HTMLElement>('[data-attendance-sizer]');
           const wording = root.querySelector<HTMLElement>('[data-attendance-wording]');
           const label = root.querySelector<HTMLElement>('[data-attendance-label]');
-          const suffix = attendance.source === 'ticket_count' ? (attendance.count === 1 ? 'ticket' : 'tickets') : attendance.count === 1 ? 'person is coming' : 'people are coming';
+          const suffix = attendanceSuffix(attendance.count);
 
           if (!sizer || !wording || !label) continue;
           sizer.textContent = formatted;
           root.style.setProperty('--attendance-number-limit', `calc((100vw - 100px) / ${formatted.length * 0.7})`);
           count.textContent = formatted;
-          wording.textContent = suffix;
+          wording.textContent = suffix.replace(' Are you?', '\nAre you?');
           label.textContent = `${formatted} ${suffix}`;
         } else {
           if (!estimate) continue;
-          count.textContent = attendance.source === 'ticket_count'
-            ? `${formatted} ${attendance.count === 1 ? 'ticket' : 'tickets'}` : `${formatted} ${attendance.count === 1 ? 'person is' : 'people are'} attending`;
+          count.textContent = `${formatted} ${attendanceSuffix(attendance.count)}`;
           estimate.hidden = attendance.source !== 'estimate';
         }
 

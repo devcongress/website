@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-11-10 — Update the DevCon26 attendance message
+
+- Show “people are coming. Are you?” with the live count and add a small wave to the badge-style counters.
+
 ## 2026-11-10 — Clarify managed payment recovery
 
 - Offer a check of the existing payment after returning from Paystack, and show supported provider observations and reservation expiry separately without inferring payment from the hold. Preserve verified fulfillment and refund precedence and support older EMS responses.

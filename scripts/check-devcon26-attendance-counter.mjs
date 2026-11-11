@@ -54,10 +54,10 @@ function fixture() {
 }
 
 for (const [input, label, estimated] of [
-  [{ count: 0, source: 'actual' }, '0 people are attending', false],
-  [{ count: 1, source: 'actual' }, '1 person is attending', false],
-  [{ count: 1250, source: 'estimate' }, '1,250 people are attending', true],
-  [{ count: 25, source: 'ticket_count' }, '25 tickets', false],
+  [{ count: 0, source: 'actual' }, '0 people are coming. Are you?', false],
+  [{ count: 1, source: 'actual' }, '1 person is coming. Are you?', false],
+  [{ count: 1250, source: 'estimate' }, '1,250 people are coming. Are you?', true],
+  [{ count: 25, source: 'ticket_count' }, '25 people are coming. Are you?', false],
 ]) {
   payload = input;
   const root = fixture();
@@ -66,11 +66,13 @@ for (const [input, label, estimated] of [
   assert.equal(root.count.textContent, label);
   assert.equal(root.estimate.hidden, !estimated);
 }
-for (const [variant, count, expected] of [
-  ['sticker', 1, '1 person is coming'],
-  ['hanging', 1250, '1,250 people are coming'],
+for (const [variant, count, source, expected] of [
+  ['sticker', 1, 'actual', '1 person is coming. Are you?'],
+  ['hanging', 1250, 'actual', '1,250 people are coming. Are you?'],
+  ['sticker', 23, 'ticket_count', '23 people are coming. Are you?'],
+  ['hanging', 23, 'ticket_count', '23 people are coming. Are you?'],
 ]) {
-  payload = { count, source: 'actual' };
+  payload = { count, source };
   const elements = {
     '[data-attendance-count]': { textContent: '' },
     '[data-attendance-sizer]': { textContent: '' },
@@ -136,16 +138,16 @@ const lifecycleContext = {
 vm.runInNewContext(await bundle('src/lib/devcon26-attendance-counter.ts'), lifecycleContext);
 const lifecycleRoot = fixture();
 await lifecycleModule.exports.initializeAttendanceCounter([lifecycleRoot], 'https://em.devcongress.org');
-assert.equal(lifecycleRoot.count.textContent, '20 tickets');
+assert.equal(lifecycleRoot.count.textContent, '20 people are coming. Are you?');
 refreshPayload = { count: 25, source: 'ticket_count' };
 listeners.storage({ key: 'devcon26-ticket-counter-refresh' });
 await new Promise((resolve) => setImmediate(resolve));
-assert.equal(lifecycleRoot.count.textContent, '25 tickets');
+assert.equal(lifecycleRoot.count.textContent, '25 people are coming. Are you?');
 assert.equal(timers.length, 3);
 refreshPayload = { count: 26, source: 'ticket_count' };
 listeners.visibilitychange();
 await new Promise((resolve) => setImmediate(resolve));
-assert.equal(lifecycleRoot.count.textContent, '26 tickets');
+assert.equal(lifecycleRoot.count.textContent, '26 people are coming. Are you?');
 release = true;
 listeners.interval();
 listeners.interval();

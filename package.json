@@ -18,12 +18,12 @@
   },
   "dependencies": {
     "@inttegro/js": "0.7.2",
-    "astro": "^7.4.7",
+    "astro": "^7.4.11",
     "zod": "^4.6.7"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "5.20261106.1",
-    "wrangler": "^4.158.0"
+    "@cloudflare/workers-types": "5.20261113.1",
+    "wrangler": "^4.161.0"
   },
   "pnpm": {
     "overrides": {

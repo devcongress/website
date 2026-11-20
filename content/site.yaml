@@ -8,9 +8,9 @@
     - value: "6000+"
       label: "Community Members"
       description: "Developers, Designers, Founders, Hackers and Makers across Africa."
-    - value: "10+"
+    - value: "13"
       label: "Years"
-      description: "Building Community since 2015."
+      description: "Building Community since 2013."
 
   socials:
     - platform: linkedin

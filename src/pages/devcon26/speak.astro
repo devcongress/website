@@ -1,1084 +1,190 @@
 ---
 import Base from '../../layouts/Base.astro';
-import Devcon26HomeLink from '../../components/Devcon26HomeLink.astro';
-import FormDropdown from '../../components/FormDropdown.astro';
-import { EVENT_SUBMISSION_TURNSTILE_SITE_KEY } from '../../lib/events';
-const localPreview = import.meta.env.DEV;
-const apiOrigin = import.meta.env.PUBLIC_DEVCON26_API_ORIGIN || 'https://em.devcongress.org';
 ---
 
-<Base title="Apply to speak | DevCon26" description="Share something useful with the DevCon26 community. Apply to speak at our annual conference." showFooter={false}>
-  <main class="speaker-page" data-speaker-page data-api-origin={apiOrigin} data-local-preview={localPreview ? 'true' : undefined}>
-    <Devcon26HomeLink />
-    <div class="page-heading">
-      <div><p class="eyebrow">DevCon26 · Call for Speakers</p><h1>Something worth <em>sharing?</em></h1></div>
-      <p class="intro">Bring your experience, your experiments, and your perspective to the community.</p>
-    </div>
-    <p id="cfp-status" data-cfp-status role="status" tabindex="-1">Checking the Call for Speakers…</p>
-    <form data-cfp-form novalidate hidden>
-      <ol class="stepper" aria-label="Application steps">
-        {['About you', 'Your session', 'Proposal details', 'Review'].map((label, index) => (
-          <li data-step-label={index} aria-current={index === 0 ? 'step' : undefined}>
-            <span class="step-number" data-step-number aria-hidden="true">{index + 1}</span><span>{label}</span>
-          </li>
-        ))}
-      </ol>
-      <section class="step-panel" data-step="0" aria-labelledby="about-heading">
-        <h2 id="about-heading">About you</h2>
-        <div class="field-grid">
-        <label>Your name<input name="speaker_name" maxlength="120" autocomplete="name" required /></label>
-        <label>Email<input name="speaker_email" type="email" maxlength="254" autocomplete="email" required /></label>
-        <label class="full-width">Short bio<textarea name="bio" maxlength="4000" rows="4" required></textarea></label>
+<Base title="Speaker applications are closed | DevCon26" description="Join DevCon26 in Accra on 19 December 2026. Speaker applications are closed and tickets are available." showFooter={false}>
+  <main class="speaker-page">
+    <section aria-labelledby="speaker-heading">
+      <img class="banner" src="/images/devcon26/hero-may-speakers.webp" width="1100" height="734" alt="Four speakers together at the May DevCongress meetup" />
+      <div class="notice">
+        <div class="message">
+          <a class="back" href="/devcon26/#speakers" aria-label="Back to DevCon26 speakers">← DevCon26</a>
+          <h1 id="speaker-heading">Speaker applications are closed.</h1>
         </div>
-        <div class="actions"><span>Step 1 of 4</span><button type="button" data-next="1" disabled>Continue →</button></div>
-      </section>
-      <section class="step-panel" data-step="1" aria-labelledby="session-heading" hidden>
-        <h2 id="session-heading">Your session</h2>
-        <label>Session title<input name="title" maxlength="200" required /></label>
-        <div class="field-grid">
-          {[['topic', 'Topic track', 'Choose a track'], ['session_type', 'Session type', 'Choose a format']].map(([name, label, placeholder]) => (
-            <FormDropdown name={name} label={label} placeholder={placeholder} />
-          ))}
-        </div>
-        <div class="actions"><button class="secondary" type="button" data-back="0"><svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="m8 4-6 6 6 6M2 10h16" /></svg>Back</button><span>Step 2 of 4</span><button type="button" data-next="2" disabled>Continue →</button></div>
-      </section>
-      <section class="step-panel" data-step="2" aria-labelledby="details-heading" hidden>
-        <h2 id="details-heading">Proposal details</h2>
-        <div class="field-grid proposal-fields">
-          <label>Abstract
-            <textarea name="abstract" rows="7" maxlength="12000" aria-describedby="abstract-limit abstract-error" required></textarea>
-            <small id="abstract-limit" data-abstract-limit></small>
-            <small id="abstract-error" class="field-error" hidden></small>
-          </label>
-          <fieldset class="outcomes-editor" aria-describedby="outcomes-hint outcomes-progress outcomes-error">
-            <legend>Learning outcomes</legend>
-            <small id="outcomes-hint">Add 3–5 concrete things attendees will understand, be able to do, or take away. Up to 300 characters each.</small>
-            <div data-outcome-rows></div>
-            <button type="button" class="outcome-add" data-add-outcome>＋ Add another outcome</button>
-            <small id="outcomes-progress" aria-live="polite"></small>
-            <small id="outcomes-error" class="field-error" hidden></small>
-            <textarea name="learning_outcomes" hidden></textarea>
-          </fieldset>
-        </div>
-        <div class="actions">
-          <button class="secondary" type="button" data-back="1">← Back</button>
-          <button type="button" data-next="3" disabled>Preview proposal →</button>
-        </div>
-      </section>
-      <section class="step-panel" data-step="3" aria-labelledby="review-heading" hidden>
-        <h2 id="review-heading" tabindex="-1">Review your proposal</h2>
-        <p class="review-intro">Check your details before sending. You won’t be able to edit your proposal after submission.</p>
-        <dl class="review-details">
-          {[['speaker_name', 'Your name'], ['speaker_email', 'Email'], ['bio', 'Short bio'], ['title', 'Session title'], ['topic', 'Topic track'], ['session_type', 'Session type'], ['abstract', 'Abstract']].map(([name, label]) => (
-            <div><dt>{label}</dt><dd data-review-field={name}></dd></div>
-          ))}
-          <div><dt>Learning outcomes</dt><dd><ol data-review-outcomes></ol></dd></div>
-        </dl>
-        <div class="submit-footer">
-          {!localPreview && <div class="cf-turnstile" data-size="compact" data-sitekey={EVENT_SUBMISSION_TURNSTILE_SITE_KEY} data-action="cfp_submission"></div>}
-          {localPreview && <p class="preview-note">Local preview: this button shows the confirmation only. Nothing will be sent.</p>}
-          <div class="actions">
-            <button class="secondary" type="button" data-back="2">← Back</button>
-            <button type="submit">{localPreview ? 'Preview confirmation ↗' : 'Submit proposal ↗'}</button>
+        <div class="invitation">
+          <p>You can still join us at DevCon26.</p>
+          <p class="details"><time datetime="2026-12-19">19 December 2026</time> · Accra Digital Center</p>
+          <div class="badge-art" aria-hidden="true">
+            <img src="/images/devcon26/social-card/devcon26-v11-base-1080x1350.png" alt="" width="1080" height="1350" />
           </div>
+          <a class="button ticket" href="/devcon26/#tickets">Get a ticket <span aria-hidden="true">↗</span></a>
         </div>
-      </section>
-    </form>
-    <section class="submission-result" data-submission-result aria-labelledby="submission-heading" hidden>
-      <div class="result-topline"><span>DevCon26 · Call for speakers</span><span class="result-status">{localPreview ? 'Confirmation preview' : 'Proposal submitted'}</span></div>
-      <h1 id="submission-heading" tabindex="-1">Thanks for<br /><em>sharing your idea.</em></h1>
-      <p class="result-intro">Thank you for offering your time and experience to the DevCongress community.</p>
-      <div class="proposal-receipt" data-proposal-receipt hidden>
-        <p class="receipt-label">Your proposal</p>
-        <h2 data-result-title></h2>
-        <p data-result-format></p>
-      </div>
-      <div class="result-next">
-        <h2>What happens next?</h2>
-        <p>The team reviews proposals for the DevCon26 programme. If selected, you’ll hear from us about next steps.</p>
-      </div>
-      <div class="result-actions">
-        <a class="result-home" href="/devcon26/">Back to DevCon26 <span aria-hidden="true">↗</span></a>
       </div>
     </section>
-    {localPreview && <p class="preview-note" data-preview-note hidden>Local preview only. Nothing was submitted or sent.</p>}
-    <noscript>Enable JavaScript to complete your speaker application.</noscript>
   </main>
-  {!localPreview && <script is:inline src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>}
 </Base>
 
-<script>
-  const page = document.querySelector<HTMLElement>('[data-speaker-page]')!;
-  const form = page.querySelector<HTMLFormElement>('[data-cfp-form]')!;
-  const status = page.querySelector<HTMLElement>('[data-cfp-status]')!;
-  const endpoint = new URL('/api/cfp/conferences/2026', page.dataset.apiOrigin);
-  const localPreview = page.dataset.localPreview === 'true';
-  const settingsEndpoint = localPreview ? '/__local/cfp/devcon26' : endpoint;
-  let abstractLimit = 300;
-  let busy = false;
-  let currentStep = 0;
-  const closeChoices: Array<() => void> = [];
-
-  const result = page.querySelector<HTMLElement>('[data-submission-result]')!;
-  const heading = page.querySelector<HTMLElement>('.page-heading')!;
-
-  function showSubmissionResult() {
-    closeChoices.forEach((close) => close());
-    const title = form.querySelector<HTMLInputElement>('[name="title"]')!.value.trim();
-    const format = form.querySelector<HTMLInputElement>('[name="session_type"]')!.value.replaceAll('_', ' ');
-    const topic = form.querySelector<HTMLInputElement>('[name="topic"]')!.value.replaceAll('_', ' ');
-    const receipt = result.querySelector<HTMLElement>('[data-proposal-receipt]')!;
-    receipt.hidden = !title && !localPreview;
-    result.querySelector('[data-result-title]')!.textContent = title || 'Building useful things, together';
-    result.querySelector('[data-result-format]')!.textContent = [format, topic].filter(Boolean).join(' · ') || 'Example proposal · Local preview';
-    form.hidden = true;
-    heading.hidden = true;
-    status.hidden = true;
-    result.hidden = false;
-    page.querySelector<HTMLElement>('[data-preview-note]')?.removeAttribute('hidden');
-    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      result.animate([{ opacity: 0, transform: 'translateY(12px)' }, { opacity: 1, transform: 'translateY(0)' }], {
-        duration: 240,
-        easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
-      });
-    }
-    result.querySelector<HTMLElement>('#submission-heading')!.focus({ preventScroll: true });
-    result.scrollIntoView({ block: 'start' });
-  }
-
-  function setupChoice(name: string, choices: string[]) {
-    const root = form.querySelector<HTMLElement>(`[data-choice="${name}"]`)!;
-    const input = root.querySelector<HTMLInputElement>('input')!;
-    const trigger = root.querySelector<HTMLButtonElement>('.choice-trigger')!;
-    const menu = root.querySelector<HTMLElement>('[role="listbox"]')!;
-    let search = '';
-    let lastKeyAt = 0;
-
-    const close = () => {
-      menu.hidden = true;
-      trigger.setAttribute('aria-expanded', 'false');
-    };
-    closeChoices.push(close);
-
-    const options = choices.map((value) => {
-      const option = document.createElement('button');
-      option.type = 'button';
-      option.tabIndex = -1;
-      option.setAttribute('role', 'option');
-      option.setAttribute('aria-selected', 'false');
-      option.textContent = value.replaceAll('_', ' ');
-      option.addEventListener('click', () => {
-        input.value = value;
-        trigger.querySelector('[data-choice-value]')!.textContent = option.textContent;
-        trigger.removeAttribute('aria-invalid');
-        trigger.removeAttribute('aria-describedby');
-        options.forEach((item) => item.setAttribute('aria-selected', String(item === option)));
-        updateContinueButtons();
-        close();
-        trigger.focus();
-      });
-      menu.append(option);
-      return option;
-    });
-
-    function positionMenu() {
-      if (menu.hidden) return;
-      const rect = trigger.getBoundingClientRect();
-      const rootRect = root.getBoundingClientRect();
-      const viewport = window.visualViewport;
-      const viewportTop = viewport?.offsetTop ?? 0;
-      const viewportBottom = viewportTop + (viewport?.height ?? window.innerHeight);
-      const gap = 4;
-      const edge = 8;
-      const below = Math.max(0, viewportBottom - rect.bottom - gap - edge);
-      const above = Math.max(0, rect.top - viewportTop - gap - edge);
-      const desiredHeight = Math.min(menu.scrollHeight + 2, 256);
-      const onTop = below < desiredHeight && above > below;
-      menu.dataset.placement = onTop ? 'top' : 'bottom';
-      menu.style.maxHeight = `${Math.min(256, onTop ? above : below)}px`;
-      menu.style.top = onTop ? 'auto' : `${rect.bottom - rootRect.top + gap}px`;
-      menu.style.bottom = onTop ? `${rootRect.bottom - rect.top + gap}px` : 'auto';
-    }
-
-    function open(last = false) {
-      closeChoices.forEach((closeMenu) => closeMenu());
-      menu.hidden = false;
-      trigger.setAttribute('aria-expanded', 'true');
-      positionMenu();
-      const selected = choices.indexOf(input.value);
-      const option = options[selected >= 0 ? selected : last ? options.length - 1 : 0];
-      option?.focus({ preventScroll: true });
-      if (option) menu.scrollTop = option.offsetTop - menu.clientHeight / 2;
-    }
-
-    window.addEventListener('resize', positionMenu);
-    window.addEventListener('scroll', positionMenu, true);
-    window.visualViewport?.addEventListener('resize', positionMenu);
-    window.visualViewport?.addEventListener('scroll', positionMenu);
-
-    trigger.addEventListener('click', () => menu.hidden ? open() : close());
-    trigger.addEventListener('keydown', (event) => {
-      if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
-        event.preventDefault();
-        open(event.key === 'ArrowUp');
-      }
-    });
-    menu.addEventListener('keydown', (event) => {
-      if (event.key === 'Escape' || event.key === 'Tab') {
-        if (event.key === 'Escape') {
-          event.preventDefault();
-          trigger.focus();
-        }
-        close();
-        return;
-      }
-      const index = options.indexOf(document.activeElement as HTMLButtonElement);
-      let next = index;
-
-      if (event.key === 'ArrowDown') next = (index + 1) % options.length;
-      else if (event.key === 'ArrowUp') next = (index - 1 + options.length) % options.length;
-      else if (event.key === 'Home') next = 0;
-      else if (event.key === 'End') next = options.length - 1;
-      else if (event.key.length === 1 && event.key !== ' ') {
-        search = Date.now() - lastKeyAt > 600 ? event.key : search + event.key;
-        lastKeyAt = Date.now();
-        next = options.findIndex((option) => option.textContent!.toLowerCase().startsWith(search.toLowerCase()));
-      } else return;
-      event.preventDefault();
-      options[next]?.focus();
-    });
-    document.addEventListener('pointerdown', (event) => {
-      if (!root.contains(event.target as Node)) close();
-    });
-    root.addEventListener('focusout', (event) => {
-      if (!root.contains(event.relatedTarget as Node)) close();
-    });
-  }
-
-  function showStep(step: number) {
-    closeChoices.forEach((close) => close());
-    status.textContent = localPreview
-      ? 'Local preview: live speaker settings loaded. You can test the form steps; submission is disabled.'
-      : 'Applications are open. Your proposal goes directly to the annual conference review team.';
-    currentStep = step;
-    if (step === 3) {
-      const data = new FormData(form);
-      form.querySelectorAll<HTMLElement>('[data-review-field]').forEach((field) => {
-        field.textContent = String(data.get(field.dataset.reviewField!) ?? '').trim();
-      });
-      const list = form.querySelector<HTMLOListElement>('[data-review-outcomes]')!;
-      list.replaceChildren(...outcomeInputs().map((input) => {
-        const item = document.createElement('li');
-        item.textContent = input.value.trim();
-        return item;
-      }));
-    }
-    form.querySelectorAll<HTMLElement>('[data-step]').forEach((panel) => { panel.hidden = Number(panel.dataset.step) !== step; });
-    form.querySelectorAll<HTMLElement>('[data-step-label]').forEach((label) => {
-      const completed = Number(label.dataset.stepLabel) < step;
-      label.classList.toggle('completed', completed);
-      label.querySelector('[data-step-number]')!.textContent = completed ? '✓' : String(Number(label.dataset.stepLabel) + 1);
-      if (Number(label.dataset.stepLabel) === step) label.setAttribute('aria-current', 'step');
-      else label.removeAttribute('aria-current');
-    });
-    if (step === 3) form.querySelector<HTMLElement>('#review-heading')!.focus();
-    else form.querySelector<HTMLInputElement | HTMLTextAreaElement>(`[data-step="${step}"] input, [data-step="${step}"] textarea`)?.focus();
-  }
-
-  function stepReady(step: number): boolean {
-    if (step === 2) {
-      const outcomes = outcomeInputs();
-      return Boolean(abstractField.value.trim()) && wordCount(abstractField.value) <= abstractLimit
-        && abstractField.validity.valid && outcomes.length >= 3 && outcomes.length <= 5
-        && outcomes.every((input) => Boolean(input.value.trim()) && input.validity.valid);
-    }
-    const fields = [...form.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>(`[data-step="${step}"] input:not([type="hidden"]), [data-step="${step}"] textarea`)];
-    const fieldsReady = fields.every((field) => field.value.trim().length > 0 && field.validity.valid);
-    const choicesReady = step !== 1 || [...form.querySelectorAll<HTMLInputElement>('[data-choice] input')].every((field) => field.value !== '');
-
-    return fieldsReady && choicesReady;
-  }
-
-  function updateContinueButtons() {
-    form.querySelectorAll<HTMLButtonElement>('[data-next]').forEach((button) => {
-      button.disabled = busy || !stepReady(Number(button.dataset.next) - 1);
-    });
-  }
-
-  form.addEventListener('input', updateContinueButtons);
-  form.addEventListener('change', updateContinueButtons);
-  window.addEventListener('pageshow', updateContinueButtons);
-
-  const abstractField = form.querySelector<HTMLTextAreaElement>('[name="abstract"]')!;
-  const outcomesField = form.querySelector<HTMLTextAreaElement>('[name="learning_outcomes"]')!;
-  const touchedDetails = new Set<HTMLTextAreaElement>();
-  const outcomeRows = form.querySelector<HTMLElement>('[data-outcome-rows]')!;
-  const addOutcome = form.querySelector<HTMLButtonElement>('[data-add-outcome]')!;
-  let outcomeId = 0;
-
-  function outcomeInputs(): HTMLInputElement[] {
-    return [...outcomeRows.querySelectorAll<HTMLInputElement>('input')];
-  }
-
-  function syncOutcomes() {
-    const inputs = outcomeInputs();
-    outcomesField.value = inputs.map((input) => input.value.trim()).join('\n');
-    const completed = inputs.filter((input) => input.value.trim()).length;
-    const remaining = Math.max(0, 3 - completed);
-    const guidance = remaining
-      ? `Add ${remaining} more to reach the minimum.`
-      : completed < inputs.length ? 'Complete or remove the empty outcomes.' : 'Ready. You can add up to 5.';
-    const progress = form.querySelector('#outcomes-progress')!;
-    const message = `${completed} of 3 required outcomes added. ${guidance}`;
-    if (progress.textContent !== message) progress.textContent = message;
-    addOutcome.hidden = inputs.length >= 5;
-    [...outcomeRows.children].forEach((row, index) => {
-      row.querySelector('[data-outcome-number]')!.textContent = String(index + 1).padStart(2, '0');
-      const input = row.querySelector('input')!;
-      input.setAttribute('aria-label', `Learning outcome ${index + 1}`);
-      input.placeholder = `Outcome ${index + 1}`;
-      const remove = row.querySelector('button')!;
-      remove.hidden = inputs.length === 1;
-      remove.setAttribute('aria-label', `Remove learning outcome ${index + 1}`);
-    });
-    if (touchedDetails.has(outcomesField)) validateDetail(outcomesField);
-    updateContinueButtons();
-  }
-
-  function appendOutcome(focus = true) {
-    if (outcomeInputs().length >= 5) return;
-    const row = document.createElement('div');
-    row.className = 'outcome-row';
-    const number = document.createElement('span');
-    number.dataset.outcomeNumber = '';
-    number.setAttribute('aria-hidden', 'true');
-    const input = document.createElement('input');
-    input.id = `learning-outcome-${outcomeId++}`;
-    input.maxLength = 300;
-    input.required = true;
-    input.setAttribute('aria-describedby', 'outcomes-hint outcomes-error');
-    input.addEventListener('input', syncOutcomes);
-    input.addEventListener('blur', () => {
-      touchedDetails.add(outcomesField);
-      validateDetail(outcomesField);
-    });
-    const remove = document.createElement('button');
-    remove.type = 'button';
-    remove.className = 'outcome-remove';
-    remove.textContent = '×';
-    remove.addEventListener('click', () => {
-      const index = outcomeInputs().indexOf(input);
-      row.remove();
-      syncOutcomes();
-      const inputs = outcomeInputs();
-      inputs[Math.min(index, inputs.length - 1)]?.focus();
-    });
-    row.append(number, input, remove);
-    outcomeRows.append(row);
-    syncOutcomes();
-    if (focus) input.focus();
-  }
-
-  addOutcome.addEventListener('click', () => appendOutcome());
-  appendOutcome(false);
-
-
-  function wordCount(value: string): number {
-    return value.trim() ? value.trim().split(/\s+/).length : 0;
-  }
-
-  function updateWordCount() {
-    const count = wordCount(abstractField.value);
-    form.querySelector('[data-abstract-limit]')!.textContent = `${count} / ${abstractLimit} words`;
-  }
-
-  function validateDetail(field: HTMLTextAreaElement): boolean {
-    const value = field.value.trim();
-    let message = '';
-
-    if (field === abstractField) {
-      if (!value) message = 'Add an abstract for your proposal.';
-      else if (wordCount(value) > abstractLimit) message = `Keep your abstract within ${abstractLimit} words.`;
-      else if (value.length > 12000) message = 'Keep your abstract within 12,000 characters.';
-    } else {
-      const outcomes = value.split('\n').map((line) => line.trim()).filter(Boolean);
-
-      if (outcomes.length < 3 || outcomes.length > 5) message = 'Add 3–5 learning outcomes.';
-      else if (outcomeInputs().some((input) => !input.value.trim())) message = 'Complete or remove the empty outcomes.';
-      else if (outcomes.some((line) => line.length > 300)) message = 'Keep each learning outcome within 300 characters.';
-    }
-
-    const error = form.querySelector<HTMLElement>(field === abstractField ? '#abstract-error' : '#outcomes-error')!;
-    error.textContent = message;
-    error.hidden = !message;
-    field.setAttribute('aria-invalid', String(Boolean(message)));
-    if (field === outcomesField) {
-      outcomeInputs().forEach((input) => input.setAttribute('aria-invalid', String(Boolean(message))));
-    }
-    return !message;
-  }
-
-  for (const field of [abstractField, outcomesField]) {
-    field.addEventListener('blur', () => {
-      touchedDetails.add(field);
-      validateDetail(field);
-    });
-    field.addEventListener('input', () => {
-      updateWordCount();
-      if (touchedDetails.has(field)) validateDetail(field);
-    });
-  }
-
-  window.addEventListener('pageshow', updateWordCount);
-
-  function validateStep(step: number): boolean {
-    if (step === 2) {
-      const invalid = [abstractField, outcomesField].filter((field) => {
-        touchedDetails.add(field);
-        return !validateDetail(field);
-      });
-
-      if (invalid.length) {
-        showStep(step);
-        if (invalid[0] === outcomesField) (outcomeInputs().find((input) => !input.value.trim()) ?? outcomeInputs()[0])?.focus();
-        else invalid[0].focus();
-        return false;
-      }
-      return true;
-    }
-
-    const fields = [...form.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>(`[data-step="${step}"] input:not([type="hidden"]), [data-step="${step}"] textarea`)];
-    const invalid = fields.find((field) => !field.checkValidity());
-
-    if (invalid) {
-      showStep(step);
-      invalid.reportValidity();
-      return false;
-    }
-    if (step === 1) {
-      for (const root of form.querySelectorAll<HTMLElement>('[data-choice]')) {
-        if (!root.querySelector<HTMLInputElement>('input')!.value) {
-          showStep(step);
-          const trigger = root.querySelector<HTMLButtonElement>('button')!;
-          trigger.setAttribute('aria-invalid', 'true');
-          trigger.setAttribute('aria-describedby', 'cfp-status');
-          status.textContent = `Choose a ${root.dataset.choice === 'topic' ? 'topic track' : 'session format'} to continue.`;
-          trigger.focus();
-          return false;
-        }
-      }
-    }
-    return stepReady(step);
-  }
-
-  form.querySelectorAll<HTMLButtonElement>('[data-next]').forEach((button) => {
-    button.addEventListener('click', () => {
-      if (validateStep(currentStep)) showStep(Number(button.dataset.next));
-    });
-  });
-  form.querySelectorAll<HTMLButtonElement>('[data-back]').forEach((button) => {
-    button.addEventListener('click', () => showStep(Number(button.dataset.back)));
-  });
-
-  async function loadCall() {
-    try {
-      const response = await fetch(settingsEndpoint, { credentials: 'omit', cache: 'no-store', signal: AbortSignal.timeout(12000) });
-
-      if (response.status === 404) {
-        status.textContent = 'The Call for Speakers is not open right now. Please check back soon.';
-        return;
-      }
-      if (!response.ok) throw new Error('unavailable');
-      const call = await response.json();
-
-      if (call.call_scope !== 'annual_conference' || !Array.isArray(call.topic_tracks) || !Array.isArray(call.session_types)) throw new Error('invalid');
-      for (const [name, choices] of [['topic', call.topic_tracks], ['session_type', call.session_types]] as const) {
-        if (!choices.length || choices.some((choice: unknown) => typeof choice !== 'string')) throw new Error('invalid');
-        setupChoice(name, choices);
-      }
-      abstractLimit = Number(call.abstract_word_limit) || 300;
-      updateWordCount();
-      status.textContent = localPreview
-        ? 'Local preview: live speaker settings loaded. You can test the form steps; submission is disabled.'
-        : 'Applications are open. Your proposal goes directly to the annual conference review team.';
-      form.hidden = false;
-      updateContinueButtons();
-    } catch {
-      status.textContent = 'The application could not be loaded. Please refresh to try again.';
-    }
-  }
-
-  form.addEventListener('submit', async (event) => {
-    event.preventDefault();
-    if (busy || !result.hidden) return;
-    if (currentStep < 3) {
-      if (validateStep(currentStep)) showStep(currentStep + 1);
-      return;
-    }
-    for (let step = 0; step < 3; step++) {
-      if (!validateStep(step)) return;
-    }
-    if (localPreview) {
-      showSubmissionResult();
-      return;
-    }
-    const data = new FormData(form);
-    const outcomes = String(data.get('learning_outcomes')).split('\n').map((line) => line.trim()).filter(Boolean);
-    const abstract = String(data.get('abstract')).trim();
-    const token = String(data.get('cf-turnstile-response') ?? '');
-
-    if (!token) {
-      status.textContent = 'Complete the human verification first.';
-      status.focus();
-      return;
-    }
-    busy = true;
-    form.querySelectorAll<HTMLButtonElement>('button').forEach((button) => { button.disabled = true; });
-    status.textContent = 'Submitting your proposal…';
-
-    try {
-      const response = await fetch(endpoint, {
-        method: 'POST', credentials: 'omit', headers: { 'Content-Type': 'application/json' }, signal: AbortSignal.timeout(20000),
-        body: JSON.stringify({
-          speaker_name: data.get('speaker_name'), speaker_email: data.get('speaker_email'), bio: data.get('bio'),
-          title: data.get('title'), topic: data.get('topic'), session_type: data.get('session_type'), abstract,
-          learning_outcomes: outcomes, turnstile_token: token, turnstile_action: 'cfp_submission',
-        }),
-      });
-      const body = await response.json();
-
-      if (response.status !== 202 || body.accepted !== true) throw new Error(body.error || 'Unable to submit. Please try again.');
-      showSubmissionResult();
-    } catch (error) {
-      status.textContent = error instanceof Error ? error.message : 'Unable to submit. Please try again.';
-      (window as unknown as { turnstile?: { reset: () => void } }).turnstile?.reset();
-    } finally {
-      busy = false;
-      form.querySelectorAll<HTMLButtonElement>('button').forEach((button) => { button.disabled = false; });
-      updateContinueButtons();
-      if (result.hidden) status.focus();
-    }
-  });
-  void loadCall();
-</script>
-
 <style>
+  :global(body:has(.speaker-page)) {
+    display: flex;
+    flex-direction: column;
+    min-height: 100svh;
+  }
+
   .speaker-page {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 16px 24px;
+    display: grid;
+    flex: 1;
+    min-width: 0;
   }
-  .submission-result {
-    max-width: 800px;
-    margin: 48px auto 24px;
-    padding: clamp(24px, 5vw, 56px);
-    background: #fbf9f3;
-    border: 1px solid #d6d2c8;
-    border-radius: 12px;
-    scroll-margin-top: 100px;
-  }
-  .result-topline {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 12px;
-    justify-content: space-between;
-    font-size: 12px;
-    font-weight: 600;
-    color: #59564f;
-  }
-  .result-status {
-    background: #f8ee3e;
-    padding: 6px 10px;
-    border-radius: 4px;
-    color: #111;
-  }
-  .submission-result h1 {
-    font-size: clamp(36px, 5vw, 64px);
-    line-height: 1.08;
-    margin: 32px 0 20px;
-  }
-  .submission-result h1:focus {
-    outline: none;
-  }
-  .submission-result em {
-    color: #c50070;
-    font-style: normal;
-  }
-  .result-intro, .result-next p {
-    font-size: 16px;
-    line-height: 1.65;
-    color: #59564f;
-    max-width: 60ch;
-    margin: 0;
-  }
-  .proposal-receipt {
-    margin: 28px 0;
-    padding: 4px 0 4px 20px;
-    border-left: 3px solid #c50070;
-  }
-  .receipt-label {
-    margin: 0 0 8px;
-    font-size: 12px;
-    color: #59564f;
-  }
-  .proposal-receipt h2 {
-    font-size: 22px;
-    line-height: 1.3;
-    overflow-wrap: anywhere;
-    margin: 0 0 8px;
-  }
-  .proposal-receipt > p:last-child {
-    font-size: 14px;
-    line-height: 1.5;
-    color: #59564f;
-    margin: 0;
-  }
-  .result-next {
-    border-top: 1px solid #dedbd4;
-    padding-top: 24px;
-    margin: 28px 0;
-  }
-  .result-next h2 {
-    font-size: 18px;
-    margin: 0 0 8px;
-  }
-  .result-actions {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 12px;
-  }
-  .result-home {
-    display: inline-flex;
-    align-items: center;
-    gap: 24px;
-    background: #f8ee3e;
-    color: #111;
-    padding: 14px 20px;
-    border-radius: 8px;
-    font-weight: 600;
-    text-decoration: none;
-    transition: transform 150ms cubic-bezier(0.16, 1, 0.3, 1);
-  }
-  .result-home:active {
-    transform: scale(0.97);
-  }
-  .result-home:focus-visible {
-    outline: 2px solid #c50070;
-    outline-offset: 4px;
-  }
-  @media (hover: hover) and (pointer: fine) {
-    .result-home:hover {
-      transform: translateY(-2px);
-      background: #efe52d;
-    }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .result-home, .result-home:hover, .result-home:active {
-      transition: none;
-      transform: none;
-    }
-  }
-  @media (max-width: 700px) {
-    .submission-result {
-      margin-top: 20px;
-      padding: 24px 20px;
-    }
-  }
-  .review-intro {
-    color: #59564f;
-    font-size: 16px;
-    line-height: 1.6;
-  }
-  .review-details {
-    margin: 24px 0;
-  }
-  .review-details > div {
-    padding: 16px 0;
-    border-bottom: 1px solid #dedbd4;
-  }
-  .review-details dt {
-    font-size: 14px;
-    font-weight: 600;
-    margin-bottom: 6px;
-  }
-  .review-details dd {
-    margin: 0;
-    font-size: 16px;
-    line-height: 1.6;
-    white-space: pre-wrap;
-    overflow-wrap: anywhere;
-  }
-  .review-details ol {
-    list-style: decimal outside;
-    padding-left: 24px;
-    margin: 0;
-  }
-  .page-heading {
+
+  .speaker-page section {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
-    gap: 8px;
-    margin-bottom: 12px;
-  }
-  .eyebrow {
-    font-size: 13px;
-    margin: 0;
-  }
-  h1 {
-    font-size: clamp(30px, 3.5vw, 48px);
-    line-height: 1.05;
-    margin: 8px 0;
-  }
-  h1 em {
-    color: #ed008c;
-    font-style: normal;
-  }
-  .intro,
-  [data-cfp-status],
-  .submit-footer > p,
-  small {
-    font-family: var(--font-body);
-    font-size: 16px;
-    font-weight: 400;
-    line-height: 1.6;
+    grid-template-rows: minmax(0, min(50svh, max(0px, calc(100svh - 340px)))) 1fr;
   }
 
-  .intro {
-    margin: 0;
-    max-width: 760px;
-  }
-  form {
-    width: 100%;
-    margin-top: 16px;
-  }
-  .stepper {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    width: 100%;
-    box-sizing: border-box;
-    list-style: none;
-    padding: 0 16px;
-    margin: 24px 0;
-  }
-
-  .stepper li {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex: 1;
-    font-size: 14px;
-    line-height: 1.4;
-    color: #77736b;
-    min-width: 0;
-  }
-
-  .stepper li:not(:last-child)::after {
-    content: '';
-    height: 1px;
-    min-width: 12px;
-    flex: 1;
-    margin-left: 8px;
-    background: #d6d2c8;
-  }
-
-  .stepper li:last-child {
-    flex: 0 0 auto;
-  }
-
-  .step-number {
-    display: grid;
-    place-items: center;
-    width: 28px;
-    height: 28px;
-    flex-shrink: 0;
-    border: 1px solid #d6d2c8;
-    border-radius: 50%;
-    font-size: 12px;
-  }
-
-  .stepper li.completed {
-    color: #111;
-  }
-
-  .stepper li.completed .step-number {
-    background: #f8ee3e;
-    border-color: transparent;
-  }
-
-  .stepper li[aria-current="step"] {
-    color: #b50068;
-    font-weight: 600;
-  }
-
-  [aria-current="step"] .step-number {
-    background: #ed008c;
-    color: #fff;
-    border-color: #ed008c;
-  }
-
-  .step-panel {
-    display: grid;
-    gap: 12px;
-    min-width: 0;
-    border: 1px solid #d6d2c8;
-    border-radius: 12px;
-    padding: 16px;
-    background: #fbf9f3;
-  }
-  h2 {
-    font-size: 24px;
-    font-weight: 700;
-    margin: 0;
-  }
-  .field-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 20px;
-  }
-  .outcomes-editor {
-    min-width: 0;
-    padding: 0;
-    margin: 0;
-    border: 0;
-  }
-  .outcomes-editor legend {
-    font-weight: 600;
-    margin-bottom: 8px;
-  }
-  .outcomes-editor small {
+  .banner {
     display: block;
-    margin: 8px 0;
-  }
-  :global(.speaker-page .outcome-row) {
-    display: grid;
-    grid-template-columns: 28px minmax(0, 1fr) 32px;
-    gap: 8px;
-    align-items: center;
-    margin-top: 12px;
-  }
-  :global(.speaker-page .outcome-row > span) {
-    color: #b50068;
-    font-size: 14px;
-    font-weight: 600;
-  }
-  :global(body .speaker-page .outcome-add),
-  :global(body .speaker-page .outcome-remove) {
-    background: transparent;
-    color: #b50068;
-    border: 0;
-    box-shadow: none;
-    transform: none;
-    min-height: 36px;
-    padding: 4px;
-  }
-  :global(body .speaker-page .outcome-add::after),
-  :global(body .speaker-page .outcome-remove::after) {
-    content: none;
-  }
-  .outcome-add {
-    margin-top: 12px;
-  }
-  .proposal-fields {
-    grid-template-columns: minmax(0, 1fr);
-    align-items: start;
-  }
-
-  .proposal-fields label {
-    min-width: 0;
-  }
-
-  .field-error {
-    color: #a72035;
-  }
-
-  textarea[aria-invalid="true"], :global(.speaker-page .outcome-row input[aria-invalid="true"]) {
-    border-color: #a72035;
-  }
-
-  .preview-note {
-    margin: 0;
-    color: #666;
-  }
-
-  .full-width {
-    grid-column: 1 / -1;
-  }
-  label {
-    display: grid;
-    gap: 8px;
-    font-size: 14px;
-    font-weight: 600;
-    min-width: 0;
-  }
-  input, textarea, select, :global(.speaker-page .outcome-row input) {
     width: 100%;
-    box-sizing: border-box;
-    min-height: 48px;
-    padding: 12px 14px;
-    border: 1px solid #c7c2b8;
-    border-radius: 8px;
-    background: #fffdf8;
-    color: #111;
-    font: inherit;
-    font-size: 16px;
-    font-weight: 400;
-    line-height: 1.5;
+    height: 100%;
+    object-fit: cover;
+    object-position: 50% 35%;
   }
-  input:focus, textarea:focus, select:focus, :global(.speaker-page .outcome-row input:focus) {
-    border-color: #ed008c;
-    outline: none;
-    box-shadow: none;
-  }
-  textarea {
-    resize: none;
-    line-height: 1.5;
-  }
-  small {
-    color: #666;
-  }
-  button:focus-visible {
-    outline: 2px solid #ed008c;
-    outline-offset: 3px;
-  }
-  .cf-turnstile {
-    width: 164px;
-    justify-self: start;
-  }
-  .submit-footer {
+
+  .notice {
+    position: relative;
+    isolation: isolate;
     display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    gap: 16px;
-    margin-top: 12px;
-  }
-  button {
-    min-height: 48px;
-    padding: 12px 20px;
-    border: 1px solid #111;
-    border-radius: 8px;
-    background: #f8ee3e;
-    font: inherit;
-    font-weight: 700;
-  }
-  button:disabled {
-    color: #77736b;
-    background: #e9e6dd;
-    border-color: #d6d2c8;
-    cursor: not-allowed;
-  }
-  .actions {
-    display: flex;
-    gap: 12px;
-    flex-wrap: wrap;
+    grid-template-columns: 3fr 2fr;
+    align-content: start;
     align-items: center;
-    justify-content: space-between;
+    gap: clamp(32px, 7vw, 120px);
+    padding: clamp(16px, 3vh, 32px) clamp(24px, 6vw, 108px) 20px;
   }
-  .actions button {
+
+  .back {
     display: inline-flex;
     align-items: center;
-    justify-content: center;
-    gap: 8px;
-    flex-shrink: 0;
-    min-width: 104px;
-    line-height: 1.4;
-    overflow: visible;
+    min-height: 44px;
+    color: #a90057;
+    font-weight: 600;
   }
 
-  .actions button svg {
-    flex-shrink: 0;
-    overflow: visible;
+  h1 {
+    max-width: 16ch;
+    font-size: clamp(2.5rem, 4.5vw, 5rem);
+    line-height: 1.02;
+    text-wrap: balance;
   }
 
-  .actions span {
-    font-size: 13px;
-    color: #666;
-  }
-  .secondary {
-    background: #fbf9f3;
-    border: 2px solid #55514b;
+  .invitation {
+    padding-top: clamp(0px, 7svh - 32px, 44px);
   }
 
-  :global(body .speaker-page .actions button.secondary) {
-    transform: none;
-    box-shadow: none;
-    transition: none;
+  .invitation > p:first-child {
+    font-size: clamp(1.2rem, 1.6vw, 1.6rem);
+    line-height: 1.3;
   }
 
-  :global(body .speaker-page .actions button.secondary::after) {
-    content: none;
+  .badge-art {
+    position: absolute;
+    inset: 0 0 0 59%;
+    z-index: -1;
+    overflow: clip;
+    pointer-events: none;
   }
 
-  @media (hover: hover) and (pointer: fine) {
-    .secondary:hover {
-      background: #f1eee5;
-      border-color: #111;
-    }
+  .badge-art img {
+    position: absolute;
+    top: 8%;
+    left: 36%;
+    width: auto;
+    height: 86%;
+    max-height: 380px;
+    max-width: 76%;
+    object-fit: contain;
+    opacity: 0.40;
+    transform: translateX(-50%) rotate(14deg);
   }
-  @media (max-width: 700px) {
-    .page-heading, .field-grid, .submit-footer {
-      grid-template-columns: minmax(0, 1fr);
-    }
-    .page-heading {
-      gap: 0;
-    }
-    .speaker-page {
-      padding: 20px 16px;
-    }
-    .step-panel {
-      padding: 16px 12px;
-    }
-    .stepper {
-      padding-inline: 12px;
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 12px;
+
+  .details {
+    margin-top: 4px;
+    color: #50504d;
+  }
+
+  .ticket {
+    margin-top: 16px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    min-height: 48px;
+    padding: 12px 18px 12px 20px;
+    border-radius: 8px;
+    background: var(--yellow);
+    color: var(--text);
+    font-size: var(--text-base);
+    font-weight: 600;
+    line-height: 24px;
+  }
+
+  .ticket span {
+    display: inline-grid;
+    width: 20px;
+    height: 20px;
+    flex: 0 0 20px;
+    place-items: center;
+    font-size: 20px;
+    line-height: 1;
+  }
+
+  a:focus-visible {
+    outline: 3px solid var(--pink);
+    outline-offset: 5px;
+  }
+
+  @media (max-width: 760px) {
+    .ticket {
+      min-height: 50px;
     }
 
-    .stepper li {
+    .ticket span {
+      font-size: 18px;
+    }
+  }
+
+  @media (max-width: 720px) {
+    .speaker-page section {
+      grid-template-rows: min(66vw, max(0px, calc(100svh - 505px))) 1fr;
+    }
+
+    h1 {
+      max-width: 19ch;
+      font-size: clamp(1.85rem, 8vw, 2.2rem);
+      line-height: 1.08;
+    }
+
+    .invitation {
       position: relative;
-      display: grid;
-      grid-template-rows: 36px 28px 36px;
-      align-items: center;
-      justify-items: center;
-      text-align: center;
-      font-size: 12px;
-      gap: 6px;
+      isolation: isolate;
+      padding-top: 0;
     }
 
-    .stepper .step-number {
-      grid-row: 2;
+    .badge-art {
+      inset: -22px -12px -76px 0;
     }
 
-    .stepper li > span:last-child {
-      grid-row: 3;
-      white-space: normal;
+    .badge-art img {
+      top: 5%;
+      left: 57%;
+      height: 88%;
+      opacity: 0.32;
     }
 
-    .stepper li:nth-child(even) > span:last-child {
-      grid-row: 1;
+    .notice {
+      grid-template-columns: 1fr;
+      gap: 20px;
+      padding: clamp(28px, 4svh, 40px) 24px 76px;
     }
-
-    .stepper li > span {
-      grid-column: 1;
-    }
-
-    .stepper li:not(:last-child)::after {
-      position: absolute;
-      top: 56px;
-      left: calc(50% + 22px);
-      right: calc(-50% + 10px);
-      margin-left: 0;
-      min-width: 0;
-    }
-    .actions span {
-      display: none;
-    }
-    .actions button:last-child {
-      margin-left: auto;
-    }
-  }
-  [hidden] {
-    display: none !important;
   }
 </style>

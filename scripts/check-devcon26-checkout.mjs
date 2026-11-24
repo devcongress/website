@@ -682,7 +682,8 @@ for (const couponError of ['invalid', 'expired', 'ineligible', 'unavailable']) {
 const html = readFileSync(root + '/dist/devcon26/index.html', 'utf8');
 const homeHtml = readFileSync(root + '/dist/index.html', 'utf8');
 const sponsorSection = html.slice(html.indexOf('<section id="sponsors"'), html.indexOf('<section id="faqs"'));
-const pastSponsorsSection = html.slice(html.indexOf('<section class="past-sponsors-section page-shell"'));
+const pastSponsorsIndex = html.indexOf('<section class="past-sponsors-section page-shell"');
+const pastSponsorsSection = pastSponsorsIndex === -1 ? '' : html.slice(pastSponsorsIndex);
 const checkoutSource = readFileSync(root + '/src/pages/devcon26/checkout.astro', 'utf8');
 const checkoutHtml = readFileSync(root + '/dist/devcon26/checkout/index.html', 'utf8');
 
@@ -713,12 +714,25 @@ assert.ok(checkoutStyles.includes(':focus-visible'), 'Keyboard focus remains vis
 
 assert.ok(!html.includes('partner-symbol'), 'The decorative pink plus signs are removed');
 
-assert.equal((sponsorSection.match(/class="sponsor-item"/g) || []).length, 3);
+assert.equal((sponsorSection.match(/<li class="partner-tile\b/g) || []).length, 8);
+assert.equal((sponsorSection.match(/<li class="partner-tile is-sponsor"/g) || []).length, 4);
 assert.ok(sponsorSection.includes('AmaliTech') && sponsorSection.includes('https://amalitech.com'));
 assert.ok(sponsorSection.includes('Paystack') && sponsorSection.includes('https://paystack.com/'));
+assert.ok(sponsorSection.includes('WeWire') && sponsorSection.includes('https://www.wewire.com/'));
+assert.ok(sponsorSection.includes('Ghana Digital Centres Limited') && sponsorSection.includes('https://www.gdcl.gov.gh'));
+assert.ok(sponsorSection.includes('Kweku Tech Media') && sponsorSection.includes('https://kweku.tech'));
+assert.ok(sponsorSection.includes('Slightly Techie') && sponsorSection.includes('https://www.slightlytechie.com/'));
+assert.ok(sponsorSection.includes('Developers in Vogue') && sponsorSection.includes('https://developersinvogue.org/'));
+assert.ok(sponsorSection.includes('Everything Open Source') && sponsorSection.includes('https://everythingopensource.org/'));
 assert.ok(sponsorSection.includes('/images/partners/amalitech.png'));
-assert.ok(!pastSponsorsSection.includes('AmaliTech'));
-assert.ok(pastSponsorsSection.includes('Paystack'), 'Paystack remains in its historical sponsor listing');
+assert.ok(sponsorSection.includes('/images/partners/wewire.png'));
+assert.ok(sponsorSection.includes('/images/partners/ghana-digital-centres.png'));
+if (pastSponsorsSection) {
+  assert.ok(!pastSponsorsSection.includes('AmaliTech'));
+  assert.ok(pastSponsorsSection.includes('Paystack'), 'Paystack remains in its historical sponsor listing');
+} else {
+  assert.equal(pastSponsorsIndex, -1, 'Past sponsors section is hidden for now');
+}
 const packagePlans = [...sponsorSection.matchAll(/<article\b[^>]*class="package-plan"[^>]*>([\s\S]*?)<\/article>/g)];
 
 assert.equal(packagePlans.length, 6);
@@ -822,18 +836,20 @@ for (const qualification of [
   assert.ok(sponsorSection.includes(qualification), qualification);
 }
 
-const historical = html.slice(html.indexOf('<section class="past-sponsors-section'), html.indexOf('</main>'));
-const historicalNames = ['Fido Credit', 'Kweku Tech Media', 'MEST Africa', 'Old Mutual Insurance Ltd.', 'Paystack', 'UNICEF Ghana'];
-let position = -1;
+if (pastSponsorsSection) {
+  const historical = html.slice(html.indexOf('<section class="past-sponsors-section'), html.indexOf('</main>'));
+  const historicalNames = ['Fido Credit', 'Kweku Tech Media', 'MEST Africa', 'Old Mutual Insurance Ltd.', 'Paystack', 'UNICEF Ghana'];
+  let position = -1;
 
-for (const name of historicalNames) {
-  const next = historical.indexOf(name, position + 1);
+  for (const name of historicalNames) {
+    const next = historical.indexOf(name, position + 1);
 
-  assert.ok(next > position, name);
-  position = next;
+    assert.ok(next > position, name);
+    position = next;
+  }
+
+  assert.ok(html.indexOf('<section id="faqs"') < html.indexOf('<section class="past-sponsors-section'));
 }
-
-assert.ok(html.indexOf('<section id="faqs"') < html.indexOf('<section class="past-sponsors-section'));
 assert.ok(html.includes('download="DevCon26 Sponsorship Packages.pdf"'));
 assert.ok(html.includes('19 December 2026'));
 assert.match(homeHtml, /<div class="hero-conference-meta"[^>]*>[\s\S]*?<time datetime="2026-12-19"[^>]*>19 December 2026<\/time>/, 'Homepage hero publishes the confirmed DevCon26 date');

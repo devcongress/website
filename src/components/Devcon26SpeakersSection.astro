@@ -1,0 +1,967 @@
+---
+import {
+  DEFAULT_EMS_API_ORIGIN,
+  INITIAL_DEVCON26_SPEAKERS,
+  limitExpandedBioParagraphs,
+  speakerInitials,
+  speakerLineupFingerprint,
+  splitSpeakerName,
+} from '../lib/devcon26-speakers';
+
+const initialSpeakers = INITIAL_DEVCON26_SPEAKERS;
+const initialFingerprint = speakerLineupFingerprint(initialSpeakers);
+const apiOrigin = import.meta.env.PUBLIC_DEVCON26_API_ORIGIN?.trim() || DEFAULT_EMS_API_ORIGIN;
+const frameAccents = ['#111111', '#F5E642', '#E8117F'];
+---
+
+<section
+  id="speakers"
+  class="speakers-section page-shell"
+  aria-labelledby="speakers-title"
+  data-devcon26-speakers
+  data-api-origin={apiOrigin}
+  data-initial-fingerprint={initialFingerprint}
+>
+  <div class="speakers-header">
+    <h2 id="speakers-title">Fresh perspectives.<br /><em>Familiar challenges.</em></h2>
+    <div class="speakers-invitation">
+      <p>People with something useful to say. We’re putting the programme together with care; meet the speakers here as they are confirmed.</p>
+      <a class="button button-primary" href="/devcon26/speak/">Apply to speak <span aria-hidden="true">↗</span></a>
+    </div>
+  </div>
+
+  <div class="speaker-spreads" data-speakers-list role="list" aria-label="Confirmed DevCon26 speakers">
+    {initialSpeakers.map((speaker, index) => {
+      const side = index % 2 === 0 ? 'photo-left' : 'photo-right';
+      const accent = frameAccents[index % frameAccents.length]!;
+      const parts = splitSpeakerName(speaker.name);
+      const paragraphs = limitExpandedBioParagraphs(speaker.bio);
+      const combinedLength = paragraphs.join(' ').length;
+      const expandable = paragraphs.length > 1 || combinedLength > 155;
+      const panelId = `speaker-bio-${speaker.id}`;
+
+      return (
+        <article
+          class:list={['speaker-spread', side]}
+          role="listitem"
+          data-speaker-spread
+          data-speaker-id={speaker.id}
+        >
+          <div class="speaker-profile">
+            <figure class="speaker-portrait-frame" style={'--speaker-frame-shadow:' + accent}>
+              {speaker.photoUrl ? (
+                <img
+                  src={speaker.photoUrl}
+                  alt={`Portrait of ${speaker.name}`}
+                  loading="lazy"
+                  decoding="async"
+                  style={'object-position:' + (speaker.photoPosition ?? '50% 28%')}
+                />
+              ) : (
+                <span class="speaker-portrait-fallback" aria-hidden="true">{speakerInitials(speaker.name)}</span>
+              )}
+            </figure>
+
+            <div class="speaker-identity">
+              <h3 class="speaker-name">
+                <span class="speaker-name-first">{parts.first}</span>
+                {parts.rest && <span class="speaker-name-rest">{parts.rest}</span>}
+              </h3>
+              {speaker.role && <p class="speaker-role">{speaker.role}</p>}
+              {speaker.organization && <p class="speaker-org">{speaker.organization}</p>}
+            </div>
+          </div>
+
+          <div class="speaker-bio-column">
+            <div
+              id={panelId}
+              class:list={['speaker-bio-viewport', { 'is-collapsed': expandable }]}
+              data-bio-viewport
+            >
+              <div class="speaker-bio-content" data-bio-content>
+                {paragraphs.map((paragraph) => <p>{paragraph}</p>)}
+              </div>
+              {expandable && <span class="speaker-bio-fade" aria-hidden="true" data-bio-fade></span>}
+            </div>
+            {expandable && (
+              <button
+                type="button"
+                class="speaker-bio-toggle"
+                aria-expanded="false"
+                aria-controls={panelId}
+                data-bio-toggle
+              >
+                <span class="speaker-bio-toggle-label" data-bio-label>Read full bio</span>
+                <svg class="speaker-bio-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" focusable="false">
+                  <path d="M8 3.25v9.5M3.25 8h9.5" />
+                </svg>
+              </button>
+            )}
+          </div>
+        </article>
+      );
+    })}
+  </div>
+</section>
+
+<script>
+  import {
+    DEFAULT_EMS_API_ORIGIN,
+    fetchDevcon26Speakers,
+    limitExpandedBioParagraphs,
+    speakerInitials,
+    speakerLineupFingerprint,
+    splitSpeakerName,
+    type Devcon26Speaker,
+  } from '../lib/devcon26-speakers';
+
+  const FRAME_ACCENTS = ['#111111', '#F5E642', '#E8117F'];
+  const COLLAPSED_LINES = 3.1;
+  const REVEAL_EASE = 'cubic-bezier(0.16, 1, 0.3, 1)';
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+  function createSpeakerScrollReveals(section: HTMLElement) {
+    let observer: IntersectionObserver | null = null;
+    const armedFrom = new WeakMap<HTMLElement, 'above' | 'below'>();
+    const activeAnimations = new Set<Animation>();
+
+    const clearSpreadState = (spread: HTMLElement) => {
+      spread.classList.remove('is-reveal-pending');
+      armedFrom.delete(spread);
+    };
+
+    const settleAll = () => {
+      activeAnimations.forEach((anim) => anim.cancel());
+      activeAnimations.clear();
+      section.querySelectorAll<HTMLElement>('[data-speaker-spread]').forEach(clearSpreadState);
+    };
+
+    const playEntrance = (spread: HTMLElement, fromEdge: 'above' | 'below') => {
+      clearSpreadState(spread);
+      if (reducedMotion.matches || document.hidden || spread.contains(document.activeElement)) return;
+
+      const profile = spread.querySelector<HTMLElement>('.speaker-profile');
+      const bio = spread.querySelector<HTMLElement>('.speaker-bio-column');
+      const isRight = spread.classList.contains('photo-right');
+      const yOffset = fromEdge === 'below' ? 24 : -24;
+      const profileX = isRight ? 36 : -36;
+      const bioX = isRight ? -24 : 24;
+
+      const tracks: Array<{ el: HTMLElement | null; from: string; delay: number }> = [
+        { el: profile, from: `translate3d(${profileX}px, ${yOffset}px, 0) scale(0.98)`, delay: 0 },
+        { el: bio, from: `translate3d(${bioX}px, ${yOffset}px, 0)`, delay: 75 },
+      ];
+
+      for (const track of tracks) {
+        if (!track.el || typeof track.el.animate !== 'function') continue;
+
+        // Cancel any prior in-flight reveal on this element so rapid scrolling stays interruptible.
+        track.el.getAnimations().forEach((anim) => {
+          if (activeAnimations.has(anim)) {
+            anim.cancel();
+            activeAnimations.delete(anim);
+          }
+        });
+
+        const animation = track.el.animate(
+          [
+            { opacity: 0, transform: track.from },
+            { opacity: 1, transform: 'translate3d(0, 0, 0) scale(1)' },
+          ],
+          {
+            duration: 420,
+            delay: track.delay,
+            easing: REVEAL_EASE,
+            fill: 'backwards',
+          },
+        );
+
+        activeAnimations.add(animation);
+        animation.onfinish = () => activeAnimations.delete(animation);
+        animation.oncancel = () => activeAnimations.delete(animation);
+      }
+    };
+
+    const observeSpreads = () => {
+      observer?.disconnect();
+      settleAll();
+
+      if (reducedMotion.matches || !('IntersectionObserver' in window)) return;
+
+      const spreads = Array.from(section.querySelectorAll<HTMLElement>('[data-speaker-spread]'));
+      if (!spreads.length) return;
+
+      const viewportH = window.innerHeight;
+      for (const spread of spreads) {
+        const rect = spread.getBoundingClientRect();
+        if (rect.top >= viewportH) {
+          armedFrom.set(spread, 'below');
+          spread.classList.add('is-reveal-pending');
+        } else if (rect.bottom <= 0) {
+          armedFrom.set(spread, 'above');
+          spread.classList.add('is-reveal-pending');
+        }
+      }
+
+      observer = new IntersectionObserver(
+        (entries) => {
+          if (reducedMotion.matches) {
+            settleAll();
+            return;
+          }
+
+          for (const entry of entries) {
+            const spread = entry.target as HTMLElement;
+            const rect = entry.boundingClientRect;
+            const vh = entry.rootBounds?.height ?? window.innerHeight;
+
+            if (entry.isIntersecting && entry.intersectionRatio >= 0.14) {
+              const edge = armedFrom.get(spread);
+              if (edge) playEntrance(spread, edge);
+              else clearSpreadState(spread);
+            } else if (!entry.isIntersecting && entry.intersectionRatio === 0 && !spread.contains(document.activeElement)) {
+              const edge = rect.top < vh / 2 ? 'above' : 'below';
+              armedFrom.set(spread, edge);
+              spread.classList.add('is-reveal-pending');
+            }
+          }
+        },
+        { threshold: [0, 0.14] },
+      );
+
+      for (const spread of spreads) observer.observe(spread);
+    };
+
+    section.addEventListener('focusin', (event) => {
+      const target = event.target instanceof HTMLElement ? event.target.closest<HTMLElement>('[data-speaker-spread]') : null;
+      if (target) clearSpreadState(target);
+    });
+    window.addEventListener('beforeprint', settleAll);
+    reducedMotion.addEventListener('change', () => {
+      if (reducedMotion.matches) {
+        observer?.disconnect();
+        settleAll();
+      } else {
+        observeSpreads();
+      }
+    });
+
+    observeSpreads();
+    return { refresh: observeSpreads };
+  }
+
+  function measureCollapsedHeight(content: HTMLElement): number {
+    const firstParagraph = content.querySelector('p') ?? content;
+    const style = window.getComputedStyle(firstParagraph);
+    const lineHeight = parseFloat(style.lineHeight) || parseFloat(style.fontSize) * 1.65 || 28;
+    return Math.round(lineHeight * COLLAPSED_LINES);
+  }
+
+  function bindSpeakerToggles(root: HTMLElement) {
+    const spreads = Array.from(root.querySelectorAll<HTMLElement>('[data-speaker-spread]'));
+
+    for (const spread of spreads) {
+      const toggle = spread.querySelector<HTMLButtonElement>('[data-bio-toggle]');
+      const viewport = spread.querySelector<HTMLElement>('[data-bio-viewport]');
+      const content = spread.querySelector<HTMLElement>('[data-bio-content]');
+      const label = spread.querySelector<HTMLElement>('[data-bio-label]');
+
+      if (!toggle || !viewport || !content || !label) continue;
+
+      let activeAnimation: Animation | null = null;
+
+      toggle.addEventListener('click', (event) => {
+        if (event.detail > 0) toggle.blur();
+        const nextOpen = toggle.getAttribute('aria-expanded') !== 'true';
+        const collapsedPx = measureCollapsedHeight(content);
+        const fullPx = content.scrollHeight;
+
+        const currentHeight = viewport.getBoundingClientRect().height;
+
+        if (activeAnimation) {
+          activeAnimation.cancel();
+          activeAnimation = null;
+        }
+
+        toggle.setAttribute('aria-expanded', String(nextOpen));
+        spread.classList.toggle('is-expanded', nextOpen);
+        viewport.classList.toggle('is-collapsed', !nextOpen);
+        label.textContent = nextOpen ? 'Show less' : 'Read full bio';
+
+        const targetHeight = nextOpen ? fullPx : collapsedPx;
+
+        if (reducedMotion.matches || typeof viewport.animate !== 'function' || Math.abs(currentHeight - targetHeight) < 2) {
+          viewport.style.height = '';
+          return;
+        }
+
+        viewport.style.height = `${currentHeight}px`;
+
+        activeAnimation = viewport.animate(
+          [
+            { height: `${currentHeight}px` },
+            { height: `${targetHeight}px` },
+          ],
+          {
+            duration: nextOpen ? 260 : 220,
+            easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
+          },
+        );
+
+        activeAnimation.onfinish = () => {
+          activeAnimation = null;
+          viewport.style.height = '';
+        };
+        activeAnimation.oncancel = () => {
+          activeAnimation = null;
+        };
+      });
+    }
+  }
+
+  function createSpeakerNode(speaker: Devcon26Speaker, index: number, isExpanded: boolean): HTMLElement {
+    const side = index % 2 === 0 ? 'photo-left' : 'photo-right';
+    const accent = FRAME_ACCENTS[index % FRAME_ACCENTS.length]!;
+    const parts = splitSpeakerName(speaker.name);
+    const paragraphs = limitExpandedBioParagraphs(speaker.bio);
+    const combinedLength = paragraphs.join(' ').length;
+    const expandable = paragraphs.length > 1 || combinedLength > 155;
+    const panelId = `speaker-bio-${speaker.id}`;
+
+    const article = document.createElement('article');
+    article.className = `speaker-spread ${side}${isExpanded && expandable ? ' is-expanded' : ''}`;
+    article.setAttribute('role', 'listitem');
+    article.dataset.speakerSpread = '';
+    article.dataset.speakerId = speaker.id;
+
+    const profile = document.createElement('div');
+    profile.className = 'speaker-profile';
+
+    const figure = document.createElement('figure');
+    figure.className = 'speaker-portrait-frame';
+    figure.style.setProperty('--speaker-frame-shadow', accent);
+
+    if (speaker.photoUrl) {
+      const img = document.createElement('img');
+      img.src = speaker.photoUrl;
+      img.alt = `Portrait of ${speaker.name}`;
+      img.loading = 'lazy';
+      img.decoding = 'async';
+      img.style.objectPosition = speaker.photoPosition ?? '50% 28%';
+      figure.append(img);
+    } else {
+      const fallback = document.createElement('span');
+      fallback.className = 'speaker-portrait-fallback';
+      fallback.setAttribute('aria-hidden', 'true');
+      fallback.textContent = speakerInitials(speaker.name);
+      figure.append(fallback);
+    }
+
+    const identity = document.createElement('div');
+    identity.className = 'speaker-identity';
+
+    const heading = document.createElement('h3');
+    heading.className = 'speaker-name';
+    const first = document.createElement('span');
+    first.className = 'speaker-name-first';
+    first.textContent = parts.first;
+    heading.append(first);
+    if (parts.rest) {
+      const rest = document.createElement('span');
+      rest.className = 'speaker-name-rest';
+      rest.textContent = parts.rest;
+      heading.append(rest);
+    }
+    identity.append(heading);
+
+    if (speaker.role) {
+      const role = document.createElement('p');
+      role.className = 'speaker-role';
+      role.textContent = speaker.role;
+      identity.append(role);
+    }
+    if (speaker.organization) {
+      const org = document.createElement('p');
+      org.className = 'speaker-org';
+      org.textContent = speaker.organization;
+      identity.append(org);
+    }
+
+    const bioColumn = document.createElement('div');
+    bioColumn.className = 'speaker-bio-column';
+
+    const viewport = document.createElement('div');
+    viewport.id = panelId;
+    viewport.className = `speaker-bio-viewport${expandable && !isExpanded ? ' is-collapsed' : ''}`;
+    viewport.dataset.bioViewport = '';
+
+    const content = document.createElement('div');
+    content.className = 'speaker-bio-content';
+    content.dataset.bioContent = '';
+    for (const text of paragraphs) {
+      const p = document.createElement('p');
+      p.textContent = text;
+      content.append(p);
+    }
+    viewport.append(content);
+
+    if (expandable) {
+      const fade = document.createElement('span');
+      fade.className = 'speaker-bio-fade';
+      fade.setAttribute('aria-hidden', 'true');
+      fade.dataset.bioFade = '';
+      viewport.append(fade);
+    }
+
+    bioColumn.append(viewport);
+
+    if (expandable) {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'speaker-bio-toggle';
+      button.setAttribute('aria-expanded', String(isExpanded));
+      button.setAttribute('aria-controls', panelId);
+      button.dataset.bioToggle = '';
+
+      const label = document.createElement('span');
+      label.className = 'speaker-bio-toggle-label';
+      label.dataset.bioLabel = '';
+      label.textContent = isExpanded ? 'Show less' : 'Read full bio';
+
+      const icon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      icon.setAttribute('class', 'speaker-bio-icon');
+      icon.setAttribute('viewBox', '0 0 16 16');
+      icon.setAttribute('fill', 'none');
+      icon.setAttribute('stroke', 'currentColor');
+      icon.setAttribute('stroke-width', '2');
+      icon.setAttribute('stroke-linecap', 'round');
+      icon.setAttribute('aria-hidden', 'true');
+      icon.setAttribute('focusable', 'false');
+      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path.setAttribute('d', 'M8 3.25v9.5M3.25 8h9.5');
+      icon.append(path);
+
+      button.append(label, icon);
+      bioColumn.append(button);
+    }
+
+    profile.append(figure, identity);
+    article.append(profile, bioColumn);
+    return article;
+  }
+
+  function renderEmptyLineup(listEl: HTMLElement) {
+    const empty = document.createElement('p');
+    empty.className = 'speakers-empty-note';
+    empty.textContent = 'Speaker announcements are coming soon. Check back shortly as the DevCon26 lineup is published.';
+    listEl.replaceChildren(empty);
+  }
+
+  function initSpeakersSection(section: HTMLElement) {
+    const listEl = section.querySelector<HTMLElement>('[data-speakers-list]');
+    if (!listEl) return;
+
+    bindSpeakerToggles(section);
+    const reveals = createSpeakerScrollReveals(section);
+
+    let currentFingerprint = section.dataset.initialFingerprint ?? '';
+    const apiOrigin = section.dataset.apiOrigin || DEFAULT_EMS_API_ORIGIN;
+
+    const reconcile = async () => {
+      const liveSpeakers = await fetchDevcon26Speakers(apiOrigin);
+      if (!liveSpeakers) return;
+
+      const nextFingerprint = speakerLineupFingerprint(liveSpeakers);
+      if (nextFingerprint === currentFingerprint) return;
+
+      const expandedIds = new Set(
+        Array.from(section.querySelectorAll<HTMLElement>('[data-speaker-spread].is-expanded'))
+          .map((node) => node.dataset.speakerId)
+          .filter((id): id is string => Boolean(id)),
+      );
+
+      currentFingerprint = nextFingerprint;
+
+      if (!liveSpeakers.length) {
+        renderEmptyLineup(listEl);
+        return;
+      }
+
+      const fragment = document.createDocumentFragment();
+      liveSpeakers.forEach((speaker, index) => {
+        fragment.append(createSpeakerNode(speaker, index, expandedIds.has(speaker.id)));
+      });
+
+      listEl.replaceChildren(fragment);
+      bindSpeakerToggles(section);
+      reveals.refresh();
+    };
+
+    const scheduleIdle = () => {
+      if ('requestIdleCallback' in window) {
+        window.requestIdleCallback(() => { void reconcile(); }, { timeout: 1500 });
+      } else {
+        window.setTimeout(() => { void reconcile(); }, 180);
+      }
+    };
+
+    if (document.readyState === 'complete') scheduleIdle();
+    else window.addEventListener('load', scheduleIdle, { once: true });
+  }
+
+  const section = document.querySelector<HTMLElement>('[data-devcon26-speakers]');
+  if (section) initSpeakersSection(section);
+</script>
+
+<style>
+  .page-shell {
+    width: min(100% - 64px, 1200px);
+    margin-inline: auto;
+  }
+
+  .speakers-section {
+    padding-block: 82px 148px;
+  }
+
+  .speakers-section h2,
+  .speakers-section p,
+  .speakers-section figure {
+    margin: 0;
+  }
+
+  .speakers-section h2 {
+    color: var(--dc-ink);
+    font-family: var(--font-display);
+    font-size: clamp(36px, 4.15vw, 58px);
+    font-weight: 600;
+    letter-spacing: var(--tracking-display);
+    line-height: var(--leading-tight);
+    text-wrap: balance;
+  }
+
+  .speakers-section h2 em {
+    color: var(--dc-pink);
+    font-style: normal;
+  }
+
+  .speakers-header {
+    display: grid;
+    grid-template-columns: 1.2fr 0.8fr;
+    align-items: end;
+    gap: 56px;
+  }
+
+  .speakers-invitation {
+    display: grid;
+    justify-items: start;
+    gap: 20px;
+  }
+
+  .speakers-invitation > p {
+    max-width: 29rem;
+    color: var(--dc-muted);
+    font-size: var(--dc-text-body);
+    line-height: 1.65;
+  }
+
+  .button {
+    display: inline-flex;
+    min-height: var(--dc-control-height, 48px);
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 18px 12px 20px;
+    border: 0;
+    border-radius: 8px;
+    font-size: var(--dc-text-body);
+    font-weight: 600;
+    line-height: 24px;
+    text-decoration: none;
+  }
+
+  .button-primary {
+    color: var(--dc-ink);
+    background: var(--dc-yellow);
+  }
+
+  .button-primary span {
+    display: inline-grid;
+    width: 20px;
+    height: 20px;
+    flex: 0 0 20px;
+    place-items: center;
+    font-size: var(--dc-text-subtitle, 20px);
+    line-height: 1;
+  }
+
+  .speaker-spreads {
+    display: flex;
+    flex-direction: column;
+    margin-top: 56px;
+  }
+
+  .speaker-spreads :global(.speakers-empty-note) {
+    padding: 32px 0;
+    color: var(--dc-muted);
+    font-size: var(--dc-text-body);
+    line-height: 1.65;
+  }
+
+  /* 50/50 alternating spreads with subtle horizontal dividers strictly between speakers */
+  .speaker-spreads :global(.speaker-spread) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: start;
+    gap: 0;
+    padding-block: 44px;
+  }
+
+  .speaker-spreads :global(.speaker-spread:first-child) {
+    padding-top: 0;
+  }
+
+  .speaker-spreads :global(.speaker-spread:last-child) {
+    padding-bottom: 0;
+  }
+
+  .speaker-spreads :global(.speaker-spread + .speaker-spread) {
+    border-top: 1px solid var(--dc-rule);
+  }
+
+  .speaker-spreads :global(.speaker-spread.is-reveal-pending .speaker-profile),
+  .speaker-spreads :global(.speaker-spread.is-reveal-pending .speaker-bio-column) {
+    opacity: 0;
+  }
+
+  .speaker-spreads :global(.speaker-spread.photo-left) {
+    grid-template-areas: 'profile bio';
+  }
+
+  .speaker-spreads :global(.speaker-spread.photo-right) {
+    grid-template-areas: 'bio profile';
+  }
+
+  .speaker-spreads :global(.speaker-profile) {
+    grid-area: profile;
+    display: grid;
+    min-width: 0;
+    align-items: center;
+    gap: 28px;
+  }
+
+  .speaker-spreads :global(.speaker-spread.photo-left .speaker-profile) {
+    grid-template-columns: 224px minmax(0, 1fr);
+    grid-template-areas: 'portrait identity';
+    padding-right: 40px;
+  }
+
+  .speaker-spreads :global(.speaker-spread.photo-right .speaker-profile) {
+    grid-template-columns: minmax(0, 1fr) 224px;
+    grid-template-areas: 'identity portrait';
+    padding-left: 40px;
+  }
+
+  .speaker-spreads :global(.speaker-portrait-frame) {
+    grid-area: portrait;
+    position: relative;
+    width: 224px;
+    aspect-ratio: 224 / 242;
+    overflow: hidden;
+    border: 2px solid var(--dc-ink);
+    border-radius: 10px;
+    background: var(--dc-paper-light);
+    box-shadow: 5px 5px 0 var(--speaker-frame-shadow, var(--dc-ink));
+  }
+
+  .speaker-spreads :global(.speaker-portrait-frame img) {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 520ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .speaker-spreads :global(.speaker-spread:hover .speaker-portrait-frame img) {
+      transform: scale(1.03);
+    }
+  }
+
+  .speaker-spreads :global(.speaker-portrait-fallback) {
+    display: grid;
+    width: 100%;
+    height: 100%;
+    place-items: center;
+    background: var(--dc-ink);
+    color: var(--dc-yellow);
+    font-family: var(--font-display);
+    font-size: 56px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+
+  .speaker-spreads :global(.speaker-identity) {
+    grid-area: identity;
+    min-width: 0;
+  }
+
+  .speaker-spreads :global(.speaker-spread.photo-right .speaker-identity) {
+    justify-self: end;
+    text-align: right;
+  }
+
+  .speaker-spreads :global(.speaker-name) {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: clamp(32px, 3vw, 44px);
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    line-height: 1.02;
+    text-wrap: balance;
+  }
+
+  .speaker-spreads :global(.speaker-name-first) {
+    display: block;
+    color: var(--dc-ink);
+  }
+
+  .speaker-spreads :global(.speaker-name-rest) {
+    display: block;
+    color: var(--dc-pink);
+  }
+
+  .speaker-spreads :global(.speaker-role) {
+    margin-top: 12px;
+    color: var(--dc-ink);
+    font-size: var(--dc-text-body);
+    font-weight: 600;
+    line-height: 1.35;
+  }
+
+  .speaker-spreads :global(.speaker-org) {
+    margin-top: 4px;
+    color: var(--dc-muted);
+    font-size: var(--dc-text-meta);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    line-height: 1.4;
+    text-transform: uppercase;
+  }
+
+  .speaker-spreads :global(.speaker-bio-column) {
+    grid-area: bio;
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    padding-top: 32px;
+  }
+
+  .speaker-spreads :global(.speaker-spread.photo-left .speaker-bio-column) {
+    padding-left: 44px;
+  }
+
+  .speaker-spreads :global(.speaker-spread.photo-right .speaker-bio-column) {
+    padding-right: 44px;
+  }
+
+  /* Smooth fade-masked bio disclosure (no layout box swap on expand) */
+  .speaker-spreads :global(.speaker-bio-viewport) {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+  }
+
+  .speaker-spreads :global(.speaker-bio-viewport.is-collapsed) {
+    height: calc(1.65em * 3.1);
+  }
+
+  .speaker-spreads :global(.speaker-bio-content) {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    color: var(--dc-muted);
+    font-size: var(--dc-text-body);
+    line-height: 1.65;
+    text-wrap: pretty;
+    transition: color 220ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .speaker-spreads :global(.speaker-spread.is-expanded .speaker-bio-content) {
+    color: var(--dc-ink);
+  }
+
+  .speaker-spreads :global(.speaker-bio-content p) {
+    margin: 0;
+  }
+
+  .speaker-spreads :global(.speaker-bio-fade) {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    height: 2.35em;
+    background: linear-gradient(
+      to bottom,
+      rgb(245 242 232 / 0) 0%,
+      rgb(245 242 232 / 0.82) 62%,
+      var(--dc-paper) 100%
+    );
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 220ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .speaker-spreads :global(.speaker-bio-viewport.is-collapsed .speaker-bio-fade) {
+    opacity: 1;
+  }
+
+  /* Borderless text-action toggle with cap-height plus icon */
+  .speaker-spreads :global(.speaker-bio-toggle) {
+    display: inline-flex;
+    min-height: 44px;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 2px;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--dc-ink);
+    font-family: var(--font-body);
+    font-size: var(--dc-text-small);
+    font-weight: 600;
+    line-height: 1.3;
+    -webkit-tap-highlight-color: transparent;
+    transition:
+      transform 120ms cubic-bezier(0.4, 0, 0.2, 1),
+      color 160ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .speaker-spreads :global(.speaker-bio-toggle:active) {
+    transform: scale(0.97);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .speaker-spreads :global(.speaker-bio-toggle:hover .speaker-bio-toggle-label) {
+      text-decoration: underline;
+      text-decoration-color: var(--dc-pink);
+      text-decoration-thickness: 1.5px;
+      text-underline-offset: 4px;
+    }
+  }
+
+  .speaker-spreads :global(.speaker-bio-toggle:focus-visible) {
+    outline: 2px solid var(--dc-pink);
+    outline-offset: 4px;
+  }
+
+  /* Cap-height aligned icon per design-with-taste + spring rotation per ui-animations */
+  .speaker-spreads :global(.speaker-bio-icon) {
+    block-size: 1cap;
+    inline-size: 1cap;
+    flex-shrink: 0;
+    color: var(--dc-pink);
+    transition: transform 200ms cubic-bezier(0.34, 1.56, 0.64, 1), color 160ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .speaker-spreads :global(.speaker-bio-toggle[aria-expanded='true'] .speaker-bio-icon) {
+    color: var(--dc-ink);
+    transform: rotate(45deg);
+  }
+
+  @media (max-width: 960px) {
+    .speakers-header {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 24px;
+    }
+
+    .speaker-spreads :global(.speaker-spread) {
+      padding-block: 38px;
+    }
+
+    .speaker-spreads :global(.speaker-spread.photo-left),
+    .speaker-spreads :global(.speaker-spread.photo-right) {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-areas:
+        'profile'
+        'bio';
+      gap: 20px;
+    }
+
+    .speaker-spreads :global(.speaker-spread.photo-left .speaker-profile) {
+      grid-template-columns: 188px minmax(0, 1fr);
+      padding-right: 0;
+    }
+
+    .speaker-spreads :global(.speaker-spread.photo-right .speaker-profile) {
+      grid-template-columns: minmax(0, 1fr) 188px;
+      padding-left: 0;
+    }
+
+    .speaker-spreads :global(.speaker-portrait-frame) {
+      width: 188px;
+    }
+
+    .speaker-spreads :global(.speaker-spread.photo-left .speaker-bio-column),
+    .speaker-spreads :global(.speaker-spread.photo-right .speaker-bio-column) {
+      padding: 0;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .speakers-section {
+      padding-block: 56px 96px;
+    }
+
+    .speaker-spreads {
+      margin-top: 38px;
+    }
+
+    .speaker-spreads :global(.speaker-spread) {
+      padding-block: 34px;
+    }
+
+    .speaker-spreads :global(.speaker-spread.photo-left),
+    .speaker-spreads :global(.speaker-spread.photo-right) {
+      gap: 16px;
+    }
+
+    .speaker-spreads :global(.speaker-spread.photo-left .speaker-profile),
+    .speaker-spreads :global(.speaker-spread.photo-right .speaker-profile) {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-areas:
+        'portrait'
+        'identity';
+      gap: 18px;
+    }
+
+    .speaker-spreads :global(.speaker-spread.photo-right .speaker-identity) {
+      justify-self: start;
+      text-align: left;
+    }
+
+    .speaker-spreads :global(.speaker-portrait-frame) {
+      width: min(100%, 248px);
+    }
+
+    .speaker-spreads :global(.speaker-name) {
+      font-size: clamp(30px, 9vw, 38px);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .speaker-spreads :global(.speaker-portrait-frame img),
+    .speaker-spreads :global(.speaker-bio-content),
+    .speaker-spreads :global(.speaker-bio-fade),
+    .speaker-spreads :global(.speaker-bio-toggle),
+    .speaker-spreads :global(.speaker-bio-icon) {
+      transition: none;
+    }
+
+    .speaker-spreads :global(.speaker-spread:hover .speaker-portrait-frame img),
+    .speaker-spreads :global(.speaker-bio-toggle:active) {
+      transform: none;
+    }
+  }
+</style>

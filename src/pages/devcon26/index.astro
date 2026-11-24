@@ -3,8 +3,8 @@ import { getCollection } from 'astro:content';
 import Base from '../../layouts/Base.astro';
 import Devcon26HomeLink from '../../components/Devcon26HomeLink.astro';
 import AttendanceCounter from '../../components/AttendanceCounter.astro';
+import Devcon26SpeakersSection from '../../components/Devcon26SpeakersSection.astro';
 
-const speakerSlots = ['01', '02', '03'];
 const heroScenes = [
   {
     label: 'The April community gathered together',
@@ -127,11 +127,48 @@ const faqs = [
   ['How do I get a ticket?', 'Go to ticket checkout, choose your tickets, and complete payment. Your ticket email includes a QR ticket PDF and a link to personalize your conference badge.'],
 ];
 
-const sponsorIds = new Set(['amalitech', 'kweku_tech', 'paystack']);
 const partners = await getCollection('partners');
-const sponsors = partners.filter((partner) => sponsorIds.has(partner.id));
+const partnerById = new Map(partners.map((partner) => [partner.id, partner]));
+const devconPartnerCategories = [
+  {
+    id: 'sponsors',
+    label: 'Sponsors',
+    description: 'Backing the venue, accessibility, and full-day conference experience.',
+    isSponsor: true,
+    items: ['paystack', 'amalitech', 'wewire', 'ghana_digital_centres']
+      .map((id) => partnerById.get(id))
+      .filter((partner): partner is NonNullable<typeof partner> => Boolean(partner)),
+  },
+  {
+    id: 'media',
+    label: 'Media Partners',
+    description: 'Amplifying the stories, sessions, and builders in the room.',
+    isSponsor: false,
+    items: ['kweku_tech']
+      .map((id) => partnerById.get(id))
+      .filter((partner): partner is NonNullable<typeof partner> => Boolean(partner)),
+  },
+  {
+    id: 'community',
+    label: 'Community Partners',
+    description: 'Connecting developer circles and ecosystems across Ghana.',
+    isSponsor: false,
+    items: ['slightly_techie', 'developers_in_vogue', 'everything_open_source']
+      .map((id) => partnerById.get(id))
+      .filter((partner): partner is NonNullable<typeof partner> => Boolean(partner)),
+  },
+];
+const showPastSponsors = false;
+const pastSponsorExcludedIds = new Set([
+  'amalitech',
+  'wewire',
+  'ghana_digital_centres',
+  'slightly_techie',
+  'developers_in_vogue',
+  'everything_open_source',
+]);
 const pastSponsors = partners
-  .filter((partner) => partner.id !== 'amalitech')
+  .filter((partner) => !pastSponsorExcludedIds.has(partner.id))
   .sort((left, right) => left.data.name.localeCompare(right.data.name, 'en', { sensitivity: 'base' }));
 
 const sponsorshipPackages = [
@@ -291,46 +328,7 @@ function packageEnquiryLink(sponsorship: (typeof sponsorshipPackages)[number]) {
         </div>
       </section>
 
-      <section id="speakers" class="speakers-section page-shell" aria-labelledby="speakers-title">
-        <div class="speakers-header">
-          <h2 id="speakers-title">Fresh perspectives.<br /><em>Familiar challenges.</em></h2>
-          <div class="speakers-invitation">
-            <p>People with something useful to say. We’re putting the programme together with care; meet the speakers here as they are confirmed.</p>
-            <a class="button button-primary" href="/devcon26/speak/">Apply to speak <span aria-hidden="true">↗</span></a>
-          </div>
-        </div>
-        <div class="speaker-grid">
-          {speakerSlots.map((slot) => (
-            <article class="speaker-card">
-              <div class="speaker-placeholder" aria-hidden="true">
-                <span class="speaker-number">{slot}</span>
-                <svg class="speaker-art" viewBox="0 0 160 160" fill="none" stroke="currentColor" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
-                  {slot === '01' ? (
-                    <>
-                      <rect x="56" y="20" width="48" height="80" rx="24" />
-                      <path d="M40 74v6a40 40 0 0 0 80 0v-6M80 120v20M60 140h40" />
-                      <path d="M72 40h16M72 54h16" stroke-width="5" />
-                    </>
-                  ) : slot === '02' ? (
-                    <>
-                      <path d="M32 28h62a18 18 0 0 1 18 18v30a18 18 0 0 1-18 18H58l-26 22V94a18 18 0 0 1-18-18V46a18 18 0 0 1 18-18Z" />
-                      <path d="M112 60h16a18 18 0 0 1 18 18v30a18 18 0 0 1-18 18v18l-24-18H82a18 18 0 0 1-18-18v-6" />
-                      <path d="M40 60h44" stroke-width="5" />
-                    </>
-                  ) : (
-                    <>
-                      <path d="M20 70v20M40 52v56M60 32v96M80 20v120M100 42v76M120 58v44M140 72v16" />
-                    </>
-                  )}
-                </svg>
-                <small>Next voice, coming soon.</small>
-              </div>
-              <p class="speaker-status">Speaker announcement</p>
-              <h3>To be announced</h3>
-            </article>
-          ))}
-        </div>
-      </section>
+      <Devcon26SpeakersSection />
 
       <section class="location-section page-shell" aria-labelledby="location-title">
         <div class="location-place" aria-label="Accra, Ghana">
@@ -365,29 +363,46 @@ function packageEnquiryLink(sponsorship: (typeof sponsorshipPackages)[number]) {
       </section>
 
       <section id="sponsors" class="sponsors-section page-shell" aria-labelledby="sponsors-title">
-        <div class="sponsors-story">
-          <p class="section-caption">The people behind the gathering</p>
-          <h2 id="sponsors-title">Good company<br />needs <em>good backing.</em></h2>
-          <p>Partners help keep this space open: a place for Ghana’s technology community to meet collaborators, exchange ideas, and take their work further.</p>
+        <div class="sponsors-header">
+          <div class="sponsors-story">
+            <p class="section-caption">The people behind the gathering</p>
+            <h2 id="sponsors-title">Good company<br />needs <em>good backing.</em></h2>
+          </div>
+          <p class="sponsors-lead">Partners help keep this space open: a place for Ghana’s technology community to meet collaborators, exchange ideas, and take their work further.</p>
         </div>
-        <div class="sponsors-community">
-          <p>With the support of</p>
-          <ul class="sponsor-list" aria-label="DevCon26 partners">
-            {sponsors.map((sponsor) => (
-              <li class="sponsor-item">
-                <a href={sponsor.data.url} target="_blank" rel="noopener noreferrer" aria-label={'Visit ' + sponsor.data.name}>
-                  <span class="sponsor-name">{sponsor.data.name}</span>
-                  <img
-                    src={sponsor.data.logo}
-                    alt=""
-                    loading="lazy"
-                    style={sponsor.data.backgroundColor ? 'background-color:' + sponsor.data.backgroundColor : undefined}
-                  />
-                  <span class="sponsor-visit" aria-hidden="true">↗</span>
-                </a>
-              </li>
-            ))}
-          </ul>
+
+        <div class="partner-chapters" aria-label="DevCon26 sponsors and partners">
+          {devconPartnerCategories.map((category) => (
+            <section class:list={['partner-chapter', { 'is-sponsor-chapter': category.isSponsor }]} aria-labelledby={'partner-cat-' + category.id}>
+              <div class="partner-chapter-meta">
+                <h3 id={'partner-cat-' + category.id}>{category.label}</h3>
+                <p>{category.description}</p>
+              </div>
+              <ul class="partner-tile-grid" aria-label={category.label}>
+                {category.items.map((partner) => (
+                  <li class:list={['partner-tile', { 'is-sponsor': category.isSponsor }]}>
+                    <a href={partner.data.url} target="_blank" rel="noopener noreferrer" aria-label={'Visit ' + partner.data.name}>
+                      <span
+                        class="partner-logo-box"
+                        style={partner.data.backgroundColor ? 'background-color:' + partner.data.backgroundColor : undefined}
+                      >
+                        <img
+                          src={partner.data.logo}
+                          alt=""
+                          loading="lazy"
+                          decoding="async"
+                        />
+                      </span>
+                      <span class="partner-caption">
+                        <span class="partner-tile-name">{partner.data.name}</span>
+                        <span class="sponsor-visit" aria-hidden="true">↗</span>
+                      </span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ))}
         </div>
         <div class="sponsorship-packages" aria-labelledby="packages-title">
           <div class="packages-intro">
@@ -452,26 +467,28 @@ function packageEnquiryLink(sponsorship: (typeof sponsorshipPackages)[number]) {
           ))}
         </div>
       </section>
-      <section class="past-sponsors-section page-shell" aria-labelledby="past-sponsors-title">
-        <div class="past-sponsors-intro">
-          <p class="section-caption">A history of good company</p>
-          <h2 id="past-sponsors-title">Past <em>sponsors.</em></h2>
-          <p>The organisations that have backed the DevCongress community along the way.</p>
-        </div>
-        <ul class="past-sponsors-list">
-          {pastSponsors.map((partner) => (
-            <li>
-              <a href={partner.data.url} target="_blank" rel="noopener noreferrer" aria-label={'Visit ' + partner.data.name + ' (opens in a new tab)'}>
-                <span class="past-sponsor-logo" style={partner.data.backgroundColor ? 'background-color:' + partner.data.backgroundColor : undefined}>
-                  <img src={partner.data.logo} alt="" width="180" height="70" loading="lazy" decoding="async" />
-                </span>
-                <span>{partner.data.name}</span>
-                <span class="past-sponsor-arrow" aria-hidden="true">↗</span>
-              </a>
-            </li>
-          ))}
-        </ul>
-      </section>
+      {showPastSponsors && (
+        <section class="past-sponsors-section page-shell" aria-labelledby="past-sponsors-title">
+          <div class="past-sponsors-intro">
+            <p class="section-caption">A history of good company</p>
+            <h2 id="past-sponsors-title">Past <em>sponsors.</em></h2>
+            <p>The organisations that have backed the DevCongress community along the way.</p>
+          </div>
+          <ul class="past-sponsors-list">
+            {pastSponsors.map((partner) => (
+              <li>
+                <a href={partner.data.url} target="_blank" rel="noopener noreferrer" aria-label={'Visit ' + partner.data.name + ' (opens in a new tab)'}>
+                  <span class="past-sponsor-logo" style={partner.data.backgroundColor ? 'background-color:' + partner.data.backgroundColor : undefined}>
+                    <img src={partner.data.logo} alt="" width="180" height="70" loading="lazy" decoding="async" />
+                  </span>
+                  <span>{partner.data.name}</span>
+                  <span class="past-sponsor-arrow" aria-hidden="true">↗</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
     </main>
   </div>
 </Base>
@@ -1423,13 +1440,20 @@ function packageEnquiryLink(sponsorship: (typeof sponsorshipPackages)[number]) {
 
   .sponsors-section {
     display: grid;
-    grid-template-columns: 1.05fr 0.95fr;
-    column-gap: 70px;
-    row-gap: var(--s6);
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: var(--s7);
     padding-block: 12px 30px;
   }
 
+  .sponsors-header {
+    display: grid;
+    grid-template-columns: 1.15fr 0.85fr;
+    align-items: end;
+    gap: 56px;
+  }
+
   .sponsors-story .section-caption {
+    margin-bottom: 10px;
     color: var(--dc-muted);
     font-size: var(--dc-text-meta);
   }
@@ -1443,66 +1467,143 @@ function packageEnquiryLink(sponsorship: (typeof sponsorshipPackages)[number]) {
     color: var(--dc-pink);
   }
 
-  .sponsors-story > p:not(.section-caption) {
-    margin-top: 25px;
+  .sponsors-lead {
+    max-width: 44ch;
     color: var(--dc-muted);
     font-size: var(--dc-text-body);
     line-height: 1.65;
   }
 
-  .sponsor-button {
-    margin-top: 26px;
-    background: var(--dc-yellow);
-    color: var(--dc-ink);
+  .partner-chapters {
+    border-top: 2px solid var(--dc-ink);
   }
 
-  .sponsors-community {
-    align-self: center;
-  }
-
-  .sponsors-community > p:first-child {
-    margin-bottom: 18px;
-    font-size: var(--dc-text-meta);
-  }
-
-  .sponsor-list {
-    list-style: none;
-  }
-
-  .sponsor-item:not(:last-child) {
-    border-bottom: 1px solid var(--dc-rule);
-  }
-
-  .sponsor-item a {
+  .partner-chapter {
     display: grid;
-    grid-template-columns: 1fr 110px 20px;
+    grid-template-columns: 270px minmax(0, 1fr);
     align-items: center;
-    gap: 18px;
-    min-height: 100px;
+    gap: 48px;
+    padding-block: 32px;
   }
 
-  .sponsor-name {
-    font-size: clamp(20px, 2.1vw, 28px);
+  .partner-chapter + .partner-chapter {
+    border-top: 1px solid var(--dc-rule);
+  }
+
+  .partner-chapter-meta h3 {
+    font-family: var(--font-display);
+    font-size: clamp(22px, 2vw, 25px);
     font-weight: 600;
     letter-spacing: var(--tracking-heading);
+    line-height: 1.2;
   }
 
-  .sponsor-item img {
+  .partner-chapter-meta p {
+    margin-top: 6px;
+    color: var(--dc-muted);
+    font-size: var(--dc-text-small);
+    line-height: 1.5;
+  }
+
+  .partner-tile-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 20px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .partner-tile a {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+    text-decoration: none;
+    color: inherit;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .partner-logo-box {
+    position: relative;
+    display: flex;
     width: 100%;
-    max-width: 110px;
-    max-height: 48px;
-    padding: 6px;
-    border-radius: 6px;
+    height: 92px;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    padding: 14px 18px;
+    border-radius: 10px;
     background: var(--dc-paper-light);
+    border: 1px solid rgb(0 0 0 / 0.12);
+    transition: transform 200ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  .partner-tile.is-sponsor .partner-logo-box {
+    height: 100px;
+  }
+
+  .partner-logo-box img {
+    display: block;
+    max-width: 100%;
+    max-height: 100%;
+    width: auto;
+    height: auto;
     object-fit: contain;
-    outline: 1px solid rgba(0, 0, 0, 0.1);
-    outline-offset: -1px;
+  }
+
+  .partner-caption {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding-inline: 2px;
+  }
+
+  .partner-tile-name {
+    min-width: 0;
+    color: var(--dc-muted);
+    font-size: var(--dc-text-small);
+    font-weight: 600;
+    line-height: 1.3;
+  }
+
+  .partner-tile.is-sponsor .partner-tile-name {
+    color: var(--dc-ink);
+    font-weight: 700;
   }
 
   .sponsor-visit {
+    flex-shrink: 0;
     color: var(--dc-pink);
-    font-size: 22px;
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1;
     transition: transform 160ms var(--dc-ease);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .partner-tile a:hover .partner-logo-box {
+      transform: translateY(-2px);
+    }
+
+    .partner-tile a:hover .partner-tile-name {
+      color: var(--dc-ink);
+    }
+
+    .partner-tile a:hover .sponsor-visit {
+      transform: translate(2px, -2px);
+    }
+  }
+
+  .partner-tile a:active .partner-logo-box {
+    transform: scale(0.98);
+    transition-duration: 100ms;
+  }
+
+  .partner-tile a:focus-visible {
+    outline: 2px solid var(--dc-pink);
+    outline-offset: 4px;
+    border-radius: 10px;
   }
 
   .sponsorship-packages {
@@ -2389,20 +2490,34 @@ function packageEnquiryLink(sponsorship: (typeof sponsorshipPackages)[number]) {
 
     .sponsors-section {
       grid-template-columns: minmax(0, 1fr);
-      gap: var(--s6);
+      row-gap: var(--s6);
       padding-block: 12px 0;
+    }
+
+    .sponsors-header {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 18px;
     }
 
     .sponsors-story h2 {
       font-size: clamp(30px, 7.8vw, 42px);
     }
 
-    .sponsor-item a {
-      min-height: 85px;
+    .partner-chapter {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 20px;
+      padding-block: 26px;
     }
 
-    .sponsor-name {
-      font-size: 22px;
+    .partner-tile-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .partner-logo-box,
+    .partner-tile.is-sponsor .partner-logo-box {
+      height: 82px;
+      padding: 12px 14px;
     }
 
     .faq-section {
@@ -2422,7 +2537,9 @@ function packageEnquiryLink(sponsorship: (typeof sponsorshipPackages)[number]) {
     }
 
     .button:active, .ticket-buy-button:active,
-    .button:hover, .ticket-buy-button:hover, .sponsor-item a:hover .sponsor-visit {
+    .button:hover, .ticket-buy-button:hover,
+    .partner-tile a:hover .partner-logo-box, .partner-tile a:active .partner-logo-box,
+    .partner-tile a:hover .sponsor-visit {
       transform: none;
     }
 

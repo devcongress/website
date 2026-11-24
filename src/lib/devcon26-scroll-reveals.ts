@@ -8,7 +8,7 @@ export function initDevcon26ScrollReveals(page: HTMLElement) {
     { selector: '.story-heading, .story-copy, .people-line', from: 'translateY(16px)' },
     { selector: '.programme-photo', from: 'translateX(-16px)' },
     { selector: '.day-content', from: 'translateX(16px)' },
-    { selector: '.speakers-header, .speaker-card', from: 'translateY(12px) scale(0.98)' },
+    { selector: '.speakers-header', from: 'translateY(12px) scale(0.99)' },
     { selector: '.location-place, .location-copy', from: 'translateX(-12px)' },
     { selector: '.tickets-heading, .registration-action', from: 'translateY(10px) scale(0.99)' },
     { selector: '.sponsors-story, .sponsors-community, .packages-intro, .package-plan, .custom-sponsorship', from: 'scale(0.975)' },

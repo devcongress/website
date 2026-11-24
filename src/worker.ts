@@ -2,6 +2,8 @@
 
 import { ATTENDANCE_RELAY_PATH } from './lib/devcon26-attendance-counter';
 import { serveAttendanceCounter } from './lib/devcon26-attendance-relay';
+import { SPEAKERS_RELAY_PATH } from './lib/devcon26-speakers';
+import { serveDevcon26SpeakerPhoto, serveDevcon26Speakers } from './lib/devcon26-speakers-relay';
 import { renderPublicBadgePage, renderPublicBadgeSvg } from './lib/devcon26-public-badge';
 import { PHYSICAL_BADGE_PATH } from './lib/devcon26-digital-badge';
 import { createEventsCalendar, createSingleEventCalendar } from './lib/event-calendar';
@@ -19,6 +21,7 @@ interface Env {
 }
 
 const EVENT_ROUTE = /^\/events\/([a-zA-Z0-9][a-zA-Z0-9_-]{0,239})\/?$/;
+const SPEAKER_PHOTO_RELAY_ROUTE = /^\/devcon26\/api\/speakers\/([0-9a-fA-F-]{36})\/photo\/?$/;
 const SOCIAL_CARD_ROUTE = /^\/devcon26\/cards\/([A-Za-z0-9_-]{22,80})\/?$/;
 const SOCIAL_CARD_IMAGE_ROUTE = /^\/devcon26\/cards\/([A-Za-z0-9_-]{22,80})\/image\/?$/;
 const SOCIAL_CARD_PREVIEW_ROUTE = /^\/devcon26\/cards\/([A-Za-z0-9_-]{22,80})\/preview\.svg\/?$/;
@@ -39,6 +42,17 @@ export default {
     if (url.pathname === ATTENDANCE_RELAY_PATH) {
       if (request.method !== 'GET') return methodNotAllowed();
       return serveAttendanceCounter();
+    }
+
+    if (url.pathname === SPEAKERS_RELAY_PATH) {
+      if (!isReadableMethod(request.method)) return methodNotAllowed();
+      return serveDevcon26Speakers(request, context);
+    }
+
+    const speakerPhotoMatch = url.pathname.match(SPEAKER_PHOTO_RELAY_ROUTE);
+    if (speakerPhotoMatch) {
+      if (!isReadableMethod(request.method)) return methodNotAllowed();
+      return serveDevcon26SpeakerPhoto(request, speakerPhotoMatch[1], context);
     }
 
     if (SUPPORT_PATHS.has(url.pathname)) {

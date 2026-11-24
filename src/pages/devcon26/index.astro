@@ -3,8 +3,8 @@ import { getCollection } from 'astro:content';
 import Base from '../../layouts/Base.astro';
 import Devcon26HomeLink from '../../components/Devcon26HomeLink.astro';
 import AttendanceCounter from '../../components/AttendanceCounter.astro';
+import Devcon26SpeakersSection from '../../components/Devcon26SpeakersSection.astro';
 
-const speakerSlots = ['01', '02', '03'];
 const heroScenes = [
   {
     label: 'The April community gathered together',
@@ -291,46 +291,7 @@ function packageEnquiryLink(sponsorship: (typeof sponsorshipPackages)[number]) {
         </div>
       </section>
 
-      <section id="speakers" class="speakers-section page-shell" aria-labelledby="speakers-title">
-        <div class="speakers-header">
-          <h2 id="speakers-title">Fresh perspectives.<br /><em>Familiar challenges.</em></h2>
-          <div class="speakers-invitation">
-            <p>People with something useful to say. We’re putting the programme together with care; meet the speakers here as they are confirmed.</p>
-            <a class="button button-primary" href="/devcon26/speak/">Apply to speak <span aria-hidden="true">↗</span></a>
-          </div>
-        </div>
-        <div class="speaker-grid">
-          {speakerSlots.map((slot) => (
-            <article class="speaker-card">
-              <div class="speaker-placeholder" aria-hidden="true">
-                <span class="speaker-number">{slot}</span>
-                <svg class="speaker-art" viewBox="0 0 160 160" fill="none" stroke="currentColor" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
-                  {slot === '01' ? (
-                    <>
-                      <rect x="56" y="20" width="48" height="80" rx="24" />
-                      <path d="M40 74v6a40 40 0 0 0 80 0v-6M80 120v20M60 140h40" />
-                      <path d="M72 40h16M72 54h16" stroke-width="5" />
-                    </>
-                  ) : slot === '02' ? (
-                    <>
-                      <path d="M32 28h62a18 18 0 0 1 18 18v30a18 18 0 0 1-18 18H58l-26 22V94a18 18 0 0 1-18-18V46a18 18 0 0 1 18-18Z" />
-                      <path d="M112 60h16a18 18 0 0 1 18 18v30a18 18 0 0 1-18 18v18l-24-18H82a18 18 0 0 1-18-18v-6" />
-                      <path d="M40 60h44" stroke-width="5" />
-                    </>
-                  ) : (
-                    <>
-                      <path d="M20 70v20M40 52v56M60 32v96M80 20v120M100 42v76M120 58v44M140 72v16" />
-                    </>
-                  )}
-                </svg>
-                <small>Next voice, coming soon.</small>
-              </div>
-              <p class="speaker-status">Speaker announcement</p>
-              <h3>To be announced</h3>
-            </article>
-          ))}
-        </div>
-      </section>
+      <Devcon26SpeakersSection />
 
       <section class="location-section page-shell" aria-labelledby="location-title">
         <div class="location-place" aria-label="Accra, Ghana">
